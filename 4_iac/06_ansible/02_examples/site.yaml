@@ -1,0 +1,106 @@
+---
+# Полный playbook: установить и настроить nginx на веб-серверах
+# Запуск:
+#   ansible-playbook -i inventory.yaml site.yaml --check   # dry-run
+#   ansible-playbook -i inventory.yaml site.yaml
+
+- name: Configure web servers
+  hosts: webservers
+  become: true
+  gather_facts: true
+
+  vars:
+    nginx_conf: |
+      server {
+          listen {{ nginx_port }};
+          server_name _;
+          location / {
+              root /var/www/html;
+              index index.html;
+          }
+          location /health {
+              return 200 "ok\n";
+              add_header Content-Type text/plain;
+          }
+      }
+
+  pre_tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Update dnf cache (Fedora/RHEL)
+      ansible.builtin.dnf:
+        update_cache: true
+      when: ansible_os_family == "RedHat"
+
+  tasks:
+    - name: Install nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      notify: Restart nginx
+
+    - name: Create web root
+      ansible.builtin.file:
+        path: /var/www/html
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: "0755"
+
+    - name: Deploy index page
+      ansible.builtin.copy:
+        content: |
+          <h1>Server: {{ inventory_hostname }}</h1>
+          <p>App version: {{ app_version }}</p>
+          <p>Managed by Ansible</p>
+        dest: /var/www/html/index.html
+        mode: "0644"
+
+    - name: Deploy nginx config
+      ansible.builtin.copy:
+        content: "{{ nginx_conf }}"
+        dest: /etc/nginx/sites-available/app
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Enable nginx site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/app
+        dest: /etc/nginx/sites-enabled/app
+        state: link
+      notify: Reload nginx
+
+    - name: Remove default nginx site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
+
+    - name: Ensure nginx is running and enabled
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Verify nginx responds
+      ansible.builtin.uri:
+        url: "http://localhost:{{ nginx_port }}/health"
+        status_code: 200
+      register: health_check
+      retries: 3
+      delay: 5
+
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded

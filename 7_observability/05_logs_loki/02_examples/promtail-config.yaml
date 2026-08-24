@@ -1,0 +1,44 @@
+server:
+  http_listen_port: 9080
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+positions:
+  filename: /tmp/positions.yaml
+
+scrape_configs:
+  # Docker контейнеры через Docker SD
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        regex: '/(.*)'
+        target_label: container
+      - source_labels: [__meta_docker_container_label_app]
+        target_label: app
+      - source_labels: [__meta_docker_container_label_environment]
+        target_label: env
+    pipeline_stages:
+      # Попытаться парсить JSON логи
+      - json:
+          expressions:
+            level: level
+            msg: message
+            ts: time
+      - labels:
+          level:
+      # Не собирать логи самого promtail
+      - drop:
+          source: container
+          expression: "promtail"
+
+  # Системные логи
+  - job_name: system
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: syslog
+          __path__: /var/log/syslog

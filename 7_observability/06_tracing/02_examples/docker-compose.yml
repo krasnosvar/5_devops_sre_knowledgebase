@@ -1,0 +1,41 @@
+services:
+  # OTel Collector — принимает OTLP, маршрутизирует в Jaeger и Prometheus
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    ports:
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+      - "8889:8889"    # Prometheus metrics от OTel Collector
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    command: ["--config=/etc/otelcol/config.yaml"]
+    depends_on:
+      - jaeger
+
+  # Jaeger — distributed tracing backend
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14250:14250"  # gRPC (от OTel Collector)
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+  # Grafana Tempo — альтернатива Jaeger (uncomment если нужен Tempo)
+  # tempo:
+  #   image: grafana/tempo:latest
+  #   command: ["-config.file=/etc/tempo.yaml"]
+  #   volumes:
+  #     - ./tempo.yaml:/etc/tempo.yaml:ro
+  #   ports:
+  #     - "3200:3200"
+  #     - "4317:4317"
+
+  # Демо-приложение с трейсингом (генерирует traces)
+  demo-app:
+    image: ghcr.io/open-telemetry/demo:latest
+    ports:
+      - "8080:8080"    # frontend
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=demo-app

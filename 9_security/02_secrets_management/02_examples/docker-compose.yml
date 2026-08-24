@@ -1,0 +1,41 @@
+services:
+  vault:
+    image: hashicorp/vault:latest
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "dev-root-token"   # только для dev режима!
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      VAULT_ADDR: "http://0.0.0.0:8200"
+    cap_add:
+      - IPC_LOCK
+    command: vault server -dev
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 5s
+      retries: 10
+
+  # Vault UI: http://localhost:8200 (token: dev-root-token)
+
+  # Пример: приложение которое читает секреты из Vault через API
+  demo-app:
+    image: curlimages/curl:latest
+    depends_on:
+      vault:
+        condition: service_healthy
+    environment:
+      VAULT_ADDR: "http://vault:8200"
+      VAULT_TOKEN: "dev-root-token"
+    command: >
+      sh -c "
+        echo '--- Записать секрет ---' &&
+        curl -s -X POST http://vault:8200/v1/secret/data/myapp/config
+          -H 'X-Vault-Token: dev-root-token'
+          -d '{\"data\": {\"db_password\": \"s3cr3t\", \"api_key\": \"abc123\"}}'
+          | jq . &&
+        echo '--- Прочитать секрет ---' &&
+        curl -s http://vault:8200/v1/secret/data/myapp/config
+          -H 'X-Vault-Token: dev-root-token'
+          | jq '.data.data'
+      "
+    restart: "no"
