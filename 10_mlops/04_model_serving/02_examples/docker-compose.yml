@@ -1,0 +1,75 @@
+# MLOps serving stack: vLLM + MLflow + MinIO
+# Требования: NVIDIA GPU + NVIDIA Container Toolkit
+# Для CPU-only: убери runtime: nvidia и используй модель меньшего размера
+
+services:
+  # ── Model Registry ────────────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"   # UI
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    ports:
+      - "5000:5000"
+    environment:
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root s3://mlflow/
+      --host 0.0.0.0
+    depends_on:
+      minio:
+        condition: service_healthy
+
+  # ── LLM Inference (требует GPU) ────────────────────────────────────────────
+  vllm:
+    image: vllm/vllm-openai:latest
+    runtime: nvidia    # убрать для CPU
+    ports:
+      - "8000:8000"
+    environment:
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    command: >
+      --model Qwen/Qwen2.5-1.5B-Instruct
+      --max-model-len 4096
+      --gpu-memory-utilization 0.8
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ── BentoML (классические ML модели) ──────────────────────────────────────
+  bentoml:
+    build:
+      context: ./bentoml_service
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    depends_on:
+      - mlflow
+
+volumes:
+  minio_data:
+  hf_cache:
