@@ -1,0 +1,143 @@
+# Security scanning pipeline — интеграция SAST в CI
+# Запускает: Semgrep (SAST), Trivy (CVE), Checkov (IaC), hadolint (Dockerfile)
+# Стратегия: allow_failure на старте, потом ужесточать по мере устранения
+
+stages:
+  - security
+
+variables:
+  # Semgrep
+  SEMGREP_VERSION: "1.72.0"
+  # Trivy — кэшировать базу CVE
+  TRIVY_CACHE_DIR: ".trivycache"
+  TRIVY_NO_PROGRESS: "true"
+
+# ── SAST: код ──────────────────────────────────────────────────────────────────
+semgrep:
+  stage: security
+  image: semgrep/semgrep:latest
+  script:
+    - semgrep --config=auto
+        --error
+        --json --output=semgrep-results.json
+        --severity=ERROR
+        . || true   # не блокируем CI пока не устраним все находки
+  artifacts:
+    when: always
+    reports:
+      sast: semgrep-results.json
+    paths: [semgrep-results.json]
+    expire_in: 1 week
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# ── CVE: зависимости ──────────────────────────────────────────────────────────
+trivy-fs:
+  stage: security
+  image: aquasec/trivy:latest
+  script:
+    - trivy fs
+        --exit-code 0         # 0 = не блокировать (изменить на 1 для критических)
+        --severity HIGH,CRITICAL
+        --format template
+        --template "@/contrib/gitlab.tpl"
+        --output trivy-results.json
+        .
+  artifacts:
+    when: always
+    reports:
+      container_scanning: trivy-results.json
+    expire_in: 1 week
+  cache:
+    key: trivy-db
+    paths: [.trivycache/]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# ── CVE: Docker образ ─────────────────────────────────────────────────────────
+trivy-image:
+  stage: security
+  image: aquasec/trivy:latest
+  variables:
+    # Подставить свой образ
+    TARGET_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  script:
+    - trivy image
+        --exit-code 1         # блокировать при CRITICAL CVE в образе
+        --severity CRITICAL
+        --ignore-unfixed       # игнорировать CVE без фикса
+        $TARGET_IMAGE
+  allow_failure: true          # убрать когда образ будет чистый
+  cache:
+    key: trivy-db
+    paths: [.trivycache/]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# ── IaC: Terraform ────────────────────────────────────────────────────────────
+checkov:
+  stage: security
+  image: bridgecrew/checkov:latest
+  script:
+    - checkov
+        --directory terraform/
+        --framework terraform
+        --compact
+        --output cli
+        --output junitxml
+        --output-file-path checkov-results.xml
+        --soft-fail    # не блокировать пока не устраним
+  artifacts:
+    when: always
+    reports:
+      junit: checkov-results.xml
+    expire_in: 1 week
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - "terraform/**/*"
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - "terraform/**/*"
+
+# ── Dockerfile linting ────────────────────────────────────────────────────────
+hadolint:
+  stage: security
+  image: hadolint/hadolint:latest-debian
+  script:
+    - hadolint
+        --failure-threshold error
+        --format codeclimate
+        Dockerfile > hadolint-results.json
+  artifacts:
+    when: always
+    reports:
+      codequality: hadolint-results.json
+    expire_in: 1 week
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [Dockerfile]
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes: [Dockerfile]
+
+# ── Secrets scanning ──────────────────────────────────────────────────────────
+gitleaks:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  script:
+    - gitleaks detect
+        --source .
+        --report-format json
+        --report-path gitleaks-results.json
+        --exit-code 1
+  artifacts:
+    when: always
+    paths: [gitleaks-results.json]
+    expire_in: 1 week
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

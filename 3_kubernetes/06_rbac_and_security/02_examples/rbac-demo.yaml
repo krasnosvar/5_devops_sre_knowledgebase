@@ -1,0 +1,123 @@
+---
+# Namespace для демо
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    name: production
+    pod-security.kubernetes.io/enforce: baseline
+
+---
+# ServiceAccount для приложения (минимальные права)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myapp
+  namespace: production
+automountServiceAccountToken: false   # не монтировать токен если не нужен
+
+---
+# Role: только читать ConfigMaps с именем app-config
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: myapp-role
+  namespace: production
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "watch"]
+    resourceNames: ["app-config"]   # только конкретный ConfigMap
+
+---
+# RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: myapp-binding
+  namespace: production
+subjects:
+  - kind: ServiceAccount
+    name: myapp
+    namespace: production
+roleRef:
+  kind: Role
+  name: myapp-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ConfigMap который myapp может читать
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+data:
+  LOG_LEVEL: info
+  MAX_CONNECTIONS: "100"
+
+---
+# Pod с правильным securityContext и ServiceAccount
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-demo
+  namespace: production
+spec:
+  serviceAccountName: myapp
+  automountServiceAccountToken: true   # включить для этого пода — будем тестировать RBAC
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+  containers:
+    - name: app
+      image: bitnami/kubectl:latest
+      command: ["sleep", "3600"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests:
+          cpu: "50m"
+          memory: "32Mi"
+        limits:
+          cpu: "100m"
+          memory: "64Mi"
+
+---
+# Роль только для чтения Pod'ов (для monitoring agent)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pod-reader
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+
+---
+# Ограниченный пользователь alice — только читать в production namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: alice-pod-reader
+  namespace: production
+subjects:
+  - kind: User
+    name: alice   # соответствует CN в сертификате
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io

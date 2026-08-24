@@ -1,0 +1,59 @@
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest
+    ports:
+      - "8428:8428"
+    volumes:
+      - vm_data:/victoria-metrics-data
+    command:
+      - -retentionPeriod=2     # хранить 2 месяца
+      - -storageDataPath=/victoria-metrics-data
+      - -httpListenAddr=:8428
+      - -selfScrapeInterval=10s  # VM scrapes itself
+    restart: unless-stopped
+
+  # Grafana — использовать VM как Prometheus datasource
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./datasource.yaml:/etc/grafana/provisioning/datasources/vm.yaml:ro
+    depends_on:
+      - victoriametrics
+
+  # vmagent — собирает метрики и отправляет в VM через remote_write
+  vmagent:
+    image: victoriametrics/vmagent:latest
+    ports:
+      - "8429:8429"
+    volumes:
+      - vmagent_data:/vmagentdata
+      - ./vmagent.yaml:/etc/vmagent/config.yaml:ro
+    command:
+      - -promscrape.config=/etc/vmagent/config.yaml
+      - -remoteWrite.url=http://victoriametrics:8428/api/v1/write
+      - -httpListenAddr=:8429
+    depends_on:
+      - victoriametrics
+
+  # node-exporter для наглядных метрик
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+
+volumes:
+  vm_data:
+  grafana_data:
+  vmagent_data:
