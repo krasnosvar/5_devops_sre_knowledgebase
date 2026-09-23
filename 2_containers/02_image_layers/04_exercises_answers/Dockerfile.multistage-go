@@ -1,0 +1,25 @@
+# Ответ: упражнение 02 — multi-stage build < 20MB
+# Результат: scratch образ только с бинарником
+
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+# CGO_ENABLED=0: статическая линковка (нет зависимостей от libc)
+# -ldflags="-s -w": убрать debug info и DWARF (-s -w уменьшает на 30%)
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server .
+
+# Минимальный образ — scratch (пустой, 0 bytes)
+FROM scratch
+# Для TLS нужны CA сертификаты
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /app/server /server
+
+EXPOSE 8080
+ENTRYPOINT ["/server"]
+
+# Размер: golang:1.22-alpine = ~250MB, итоговый scratch образ = ~7-15MB
+# Проверить: docker build -t myapp:go . && docker images myapp:go

@@ -1,0 +1,49 @@
+# /etc/systemd/system/myapp.service
+# Установка:
+#   sudo cp myapp.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now myapp
+
+[Unit]
+Description=My Application
+Documentation=https://github.com/org/myapp
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=myapp
+Group=myapp
+WorkingDirectory=/opt/myapp
+
+ExecStart=/opt/myapp/bin/myapp \
+    --config /etc/myapp/config.yaml \
+    --port 8080
+
+ExecStop=/bin/kill -TERM $MAINPID
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Автоперезапуск при падении
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Переменные окружения
+Environment=ENV=production
+EnvironmentFile=-/etc/myapp/.env
+
+# Безопасность
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/myapp /var/log/myapp
+CapabilityBoundingSet=
+
+# Ресурсные лимиты
+LimitNOFILE=65536
+MemoryMax=512M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target

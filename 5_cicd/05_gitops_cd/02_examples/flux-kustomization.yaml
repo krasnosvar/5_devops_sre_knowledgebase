@@ -1,0 +1,65 @@
+---
+# Flux GitRepository — источник конфигурации
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gitops-config
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/org/gitops-config.git
+  ref:
+    branch: main
+  secretRef:
+    name: gitops-ssh-key   # SSH ключ для доступа к приватному репо
+
+---
+# Flux Kustomization — что применять из репо
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: production-apps
+  namespace: flux-system
+spec:
+  interval: 5m               # проверять каждые 5 мин
+  path: "./clusters/production"
+  prune: true                # удалять ресурсы удалённые из git
+  sourceRef:
+    kind: GitRepository
+    name: gitops-config
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: myapp
+      namespace: production
+  timeout: 5m
+  postBuild:
+    substitute:
+      CLUSTER_NAME: production
+      REGION: eu-central-1
+
+---
+# Flux HelmRelease — установить chart через Flux
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: myapp
+  namespace: production
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: myapp
+      version: ">=1.0.0 <2.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: myapp-charts
+        namespace: flux-system
+  values:
+    replicaCount: 3
+    image:
+      tag: latest
+  valuesFrom:
+    - kind: ConfigMap
+      name: myapp-values
+      valuesKey: values.yaml

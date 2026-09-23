@@ -1,0 +1,24 @@
+# Исключить из Docker build context
+.git/
+.gitignore
+.github/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/.mypy_cache/
+.env
+.env.*
+*.log
+*.tmp
+dist/
+build/
+node_modules/
+.venv/
+venv/
+*.egg-info/
+.DS_Store
+Thumbs.db
+README.md
+docs/
+tests/

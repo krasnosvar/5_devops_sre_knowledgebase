@@ -1,0 +1,69 @@
+---
+# StorageClass (для kind/k3d используй standard)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-ssd
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: rancher.io/local-path   # для k3d/kind
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+
+---
+# PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard   # для kind/k3d
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# Pod использующий PVC
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-demo
+spec:
+  containers:
+    - name: postgres
+      image: postgres:16-alpine
+      env:
+        - name: POSTGRES_PASSWORD
+          value: "demo"
+      volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        - name: config
+          mountPath: /etc/postgresql/extra
+          readOnly: true
+        - name: tmpdir
+          mountPath: /tmp
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: postgres-data
+    - name: config
+      configMap:
+        name: postgres-config
+    - name: tmpdir
+      emptyDir:
+        sizeLimit: 100Mi
+
+---
+# ConfigMap для конфига
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  postgresql.conf: |
+    max_connections = 100
+    shared_buffers = 128MB
+    log_statement = all

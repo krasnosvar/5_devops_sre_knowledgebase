@@ -1,0 +1,50 @@
+# helmfile.yaml — управление несколькими Helm релизами
+# Установка helmfile: https://helmfile.readthedocs.io/
+
+repositories:
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+
+environments:
+  dev:
+    values:
+      - replicas: 1
+      - resources: {requests: {cpu: 50m, memory: 64Mi}}
+  production:
+    values:
+      - replicas: 3
+      - resources: {requests: {cpu: 500m, memory: 512Mi}}
+
+releases:
+  - name: postgres
+    namespace: database
+    chart: bitnami/postgresql
+    version: "14.3.3"
+    values:
+      - auth:
+          postgresPassword: "{{ requiredEnv \"PG_PASSWORD\" }}"
+      - primary:
+          persistence:
+            size: "{{ if eq .Environment.Name \"production\" }}50Gi{{ else }}1Gi{{ end }}"
+
+  - name: monitoring
+    namespace: monitoring
+    chart: prometheus-community/kube-prometheus-stack
+    version: "55.5.0"
+    values:
+      - grafana:
+          adminPassword: "{{ requiredEnv \"GRAFANA_PASSWORD\" }}"
+      - prometheus:
+          prometheusSpec:
+            retention: 30d
+
+  - name: myapp
+    namespace: production
+    chart: ./myapp                # локальный chart из 02_examples/myapp/
+    values:
+      - replicaCount: "{{ .Values.replicas }}"
+      - resources: "{{ .Values.resources | toYaml | nindent 2 }}"
+    needs:
+      - database/postgres         # деплоить после postgres

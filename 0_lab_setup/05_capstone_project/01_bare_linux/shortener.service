@@ -1,0 +1,14 @@
+[Unit]
+Description=URL shortener (bare Linux, no containers yet)
+After=network.target redis-server.service
+Wants=redis-server.service
+
+[Service]
+User=lab
+WorkingDirectory=/opt/shortener
+Environment=REDIS_HOST=127.0.0.1
+ExecStart=/opt/shortener/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

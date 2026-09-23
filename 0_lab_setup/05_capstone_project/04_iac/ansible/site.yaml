@@ -1,0 +1,120 @@
+---
+# kubeadm-кластер на "голых" VM из ../../02_local_vms/linux_kvm/02_examples/cluster/
+# Пакетный репозиторий pkgs.k8s.io без пина версии — берёт текущий stable v1.34.
+# Когда выйдет новый minor, поменяй только URL ниже (community-стандарт, см.
+# https://kubernetes.io/releases/ — не пиши сюда версию "на глаз").
+- hosts: all
+  become: true
+  vars:
+    k8s_repo_channel: v1.34
+  tasks:
+    - name: отключить swap
+      shell: swapoff -a
+      changed_when: false
+
+    - name: убрать swap из fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*\sswap\s.*)$'
+        replace: '# \1'
+
+    - name: включить br_netfilter при загрузке
+      copy:
+        content: "br_netfilter\n"
+        dest: /etc/modules-load.d/k8s.conf
+
+    - name: подгрузить br_netfilter сейчас
+      command: modprobe br_netfilter
+      changed_when: false
+
+    - name: sysctl для CNI (ip_forward, bridge-nf)
+      copy:
+        content: |
+          net.ipv4.ip_forward = 1
+          net.bridge.bridge-nf-call-iptables = 1
+        dest: /etc/sysctl.d/k8s.conf
+      register: k8s_sysctl
+
+    - name: применить sysctl
+      command: sysctl --system
+      when: k8s_sysctl.changed
+      changed_when: false
+
+    - name: установить containerd
+      apt:
+        name: containerd
+        state: present
+        update_cache: true
+
+    - name: containerd — включить SystemdCgroup
+      shell: |
+        containerd config default | sed 's/SystemdCgroup = false/SystemdCgroup = true/' \
+          > /etc/containerd/config.toml
+        systemctl restart containerd
+      args:
+        creates: /etc/containerd/config.toml
+
+    # apt_repository deprecated с ansible-core 2.25+ в пользу deb822_repository —
+    # на момент написания (ansible-core 2.21) ещё рабочий вариант.
+    - name: добавить репозиторий Kubernetes
+      block:
+        - get_url:
+            url: "https://pkgs.k8s.io/core:/stable:/{{ k8s_repo_channel }}/deb/Release.key"
+            dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        - apt_repository:
+            repo: >-
+              deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc]
+              https://pkgs.k8s.io/core:/stable:/{{ k8s_repo_channel }}/deb/ /
+            filename: kubernetes
+
+    - name: установить kubelet, kubeadm, kubectl
+      apt:
+        name: [kubelet, kubeadm, kubectl]
+        state: present
+        update_cache: true
+
+    - name: держать версии зафиксированными (apt-mark hold)
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: [kubelet, kubeadm, kubectl]
+
+- hosts: master
+  become: true
+  tasks:
+    - name: kubeadm init (если ещё не инициализирован)
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16
+      args:
+        creates: /etc/kubernetes/admin.conf
+
+    - name: kubeconfig для пользователя lab
+      shell: |
+        mkdir -p /home/lab/.kube
+        cp /etc/kubernetes/admin.conf /home/lab/.kube/config
+        chown lab:lab /home/lab/.kube/config
+      args:
+        creates: /home/lab/.kube/config
+
+    - name: поставить Flannel (CNI)
+      become_user: lab
+      command: >
+        kubectl --kubeconfig=/home/lab/.kube/config apply
+        -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+      changed_when: true
+
+    - name: получить join-команду
+      command: kubeadm token create --print-join-command
+      register: join_command
+      changed_when: false
+
+- hosts: workers
+  become: true
+  tasks:
+    - name: kubeadm join
+      command: "{{ hostvars[groups['master'][0]].join_command.stdout }}"
+      args:
+        creates: /etc/kubernetes/kubelet.conf
+
+# После плейбука — накатить манифесты приложения:
+#   scp -i ~/.ssh/lab_key -r ../../03_kubernetes/manifests lab@<master-ip>:/tmp/
+#   ssh -i ~/.ssh/lab_key lab@<master-ip> kubectl apply -f /tmp/manifests/

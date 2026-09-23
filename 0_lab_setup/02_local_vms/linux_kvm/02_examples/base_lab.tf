@@ -8,10 +8,11 @@
 #   terraform destroy
 
 terraform {
+  required_version = ">= 1.5.0"
   required_providers {
     libvirt = {
       source  = "dmacvicar/libvirt"
-      version = "~> 0.7"
+      version = "~> 0.8.1"
     }
   }
 }
@@ -54,7 +55,9 @@ variable "ssh_public_key_path" {
 resource "libvirt_pool" "lab" {
   name = "lab"
   type = "dir"
-  path = "/var/lib/libvirt/images/lab"
+  target {
+    path = "/var/lib/libvirt/images/lab"
+  }
 }
 
 # ── Base image (скачивается один раз, все VM используют как backing) ──────────
@@ -76,20 +79,17 @@ resource "libvirt_volume" "vm_disk" {
 }
 
 # ── cloud-init ────────────────────────────────────────────────────────────────
-data "template_file" "user_data" {
-  count    = var.vm_count
-  template = file("${path.module}/cloud_init.cfg")
-  vars = {
+# templatefile() — встроенная функция Terraform (0.12+), отдельный
+# provider "hashicorp/template" для этого не нужен (он давно в архиве и
+# не обновляется — не тащи его в новые стенды).
+resource "libvirt_cloudinit_disk" "vm_init" {
+  count = var.vm_count
+  name  = "lab-node-${count.index + 1}-init.iso"
+  pool  = libvirt_pool.lab.name
+  user_data = templatefile("${path.module}/cloud_init.cfg", {
     hostname       = "lab-node-${count.index + 1}"
     ssh_public_key = file(pathexpand(var.ssh_public_key_path))
-  }
-}
-
-resource "libvirt_cloudinit_disk" "vm_init" {
-  count     = var.vm_count
-  name      = "lab-node-${count.index + 1}-init.iso"
-  pool      = libvirt_pool.lab.name
-  user_data = data.template_file.user_data[count.index].rendered
+  })
 }
 
 # ── Сеть (NAT, 192.168.122.0/24) ─────────────────────────────────────────────

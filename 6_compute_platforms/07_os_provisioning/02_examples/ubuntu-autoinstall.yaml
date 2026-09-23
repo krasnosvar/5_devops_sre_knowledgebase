@@ -1,0 +1,51 @@
+# Ubuntu Autoinstall (cloud-init для installer) — Ubuntu 20.04+
+# Размещать как /autoinstall.yaml или передавать через PXE/ISO custom seed
+
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+
+  network:
+    ethernets:
+      eth0:
+        dhcp4: true
+    version: 2
+
+  storage:
+    layout:
+      name: lvm
+
+  identity:
+    hostname: lab-server
+    username: admin
+    # Хэш пароля: mkpasswd --method=SHA-512
+    password: "$6$rounds=100000$salt$hashedpassword"
+
+  ssh:
+    install-server: true
+    authorized-keys:
+      - "ssh-ed25519 AAAA... admin@laptop"
+    allow-pw: false
+
+  packages:
+    - curl
+    - wget
+    - git
+    - jq
+    - htop
+    - net-tools
+    - python3-pip
+
+  late-commands:
+    - |
+      curtin in-target --target=/target -- bash -c "
+        systemctl enable ssh
+        apt-get clean
+        echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
+      "
+
+  user-data:
+    runcmd:
+      - [sh, -c, "echo 'Server provisioned' > /etc/motd"]

@@ -1,0 +1,29 @@
+# Ответ: переопределение values для production
+# Использование: helm upgrade myapp ./myapp -f values-prod.yaml
+
+replicaCount: 3
+
+image:
+  repository: nginx
+  tag: "1.25.3"   # конкретный тег, не latest
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  host: myapp.example.com
+
+env:
+  LOG_LEVEL: "warn"
+  ENV: "production"
+  WORKERS: "4"

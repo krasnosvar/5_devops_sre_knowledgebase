@@ -1,0 +1,35 @@
+# Docker Compose демо: изолированные сети, DNS между сервисами
+services:
+  # Frontend — доступен снаружи, видит только backend
+  frontend:
+    image: nginx:alpine
+    ports: ["8080:80"]
+    networks: [frontend-net]
+    volumes:
+      - ./frontend.conf:/etc/nginx/conf.d/default.conf:ro
+
+  # Backend — не доступен снаружи, видит frontend и db
+  backend:
+    image: python:3.12-slim
+    command: python3 -m http.server 5000
+    networks: [frontend-net, backend-net]
+    # frontend достучится по имени "backend"
+    # db достучится по имени "database"
+
+  # Database — видна только backend
+  database:
+    image: postgres:16-alpine
+    environment: {POSTGRES_PASSWORD: secret}
+    networks: [backend-net]
+
+networks:
+  frontend-net:
+    name: demo-frontend
+  backend-net:
+    name: demo-backend
+    internal: true   # нет выхода в интернет
+
+# После запуска:
+#   docker compose exec frontend wget -qO- http://backend:5000   # OK
+#   docker compose exec frontend wget -qO- http://database:5432  # FAIL (разные сети)
+#   docker compose exec backend wget -qO- http://database:5432   # OK

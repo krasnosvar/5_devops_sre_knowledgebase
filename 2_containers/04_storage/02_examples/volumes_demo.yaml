@@ -1,0 +1,39 @@
+services:
+  # Named volume — данные живут дольше контейнера
+  db:
+    image: postgres:16-alpine
+    environment: {POSTGRES_PASSWORD: secret, POSTGRES_DB: demo}
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # named volume
+
+  # Bind mount — файлы хоста внутри контейнера
+  app:
+    image: python:3.12-slim
+    command: python3 -m http.server 8000 --directory /static
+    volumes:
+      - ./static:/static:ro              # bind mount, read-only
+    ports: ["8000:8000"]
+
+  # tmpfs — только в памяти, исчезает при остановке
+  cache:
+    image: redis:7-alpine
+    command: redis-server --save ""      # без persistence
+    tmpfs:
+      - /data:size=64m                   # tmpfs для /data
+
+  # Read-only rootfs + tmpfs для temp
+  secure-app:
+    image: nginx:alpine
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+
+volumes:
+  pgdata:    # Docker управляет размещением
+    # driver: local
+    # driver_opts:
+    #   type: nfs
+    #   o: addr=192.168.1.100,rw
+    #   device: ":/nfs/pgdata"

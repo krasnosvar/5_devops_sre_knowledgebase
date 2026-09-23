@@ -1,0 +1,22 @@
+# Multi-stage build → distroless образ (нет shell, нет package manager)
+# Результат: минимальная поверхность атаки
+
+# Stage 1: build Go бинарник
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server .
+
+# Stage 2: distroless runtime
+FROM gcr.io/distroless/static-debian12:nonroot
+# Нет: bash, sh, curl, apt, pip — ничего!
+# Нет root: nonroot = UID 65532
+COPY --from=builder /app/server /server
+EXPOSE 8080
+ENTRYPOINT ["/server"]
+
+# Для отладки distroless: использовать debug образ
+# FROM gcr.io/distroless/static-debian12:debug
+# он содержит busybox shell

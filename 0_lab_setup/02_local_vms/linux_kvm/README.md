@@ -48,4 +48,12 @@ terraform destroy
 ## Стенды
 
 - [02_examples/base_lab.tf](02_examples/base_lab.tf) — базовый шаблон:
-  1–N VM, backing image, cloud-init, NAT-сеть.
+  1–N одинаковых VM, backing image, cloud-init, NAT-сеть.
+- [02_examples/cluster/](02_examples/cluster/) — master + workers для будущего
+  k8s (kubeadm/ansible накатывается уже поверх, см. [3_kubernetes](../../../3_kubernetes/)
+  и [4_iac/06_ansible](../../../4_iac/06_ansible/)).
+- [02_examples/multi_os/](02_examples/multi_os/) — по одной VM на Ubuntu 24.04 /
+  Debian 12 / Rocky 9, чтобы пощупать разницу apt/dnf на одинаковом стенде.
+- [02_examples/broken/](02_examples/broken/) — 3 намеренно сломанные VM для
+  практики troubleshooting (лог не пишется / CPU 100% / 504 на health-чеке),
+  разбор — в [04_exercises_answers](04_exercises_answers/).

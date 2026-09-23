@@ -1,0 +1,50 @@
+---
+# LitmusChaos: удалить Pod и убедиться что k8s перезапустит его
+# Предварительно: helm install chaos litmuschaos/litmus -n litmus --create-namespace
+
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: nginx-pod-delete
+  namespace: default
+spec:
+  appinfo:
+    appns: default
+    applabel: "app=nginx"
+    appkind: deployment
+
+  # Мониторинг во время эксперимента
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "30"      # секунд
+            - name: CHAOS_INTERVAL
+              value: "10"      # удалять pod каждые 10 сек
+            - name: FORCE
+              value: "false"   # graceful delete
+
+        # Probe: убедиться что nginx отвечает во время хаоса
+        probe:
+          - name: check-nginx
+            type: httpProbe
+            httpProbe/inputs:
+              url: "http://nginx-service/health"
+              insecureSkipVerify: false
+              responseTimeout: 3000
+              method:
+                get:
+                  criteria: "=="
+                  responseCode: "200"
+            mode: Continuous
+            runProperties:
+              probeTimeout: 5
+              interval: 2
+              retry: 2
+
+---
+# Альтернатива без LitmusChaos — простой bash chaos
+# kubectl delete pod -l app=nginx --grace-period=0 &
+# watch kubectl get pods -l app=nginx

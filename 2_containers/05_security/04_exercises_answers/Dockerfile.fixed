@@ -1,0 +1,36 @@
+# Ответ: упражнение 04 — исправленный Dockerfile
+# Оригинальные проблемы:
+# 1. FROM ubuntu:latest — непредсказуемо, используй конкретный тег
+# 2. ARG DB_PASSWORD + ENV DB_PASSWORD — секреты видны в docker inspect + history
+# 3. EXPOSE 22 — не нужен SSH в контейнере
+# 4. EXPOSE 5432 — PostgreSQL не должен быть в app контейнере
+# 5. USER не задан — работает от root
+
+FROM python:3.12-slim
+
+# Системные зависимости (без кэша apt)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Non-root пользователь
+RUN useradd --uid 1001 --create-home appuser
+
+WORKDIR /app
+
+# Зависимости до кода (кэш)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY --chown=appuser:appuser . .
+
+USER appuser
+
+# Только нужный порт
+EXPOSE 80
+
+# Секреты передавать через переменные окружения при запуске:
+# docker run -e DB_PASSWORD=secret myapp
+# НЕ хранить в Dockerfile/образе!
+
+CMD ["python3", "/app/main.py"]

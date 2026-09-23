@@ -1,0 +1,103 @@
+---
+# Ответ: упражнения 01-04 — правильные RBAC объекты
+
+# Ответ 01: пользователь alice — только читать pods в production
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: production
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+  # Нельзя: delete, create, patch, exec
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: alice-pod-reader
+  namespace: production
+subjects:
+  - kind: User
+    name: alice
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Ответ 02: ServiceAccount с правами только на конкретный ConfigMap
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myapp
+  namespace: production
+automountServiceAccountToken: false   # не монтировать токен глобально
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: myapp-config-reader
+  namespace: production
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "watch"]
+    resourceNames: ["app-config"]   # ТОЛЬКО этот конкретный ConfigMap!
+    # Без resourceNames: доступны ВСЕ ConfigMaps в namespace
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: myapp-config-binding
+  namespace: production
+subjects:
+  - kind: ServiceAccount
+    name: myapp
+    namespace: production
+roleRef:
+  kind: Role
+  name: myapp-config-reader
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Ответ 04: исправленный небезопасный RBAC
+# Проблема 1: wildcard resources/verbs/apiGroups — заменить на конкретные
+# Проблема 2: ClusterRoleBinding к cluster-admin — использовать namespace Role
+# Исправление:
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-role          # было: ClusterRole с wildcard
+  namespace: production   # ограничить namespace, не cluster
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "update"]   # конкретные verbs
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-binding
+  namespace: production
+subjects:
+  - kind: ServiceAccount
+    name: myapp
+    namespace: production
+roleRef:
+  kind: Role              # было: ClusterRole cluster-admin
+  name: app-role
+  apiGroup: rbac.authorization.k8s.io
+
+# Проверка:
+#   kubectl auth can-i get pods -n production --as=system:serviceaccount:production:myapp
+#   kubectl auth can-i delete pods -n production --as=system:serviceaccount:production:myapp

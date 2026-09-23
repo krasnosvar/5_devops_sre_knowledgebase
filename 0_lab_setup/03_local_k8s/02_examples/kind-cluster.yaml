@@ -1,0 +1,29 @@
+# kind cluster config — 1 control-plane + 2 workers
+# Использование: kind create cluster --name lab --config kind-cluster.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP
+  - role: worker
+    labels:
+      workload: general
+  - role: worker
+    labels:
+      workload: general
+
+# После создания:
+#   kubectl cluster-info --context kind-lab
+#   kubectl get nodes

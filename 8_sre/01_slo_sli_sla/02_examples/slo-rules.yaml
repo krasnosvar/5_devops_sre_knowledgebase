@@ -1,0 +1,68 @@
+# Prometheus recording и alerting rules для SLO 99.9%
+# Применить: kubectl apply -f slo-rules.yaml (в k8s)
+# или добавить в prometheus rule_files
+
+groups:
+  - name: slo-payment-api
+    interval: 30s
+    rules:
+      # ── Recording rules ───────────────────────────────────────────────────
+      # Error rate за последние 5 минут
+      - record: job:payment_error_rate:rate5m
+        expr: |
+          rate(http_requests_total{job="payment-api", status=~"5.."}[5m])
+          / rate(http_requests_total{job="payment-api"}[5m])
+
+      # Error rate за 30 дней (скользящее окно)
+      - record: job:payment_error_rate:rate30d
+        expr: |
+          rate(http_requests_total{job="payment-api", status=~"5.."}[30d])
+          / rate(http_requests_total{job="payment-api"}[30d])
+
+      # Остаток error budget (1.0 = полный, 0.0 = исчерпан)
+      - record: job:payment_error_budget:remaining
+        expr: |
+          1 - (job:payment_error_rate:rate30d / 0.001)
+
+      # ── Alerting rules ────────────────────────────────────────────────────
+      # Быстрый burn rate: 14.4x за 1 час = весь бюджет за 2 дня
+      - alert: PaymentAPIErrorBudgetBurnCritical
+        expr: |
+          (
+            rate(http_requests_total{job="payment-api", status=~"5.."}[1h])
+            / rate(http_requests_total{job="payment-api"}[1h])
+          ) > 14.4 * 0.001
+        for: 2m
+        labels:
+          severity: critical
+          service: payment-api
+          slo: "99.9"
+        annotations:
+          summary: "Error budget burning fast for {{ $labels.service }}"
+          description: |
+            Error rate: {{ $value | humanizePercentage }}
+            At this rate monthly budget exhausted in {{ div 30 (div $value 0.001) | humanizeDuration }}
+          runbook_url: "https://runbooks.example.com/payment-api-errors"
+          dashboard_url: "https://grafana.example.com/d/payment-slo"
+
+      # Медленный burn rate: 6x за 6 часов = бюджет за 5 дней
+      - alert: PaymentAPIErrorBudgetBurnWarning
+        expr: |
+          (
+            rate(http_requests_total{job="payment-api", status=~"5.."}[6h])
+            / rate(http_requests_total{job="payment-api"}[6h])
+          ) > 6 * 0.001
+        for: 15m
+        labels:
+          severity: warning
+          service: payment-api
+
+      # Бюджет < 10% — скоро исчерпан
+      - alert: PaymentAPIErrorBudgetLow
+        expr: job:payment_error_budget:remaining < 0.1
+        labels:
+          severity: warning
+          service: payment-api
+        annotations:
+          summary: "Error budget < 10% for payment-api"
+          description: "Remaining budget: {{ $value | humanizePercentage }}"

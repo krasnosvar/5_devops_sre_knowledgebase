@@ -1,0 +1,44 @@
+services:
+  # Evidently — ML мониторинг (drift, качество данных)
+  evidently:
+    image: evidently/service:latest
+    ports:
+      - "8085:8085"
+    volumes:
+      - ./evidently-config.yaml:/app/config.yaml:ro
+      - evidently_data:/app/workspace
+    command: ["python", "-m", "evidently.service", "--config", "/app/config.yaml"]
+
+  # Prometheus — собирает метрики из Evidently
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  # Grafana — дашборды для ML метрик
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/ds.yaml:ro
+    depends_on: [prometheus, evidently]
+
+  # MLflow — tracking server для метрик моделей
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    ports:
+      - "5000:5000"
+    command: mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow.db
+    volumes:
+      - mlflow_data:/mlflow
+
+volumes:
+  evidently_data:
+  grafana_data:
+  mlflow_data:

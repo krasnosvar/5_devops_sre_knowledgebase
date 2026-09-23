@@ -1,0 +1,36 @@
+# Оптимизированный Python образ
+# Демонстрирует: правильный порядок слоёв, кэш, slim базовый образ
+
+FROM python:3.12-slim AS builder
+
+# Установить только необходимые системные зависимости
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libpq-dev gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# СНАЧАЛА зависимости (меняются редко → кэшируются)
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# ПОТОМ код (меняется часто → инвалидирует кэш начиная отсюда)
+COPY src/ src/
+
+# ── Runtime stage (без build зависимостей) ────────────────────────────────────
+FROM python:3.12-slim
+
+# Создать non-root пользователя
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
+WORKDIR /app
+
+# Скопировать только установленные пакеты и код
+COPY --from=builder /root/.local /home/appuser/.local
+COPY --from=builder /app/src ./src
+
+USER appuser
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+EXPOSE 8080
+CMD ["python", "-m", "src.main"]

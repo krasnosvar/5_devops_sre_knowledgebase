@@ -67,3 +67,61 @@ virsh vol-list lab
 # Снова поднять
 terraform apply -var="vm_count=2"
 ```
+
+## 05 — Кластерный стенд: master + workers
+
+🐳 Tier 1 (VM внутри Tier 2, но задача — про Terraform, а не про k8s)
+
+```bash
+cd ../02_examples/cluster/
+terraform init
+terraform apply -var="master_count=1" -var="worker_count=2"
+terraform output ssh_commands
+```
+
+**Задача:** увеличить кластер до 1 master + 3 workers без пересоздания
+существующих VM (`terraform plan` не должен показывать replace для уже
+поднятых узлов).
+
+## 06 — Multi-OS: одна и та же задача на разных дистрибутивах
+
+```bash
+cd ../02_examples/multi_os/
+terraform init
+terraform apply
+terraform output ssh_commands
+```
+
+**Задача:** зайти на все три VM (ubuntu-24-04, debian-12, rocky-9) и
+одной и той же логической командой (установить `nginx` и убедиться что
+процесс слушает :80) показать разницу пакетного менеджера
+(apt vs dnf) и systemd unit (`systemctl status nginx`).
+
+## 07 — Troubleshooting: три сломанных VM
+
+☁️ По духу задачи взяты из реальных секций troubleshooting на технических
+собеседованиях DevOps (например Yandex) — вас сажают за SSH в сломанный
+стенд и просят вернуть 200/нормальную работу, не объясняя что именно не так.
+
+```bash
+cd ../02_examples/broken/
+terraform init
+terraform apply
+terraform output ssh_commands
+```
+
+Три VM, три независимых кейса. Диагностируй и почини **до того**, как
+подсмотришь в `../04_exercises_answers/`:
+
+- **broken-logs** — сервис `myapp` должен каждые 5 секунд дописывать строку
+  в `/var/log/myapp.log`. Он этого не делает. Почему и как починить, не
+  трогая сам скрипт `/usr/local/bin/myapp.sh`?
+- **broken-cpu** — на VM разряжен CPU в 100% одним процессом. Найди процесс,
+  пойми что он делает не так, и приведи нагрузку в нормальное состояние.
+- **broken-504** — `curl http://localhost/ping` отдаёт `504 Gateway Time-out`
+  вместо `200`. Найди, где по цепочке nginx → backend рвётся ответ, и
+  верни `200`.
+
+```bash
+terraform destroy
+```

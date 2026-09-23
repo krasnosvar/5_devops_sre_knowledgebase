@@ -1,0 +1,30 @@
+# Безопасный Dockerfile: non-root, minimal image, no secrets
+FROM python:3.12-slim
+
+# Не использовать root — создать отдельного пользователя
+RUN groupadd --gid 1001 appgroup \
+    && useradd --uid 1001 --gid appgroup --shell /bin/sh --create-home appuser
+
+WORKDIR /app
+
+# Зависимости от root (нужны права для установки)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Код
+COPY --chown=appuser:appgroup . .
+
+# Переключиться на non-root пользователя
+USER appuser
+
+# Порт > 1024 (не требует CAP_NET_BIND_SERVICE)
+EXPOSE 8080
+
+# Явный entrypoint — не CMD из базового образа
+ENTRYPOINT ["python", "-m", "gunicorn"]
+CMD ["--bind", "0.0.0.0:8080", "app:application"]
+
+# Что НЕ делать:
+# ENV DB_PASSWORD=secret    ← видно в docker inspect
+# ARG SECRET=value          ← видно в docker history
+# RUN echo $PASSWORD        ← остаётся в слое

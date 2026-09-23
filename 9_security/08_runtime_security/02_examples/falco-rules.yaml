@@ -1,0 +1,76 @@
+# Falco правила — обнаружение аномального поведения в runtime
+# Устанавливать через Helm: helm install falco falcosecurity/falco
+
+# ── Обнаружение shell в контейнере ───────────────────────────────────────────
+- rule: Shell Spawned in Container
+  desc: A shell was spawned inside a container
+  condition: >
+    spawned_process and
+    container and
+    shell_procs and
+    proc.tty != 0 and
+    not user_expected_terminal_shell_in_container_conditions
+  output: >
+    Shell opened in container
+    (user=%user.name container=%container.name
+     image=%container.image.repository shell=%proc.name
+     parent=%proc.pname cmdline=%proc.cmdline)
+  priority: NOTICE
+  tags: [container, shell, mitre_execution]
+
+# ── Запись файлов в /etc, /bin, /usr ─────────────────────────────────────────
+- rule: Write to Sensitive Directory
+  desc: An attempt to write to a sensitive directory was detected
+  condition: >
+    open_write and
+    container and
+    (fd.name startswith /etc/ or
+     fd.name startswith /bin/ or
+     fd.name startswith /usr/bin/) and
+    not trusted_containers
+  output: >
+    Write to sensitive dir in container
+    (user=%user.name file=%fd.name container=%container.name
+     image=%container.image.repository)
+  priority: WARNING
+
+# ── Чтение чувствительных файлов ─────────────────────────────────────────────
+- rule: Read K8s Secrets
+  desc: An attempt to read kubernetes secrets was detected
+  condition: >
+    open_read and
+    container and
+    fd.name startswith /var/run/secrets/kubernetes.io/ and
+    not trusted_containers
+  output: >
+    K8s secret read in container
+    (user=%user.name file=%fd.name container=%container.name)
+  priority: WARNING
+
+# ── Подозрительные сетевые соединения ────────────────────────────────────────
+- rule: Unexpected Network Connection
+  desc: Unexpected outbound network connection from container
+  condition: >
+    outbound and
+    container and
+    not (fd.sip in (allowed_cidrs)) and
+    fd.port != 53 and
+    fd.port != 443
+  output: >
+    Unexpected outbound connection from container
+    (container=%container.name ip=%fd.sip port=%fd.sport
+     image=%container.image.repository)
+  priority: NOTICE
+
+# ── Привилегированные операции ────────────────────────────────────────────────
+- rule: Privileged Container Started
+  desc: A privileged container was started
+  condition: >
+    container_started and
+    container.privileged = true and
+    not falco_privileged_containers
+  output: >
+    Privileged container started
+    (container=%container.name image=%container.image.repository)
+  priority: WARNING
+  tags: [container, cis, mitre_privilege_escalation]

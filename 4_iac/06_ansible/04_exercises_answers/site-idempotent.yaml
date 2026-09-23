@@ -1,0 +1,74 @@
+---
+# Ответ: идемпотентный playbook (второй запуск — только ok, нет changed)
+- name: Configure web servers (idempotent)
+  hosts: webservers
+  become: true
+
+  vars:
+    nginx_port: 80
+    app_version: "1.0.0"
+    html_content: "<h1>Server: {{ inventory_hostname }}</h1>"
+
+  tasks:
+    - name: Install nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present   # идемпотентно: ставит если нет, ничего не делает если есть
+      notify: Reload nginx
+
+    - name: Create web root
+      ansible.builtin.file:
+        path: /var/www/html
+        state: directory
+        mode: "0755"
+
+    - name: Deploy index.html
+      ansible.builtin.copy:
+        content: "{{ html_content }}"
+        dest: /var/www/html/index.html
+        mode: "0644"
+      # Если содержимое не изменилось — changed=false (идемпотентно)
+
+    - name: Configure nginx site
+      ansible.builtin.template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/myapp
+        mode: "0644"
+        validate: nginx -t -c %s
+      notify: Reload nginx
+
+    - name: Enable nginx site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/myapp
+        dest: /etc/nginx/sites-enabled/myapp
+        state: link
+      notify: Reload nginx
+
+    - name: Disable default site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
+
+    - name: Start and enable nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Verify nginx responds
+      ansible.builtin.uri:
+        url: "http://localhost:{{ nginx_port }}/health"
+        status_code: 200
+      # uri module идемпотентен — всегда проверяет, не изменяет
+
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+# Проверка идемпотентности:
+# 1й запуск: несколько "changed"
+# 2й запуск: все задачи "ok", нет "changed"
+# ansible-playbook -i inventory.yaml site-idempotent.yaml -v

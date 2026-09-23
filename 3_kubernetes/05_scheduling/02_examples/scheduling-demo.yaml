@@ -1,0 +1,82 @@
+---
+# Deployment с Node Affinity — предпочитать SSD ноды
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cache-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cache
+  template:
+    metadata:
+      labels:
+        app: cache
+    spec:
+      # Предпочитать SSD ноды (soft requirement)
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: disk-type
+                    operator: In
+                    values: [ssd]
+        # Разнести реплики по нодам (hard requirement)
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: cache
+              topologyKey: kubernetes.io/hostname
+
+      # Равномерно по зонам (soft)
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: cache
+
+      containers:
+        - name: cache
+          image: redis:7-alpine
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits:   {cpu: 200m, memory: 256Mi}
+
+---
+# PodDisruptionBudget — минимум 2 реплики при drain/upgrade
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cache-pdb
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: cache
+
+---
+# GPU Pod — только на нодах с GPU
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-job
+spec:
+  nodeSelector:
+    nvidia.com/gpu: "true"
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: cuda
+      image: nvidia/cuda:12.0-base-ubuntu22.04
+      command: ["nvidia-smi"]
+      resources:
+        limits:
+          nvidia.com/gpu: 1

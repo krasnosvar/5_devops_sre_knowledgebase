@@ -1,0 +1,11 @@
+# grafana/provisioning/dashboards/dashboard-provider.yaml
+apiVersion: 1
+providers:
+  - name: default
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true

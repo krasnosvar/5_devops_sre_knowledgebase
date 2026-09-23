@@ -1,0 +1,31 @@
+# Ответ: упражнение 01 — правильный порядок слоёв
+# ПРИНЦИП: редко меняющееся → часто меняющееся (снизу вверх)
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# 1. Системные зависимости (меняются очень редко)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Python зависимости (меняются редко — только при изменении requirements.txt)
+#    КЭШИРУЮТСЯ если requirements.txt не изменился
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 3. Код приложения (меняется часто — инвалидирует кэш только для следующих слоёв)
+COPY src/ src/
+
+# 4. Non-root пользователь
+RUN useradd --create-home --uid 1001 appuser
+USER appuser
+
+EXPOSE 8080
+CMD ["python", "-m", "src.main"]
+
+# Проверка кэша:
+# 1й build: все слои выполняются
+# Изменить src/main.py
+# 2й build: слои 1-2 берутся из кэша, пересобираются только 3-4 → в 3-5x быстрее
