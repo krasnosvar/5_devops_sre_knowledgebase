@@ -1,0 +1,17 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: myapp-consumer
+spec:
+  scaleTargetRef:
+    name: myapp-consumer
+  minReplicaCount: 0
+  maxReplicaCount: 20
+  cooldownPeriod: 60
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.default.svc:9092
+        consumerGroup: myapp-group
+        topic: orders
+        lagThreshold: "50"

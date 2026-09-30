@@ -1,0 +1,26 @@
+services:
+  router1:
+    image: frrouting/frr:latest
+    cap_add: [NET_ADMIN, NET_RAW, NET_BIND_SERVICE, SYS_ADMIN]
+    volumes:
+      - ./router1/daemons:/etc/frr/daemons
+      - ./router1/frr.conf:/etc/frr/frr.conf
+    networks:
+      peering:
+        ipv4_address: 10.100.0.11
+
+  router2:
+    image: frrouting/frr:latest
+    cap_add: [NET_ADMIN, NET_RAW, NET_BIND_SERVICE, SYS_ADMIN]
+    volumes:
+      - ./router2/daemons:/etc/frr/daemons
+      - ./router2/frr.conf:/etc/frr/frr.conf
+    networks:
+      peering:
+        ipv4_address: 10.100.0.12
+
+networks:
+  peering:
+    ipam:
+      config:
+        - subnet: 10.100.0.0/24

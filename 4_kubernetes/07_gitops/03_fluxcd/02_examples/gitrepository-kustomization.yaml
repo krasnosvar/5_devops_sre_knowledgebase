@@ -1,0 +1,52 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gitops-config
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/org/gitops-config.git
+  ref:
+    branch: main
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: myapp-production
+  namespace: flux-system
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: gitops-config
+  path: "./overlays/production"
+  prune: true
+  targetNamespace: production
+  wait: true
+  timeout: 3m
+
+---
+# Image Automation: следить за новыми тегами и коммитить обновление обратно в Git
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  image: registry.example.com/myapp
+  interval: 5m
+
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: myapp
+  policy:
+    semver:
+      range: ">=1.0.0"

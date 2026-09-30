@@ -1,0 +1,10 @@
+services:
+  coredns:
+    image: coredns/coredns:1.11.1
+    command: -conf /etc/coredns/Corefile
+    volumes:
+      - ./Corefile:/etc/coredns/Corefile
+      - ./zones/example.com.db:/etc/coredns/example.com.db
+    ports:
+      - "15353:53/udp"
+      - "15353:53/tcp"

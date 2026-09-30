@@ -1,0 +1,48 @@
+---
+# Ответ: ArgoCD Application с auto-sync + selfHeal
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/org/gitops-config.git
+    targetRevision: HEAD
+    path: overlays/production
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true   # КЛЮЧЕВОЕ: восстанавливать ручные изменения
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# Ответ 02: Application, указывающий на готовый Kustomize overlay
+# (сам overlay — см. ../../../09_manifests_management/03_kustomize/02_examples/overlays/prod/)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp-kustomize
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/org/gitops-config.git
+    targetRevision: HEAD
+    path: 09_manifests_management/03_kustomize/02_examples/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: myapp-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

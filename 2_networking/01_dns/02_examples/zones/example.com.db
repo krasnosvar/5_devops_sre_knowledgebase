@@ -1,0 +1,17 @@
+$ORIGIN example.com.
+$TTL 60
+
+@       IN  SOA   ns1.example.com. admin.example.com. (
+                  2024010101 ; serial
+                  3600       ; refresh
+                  600        ; retry
+                  1209600    ; expire
+                  60 )       ; minimum TTL
+
+@       IN  NS    ns1.example.com.
+ns1     IN  A     127.0.0.1
+www     IN  A     93.184.216.34
+api     IN  CNAME www.example.com.
+@       IN  MX    10 mail.example.com.
+mail    IN  A     93.184.216.35
+@       IN  TXT   "v=spf1 -all"

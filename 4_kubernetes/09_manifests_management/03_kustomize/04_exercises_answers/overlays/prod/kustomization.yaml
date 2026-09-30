@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: myapp-prod
+
+resources:
+  - ../../../02_examples/base
+
+patches:
+  # Базовый Strategic Merge Patch (как в 02_examples) — replicas + image tag
+  - path: patch-replicas.yaml
+    target:
+      kind: Deployment
+      name: myapp
+
+  # Ответ 04: JSON Patch (RFC 6902) — добавить args, которых не было
+  - target:
+      kind: Deployment
+      name: myapp
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args
+        value: ["--verbose=false"]
+
+configMapGenerator:
+  - name: myapp-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=warn
+      - MAX_CONNECTIONS=1000

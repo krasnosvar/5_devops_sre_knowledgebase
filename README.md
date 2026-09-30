@@ -15,7 +15,7 @@
 |------|-----------|
 | [`../1_sysadm_sre_devops_tools/`](../1_sysadm_sre_devops_tools/) | Практические команды, конфиги, скрипты — справочник по инструментам |
 | [`../3_go_my_knowledgebase/`](../3_go_my_knowledgebase/) | Go: язык, concurrency, базы данных, system design — для автоматизации на Go |
-| [`../4_python_my_knowledgebase/`](../4_python_my_knowledgebase/) | Python: язык, фреймворки, system design — для автоматизации на Python |
+| [`../4_python_my_knowledgebase/`](../4_python_my_knowledgebase/) | Python: язык, фреймворки, system design — для автоматизации на Python; там же — [Git essentials](../4_python_my_knowledgebase/0_tooling_and_workflow/01_git_essentials/) (workflow, branching/merging, conflicts) |
 
 > **Разделение ролей:** `1_sysadm_sre_devops_tools` — команды и конфиги (как делать).
 > Эта база — теория и понимание (почему так работает) + упражнения с лабами.
@@ -27,24 +27,28 @@
   облако и VPS.
 - [1_linux_and_shell](./1_linux_and_shell/) — фундамент: процессная модель, cgroups,
   namespaces, файловые дескрипторы, systemd, bash-идиомы для DevOps.
-- [2_containers](./2_containers/) — Docker и Podman: OCI, image layers, overlay FS,
+- [2_networking](./2_networking/) — сетевые технологии и протоколы: OSI, TCP/IP,
+  DNS, HTTP/HTTPS, балансировка нагрузки (L4/L7), BGP, iptables, VPC.
+- [3_containers](./3_containers/) — Docker и Podman: OCI, image layers, overlay FS,
   rootless, security (capabilities, seccomp), multi-stage builds.
-- [3_kubernetes](./3_kubernetes/) — Kubernetes от архитектуры до GitOps: control/data
+- [4_kubernetes](./4_kubernetes/) — Kubernetes от архитектуры до GitOps: control/data
   plane, scheduling, Helm, Kustomize, ArgoCD, RBAC, NetworkPolicy.
-- [4_iac](./4_iac/) — Infrastructure as Code: Terraform/OpenTofu (state, модули,
+- [5_iac](./5_iac/) — Infrastructure as Code: Terraform/OpenTofu (state, модули,
   workspaces), Terragrunt, Ansible (роли, идемпотентность), сравнение подходов.
-- [5_cicd](./5_cicd/) — CI/CD пайплайны: теория, GitLab CI, GitHub Actions, GitOps
+- [6_cicd](./6_cicd/) — CI/CD пайплайны: теория, GitLab CI, GitHub Actions, GitOps
   (push-based vs pull-based), secrets в пайплайнах.
-- [6_compute_platforms](./6_compute_platforms/) — облака (AWS/GCP/Azure), bare metal
+- [7_compute_platforms](./7_compute_platforms/) — облака (AWS/GCP/Azure), bare metal
   (IPMI/BMC, PXE, MAAS), on-prem виртуализация (VMware, Proxmox), гибридные паттерны.
-- [7_observability](./7_observability/) — наблюдаемость: метрики (RED/USE/Golden
+- [8_observability](./8_observability/) — наблюдаемость: метрики (RED/USE/Golden
   Signals, Prometheus, VictoriaMetrics), логи (Loki), трейсинг (OTel, Jaeger/Tempo),
   алертинг, дашборды.
-- [8_sre](./8_sre/) — SRE практики: SLO/SLI/SLA, error budget, incident management,
+- [9_sre](./9_sre/) — SRE практики: SLO/SLI/SLA, error budget, incident management,
   post-mortem, chaos engineering, on-call hygiene.
-- [9_security](./9_security/) — DevSecOps: k8s RBAC, secrets management (Vault),
+- [10_devsecops](./10_devsecops/) — DevSecOps: k8s RBAC, secrets management (Vault),
   Network Policy, image scanning, SAST/DAST в CI, supply chain (SBOM, Sigstore).
-- [10_mlops](./10_mlops/) — MLOps и LLMOps: lifecycle моделей, experiment tracking,
+  Основы security по каждому слою стека — рядом со слоем: `1_linux_and_shell/09_linux_security`,
+  `3_containers/05_security`, `4_kubernetes/06_security`.
+- [11_mlops](./11_mlops/) — MLOps и LLMOps: lifecycle моделей, experiment tracking,
   training pipelines, model serving, мониторинг моделей, LLM в продакшне, GPU
   инфраструктура (consumer, datacenter, cloud).
 - [other](./other/) — интервью DevOps/SRE, карьерный roadmap, книги, сертификации.
@@ -68,15 +72,15 @@
 
 1. Начать с [0_lab_setup](./0_lab_setup/) — поднять минимальную среду (хватит Tier 1
    для большинства разделов).
-2. Пройти [1_linux_and_shell](./1_linux_and_shell/) и [2_containers](./2_containers/)
+2. Пройти [1_linux_and_shell](./1_linux_and_shell/), [2_networking](./2_networking/) и [3_containers](./3_containers/)
    как фундамент — это то, на чём строится всё остальное.
-3. Перейти к [3_kubernetes](./3_kubernetes/) и [4_iac](./4_iac/) — основа современного
+3. Перейти к [4_kubernetes](./4_kubernetes/) и [5_iac](./5_iac/) — основа современного
    DevOps-стека.
-4. Параллельно читать [7_observability](./7_observability/) — наблюдаемость нужна
+4. Параллельно читать [8_observability](./8_observability/) — наблюдаемость нужна
    с первого же поднятого сервиса.
-5. [5_cicd](./5_cicd/), [6_compute_platforms](./6_compute_platforms/),
-   [8_sre](./8_sre/), [9_security](./9_security/) — по порядку или по задаче.
-6. [10_mlops](./10_mlops/) — отдельный трек, можно проходить параллельно с основным
+5. [6_cicd](./6_cicd/), [7_compute_platforms](./7_compute_platforms/),
+   [9_sre](./9_sre/), [10_devsecops](./10_devsecops/) — по порядку или по задаче.
+6. [11_mlops](./11_mlops/) — отдельный трек, можно проходить параллельно с основным
    после освоения k8s.
 7. [other](./other/) — справочник, открывать по необходимости.
 

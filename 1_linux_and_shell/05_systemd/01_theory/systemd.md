@@ -1,178 +1,111 @@
-# systemd
+# Systemd: Системный и сервисный менеджер
 
-## Что такое systemd
+## Содержание
+1. [Почему systemd победил SysVinit?](#1-почему-systemd-победил-sysvinit)
+2. [Юниты (Units) и их типы](#2-юниты-units-и-их-типы)
+3. [Управление зависимостями и Targets](#3-управление-зависимостями-и-targets)
+4. [Systemd Timers (Замена Cron)](#4-systemd-timers-замена-cron)
+5. [Journald: Бинарное логирование](#5-journald-бинарное-логирование)
+6. [Типовые вопросы на собеседовании (Interview Q&A)](#6-типовые-вопросы-на-собеседовании-interview-qa)
 
-systemd — система инициализации (PID 1) и менеджер сервисов.
-Заменяет SysVinit и Upstart. Стандарт для RHEL, Fedora, Debian, Ubuntu, Arch.
+---
 
-```bash
-systemctl list-units --type=service --state=running   # запущенные сервисы
-systemctl list-units --type=service --state=failed    # упавшие
+## 1. Почему systemd победил SysVinit?
 
-systemctl status nginx
-systemctl start|stop|restart|reload nginx
-systemctl enable nginx    # автозапуск при загрузке
-systemctl disable nginx
-systemctl is-enabled nginx
-systemctl is-active nginx
-```
+До systemd процессом `PID 1` в Linux был `init` (SysVinit). Он работал через огромные, неконсистентные bash-скрипты, запускал службы **последовательно** и не мог надежно отслеживать "упавшие" процессы, если они дважды делали fork (демонизировались).
 
-## Unit файлы
+**Ключевые преимущества systemd:**
+- **Параллельный запуск:** Сокращает время загрузки ОС. Службы запускаются одновременно благодаря хитрой механике сокетов (Socket activation).
+- **Декларативность:** Вместо 500 строк bash-скрипта — аккуратный INI-файл на 10 строк.
+- **Использование Cgroups:** systemd помещает каждый сервис в свой cgroup. Если сервис породит 100 зомби-потомков, systemd убьет всю ветку (cgroup) одним махом, не оставляя сирот (orphan processes). Ни один процесс больше не может "сбежать" от systemd.
+- **Управление логами:** Встроенный `journald`.
 
-```ini
-# /etc/systemd/system/myapp.service
-[Unit]
-Description=My Application
-Documentation=https://github.com/org/myapp
-After=network.target postgresql.service    # запуск после
-Requires=postgresql.service               # жёсткая зависимость (упадёт вместе)
-Wants=redis.service                        # мягкая зависимость
+## 2. Юниты (Units) и их типы
 
-[Service]
-Type=simple                  # exec | forking | oneshot | notify | idle
-User=myapp
-Group=myapp
-WorkingDirectory=/opt/myapp
-ExecStart=/opt/myapp/bin/myapp --config /etc/myapp/config.yaml
-ExecStop=/bin/kill -TERM $MAINPID
-ExecReload=/bin/kill -HUP $MAINPID
+Файлы конфигурации называются юнитами. Обычно они лежат в `/etc/systemd/system/` (кастомные/переопределенные) и `/lib/systemd/system/` (из пакетного менеджера). 
 
-# Автоперезапуск
-Restart=on-failure
-RestartSec=5s
-StartLimitInterval=60s
-StartLimitBurst=3           # максимум 3 рестарта за 60 сек
+Основные расширения:
+- `.service` — системный демон (nginx, postgres).
+- `.socket` — прослушивание порта. (Например, systemd сам слушает порт 22, и запускает `sshd.service` только в момент входящего коннекта).
+- `.target` — группа юнитов, аналог runlevel.
+- `.timer` — запуск юнита по расписанию (замена cron).
+- `.mount` — автоматическое монтирование ФС (замена/дополнение fstab).
 
-# Environment
-Environment=ENV=production
-EnvironmentFile=-/etc/myapp/.env    # "-" = игнорировать если файла нет
+Структура `[Service]`:
+- `Type=simple` (по умолчанию, процесс не форкается, systemd следит за главным процессом).
+- `Type=forking` (для старых демонов, процесс делает fork в фон, systemd ищет PID).
+- `Type=oneshot` (выполнить команду и выйти, полезно для скриптов миграции БД).
+- `Restart=always` — автоматический рестарт при падении.
 
-# Безопасность (sandboxing)
-NoNewPrivileges=yes
-PrivateTmp=yes              # изолированный /tmp
-ProtectSystem=strict        # /usr, /boot, /etc read-only
-ReadWritePaths=/var/lib/myapp /var/log/myapp
-CapabilityBoundingSet=      # убрать все capabilities
-AmbientCapabilities=        # если нужно добавить конкретные
+## 3. Управление зависимостями и Targets
 
-# Ресурсные лимиты
-LimitNOFILE=65536           # максимум открытых fd
-MemoryMax=512M              # cgroup memory limit
-CPUQuota=50%                # cgroup cpu limit
+Systemd позволяет строить сложные графы зависимостей:
+- `Requires=db.service` (Жесткая зависимость. Если `db` упадет, упадет и наш сервис).
+- `Wants=redis.service` (Мягкая зависимость. Попытается запустить `redis`, но если он сломан, наш сервис всё равно стартанет).
+- `After=network.target` (Порядок. Не стартовать, пока сеть не поднимется. Не путать с Requires).
 
-[Install]
-WantedBy=multi-user.target
-```
+**Targets (Таргеты)** — это логические точки группировки, замена Runlevels:
+- `multi-user.target` — система загружена в консольном режиме, запущена сеть и службы (аналог runlevel 3). Это то, куда обычно загружаются сервера.
+- `graphical.target` — включает всё из multi-user + GUI (аналог runlevel 5).
 
-```bash
-# после создания/изменения unit файла
-systemctl daemon-reload
-systemctl enable --now myapp
-```
+## 4. Systemd Timers (Замена Cron)
 
-## Типы сервисов (Type=)
+Вместо `crontab -e` сегодня принято использовать `.timer` юниты.
+Преимущества перед cron:
+1. Запись в Journald из коробки (не нужно писать `>> /var/log/my.log 2>&1`).
+2. Ограничения Cgroups: можно выставить лимит по RAM/CPU для бэкап-скрипта, чтобы он не положил продакшен базу.
+3. `OnCalendar=` позволяет гибко задавать время, а `OnBootSec=` запускать скрипт через N минут после ребута.
+4. Предотвращение нахлеста: timer не запустит скрипт второй раз, если предыдущий вызов еще не отработал.
 
-**simple** (default) — ExecStart запускает основной процесс. systemd считает
-сервис запущенным сразу. Не знает когда приложение готово.
+## 5. Journald: Бинарное логирование
 
-**notify** — приложение уведомляет systemd о готовности через `sd_notify(READY=1)`.
-Зависимые сервисы ждут этого уведомления.
+`journald` собирает stdout/stderr всех запущенных юнитов. Логи хранятся не в открытом тексте, а в **бинарном** виде.
 
-**forking** — ExecStart запускает процесс который делает fork и завершается.
-Основной процесс — потомок. Требует `PIDFile=`.
-
-**oneshot** — ExecStart запускает задачу и завершается. Хорошо для скриптов.
-
-## journald — логирование
+Плюсы бинарного формата:
+1. Невозможно подделать лог (встроенные хеши).
+2. Защита от спецсимволов и обрыва строк.
+3. Мощная фильтрация прямо из коробки.
 
 ```bash
-# все логи
-journalctl
-
-# логи конкретного сервиса
-journalctl -u nginx
-journalctl -u nginx -f          # follow (как tail -f)
-journalctl -u nginx --since "1 hour ago"
-journalctl -u nginx --since "2024-01-15 10:00:00"
-
-# по приоритету
-journalctl -u myapp -p err      # только ошибки
-journalctl -u myapp -p warning  # warning и выше
-
-# JSON формат (для парсинга)
-journalctl -u myapp -o json | jq .
-
-# размер журнала
-journalctl --disk-usage
-journalctl --vacuum-size=500M   # ограничить размер
-journalctl --vacuum-time=30d    # удалить старше 30 дней
-
-# логи текущей загрузки
-journalctl -b
-journalctl -b -1                # предыдущая загрузка
-
-# логи ядра
-journalctl -k
-dmesg                           # альтернатива
+# Примеры использования journalctl
+journalctl -u nginx.service          # Логи конкретного сервиса
+journalctl -f                        # Режим tail -f (чтение в реальном времени)
+journalctl --since "1 hour ago"      # Фильтрация по времени
+journalctl -p err                    # Только ошибки (уровень Error/Красный)
+journalctl --disk-usage              # Сколько весят логи на диске
+journalctl --vacuum-time=7d          # Очистить логи, оставив только последние 7 дней
 ```
 
-## Targets — аналог runlevels
+---
 
-```
-poweroff.target     ← runlevel 0
-rescue.target       ← runlevel 1 (single user)
-multi-user.target   ← runlevel 3 (без GUI)
-graphical.target    ← runlevel 5 (с GUI)
-reboot.target       ← runlevel 6
-```
+## 6. Типовые вопросы на собеседовании (Interview Q&A)
 
-```bash
-systemctl get-default           # текущий default target
-systemctl set-default multi-user.target
-systemctl isolate rescue.target # немедленно перейти (без перезагрузки)
-```
+**1. Почему Linux-сообщество мигрировало с SysVinit на Systemd, несмотря на критику (философия UNIX "одна утилита — одна задача")?**
+*Ответ:* Systemd победил благодаря скорости загрузки (параллельный запуск демонов) и декларативности. Вместо написания хрупких shell-скриптов для старта/стопа сервисов, админы получили надежный менеджер на C, который использует фичи современного ядра (Cgroups), умеет сам рестартовать упавшие процессы, управляет логами (journald) и отслеживает зомби-процессы.
 
-## cgroup дерево через systemd
+**2. В чем разница между директориями `/lib/systemd/system/` и `/etc/systemd/system/`?**
+*Ответ:* `/lib/...` — это системные директории пакетного менеджера (apt/yum). Файлы там перезаписываются при обновлении пакетов. `/etc/...` — директория для администратора. Сюда кладутся кастомные юниты или override-файлы. Настройки из `/etc/` имеют более высокий приоритет и перекрывают дефолты из `/lib/`.
 
-systemd организует все сервисы в cgroup иерархию:
+**3. Что произойдет, если в systemd юните указана директива `Wants=B.service`, но `B.service` завершился с ошибкой (failed)? Запустится ли основной юнит?**
+*Ответ:* Да, запустится. `Wants` — это слабая (мягкая) зависимость. Systemd попытается запустить B.service при старте основного юнита, но не отменит запуск основного, если B сломается. Для жесткой зависимости нужно использовать `Requires`.
 
-```
-/sys/fs/cgroup/
-├── system.slice/           ← системные сервисы
-│   ├── nginx.service/
-│   ├── postgresql.service/
-│   └── docker.service/
-├── user.slice/             ← пользовательские сессии
-│   └── user-1000.slice/
-└── machine.slice/          ← виртуальные машины (libvirt)
-```
+**4. В чем разница между `After=` и `Requires=`?**
+*Ответ:* Это частая ошибка. `Requires` говорит "Я не могу работать без этого сервиса" (зависимость). `After` говорит "Сначала запусти тот сервис, а потом меня" (порядок). Если написать только `Requires` без `After`, systemd запустит их параллельно, и ваш сервис может упасть, потому что база данных (которую он Requires) еще не успела открыть порт. Обычно их используют вместе.
 
-```bash
-# посмотреть дерево
-systemd-cgls
+**5. Зачем нужна команда `systemctl daemon-reload`?**
+*Ответ:* Systemd парсит и загружает все unit-файлы в оперативную память при загрузке системы для скорости. Если вы вручную отредактировали файл `.service` на диске, systemd не узнает об изменениях. Команда заставляет systemd перечитать конфигурацию с диска.
 
-# ресурсы по slice
-systemd-cgtop
+**6. Как ограничить использование оперативной памяти для конкретного Systemd-сервиса?**
+*Ответ:* Добавить в секцию `[Service]` параметры `MemoryMax=500M` или `MemoryLimit=500M`. Systemd автоматически создаст для этого процесса cgroup, и при превышении лимита ядро Linux применит OOM Killer к этому конкретному сервису, спасая остальную ОС.
 
-# лимиты конкретного сервиса
-systemctl show nginx | grep -E 'Memory|CPU|Limit'
-cat /sys/fs/cgroup/system.slice/nginx.service/memory.max
-```
+**7. В чем отличие `Type=simple` от `Type=forking` в `.service` файлах?**
+*Ответ:* `simple` (по умолчанию) означает, что указанный в `ExecStart` процесс не уходит в фон. Systemd считает, что сервис запущен сразу после вызова бинарника, и следит за ним. `forking` используется для традиционных UNIX-демонов, которые при запуске делают fork() в бэкграунд, а главный процесс завершается. В этом случае systemd ждет завершения родительского процесса и использует PID-файл (или эвристику), чтобы найти реального потомка.
 
-## Связь с k8s
+**8. Вы видите, что логи на сервере занимают слишком много места. Как очистить логи journald?**
+*Ответ:* Прямо удалять файлы из `/var/log/journal/` нельзя, так как это нарушит структуру бинарных логов. Нужно использовать команду `journalctl --vacuum-size=100M` (оставить логи весом не более 100 МБ) или `journalctl --vacuum-time=2w` (очистить логи старше 2 недель).
 
-В k8s кластере kubelet запускается как systemd сервис.
-Контейнеры попадают в cgroup иерархию управляемую systemd:
+**9. В чем преимущество Systemd Timers перед классическим Cron?**
+*Ответ:* Timers запускаются в отдельных cgroups (можно лимитировать ресурсы), они автоматически пишут логи каждого запуска в journald, их можно легко мониторить через `systemctl list-timers`, и самое важное: у них есть защита от нахлеста — таймер по умолчанию не запустит следующую итерацию, если предыдущий вызов еще висит и работает.
 
-```
-/sys/fs/cgroup/system.slice/containerd.service/
-└── kubepods/
-    ├── besteffort/
-    ├── burstable/
-    └── guaranteed/
-        └── pod-uuid/
-            └── container-id/
-```
-
-systemd `LimitNOFILE` kubelet влияет на лимит fd всех контейнеров на ноде.
-Типичная проблема: слишком низкий `LimitNOFILE` у kubelet → pods падают с "too many open files".
+**10. Что такое systemd-target и чем он отличается от runlevel из SysVinit?**
+*Ответ:* Target — это группа юнитов, определяющая состояние системы. `multi-user.target` аналогичен runlevel 3 (сеть без GUI), а `graphical.target` — runlevel 5 (с GUI). Но в отличие от runlevel (где можно было находиться только на одном уровне от 0 до 6), targets могут наследоваться друг от друга и быть активными одновременно (например, `network.target` внутри `multi-user.target`).

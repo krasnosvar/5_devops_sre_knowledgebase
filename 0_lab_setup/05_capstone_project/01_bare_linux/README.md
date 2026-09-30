@@ -1,10 +1,10 @@
 # Шаг 1 — голый Linux: процесс + systemd, без контейнеров
 
-🐳 Tier 1 (VM внутри Tier 2 — см. [../02_local_vms/linux_kvm](../02_local_vms/linux_kvm/))
+🐳 Tier 1 (VM внутри Tier 2 — см. [../../02_local_vms/linux_kvm](../../02_local_vms/linux_kvm/))
 
 Цель шага — прогнать полный цикл "код → работающий сервис" руками, без Docker
 и k8s, чтобы на следующих шагах было видно, что именно эти инструменты
-на самом деле экономят. Теория — [1_linux_and_shell](../../1_linux_and_shell/)
+на самом деле экономят. Теория — [1_linux_and_shell](../../../1_linux_and_shell/)
 (process model, systemd).
 
 ## Поднять VM

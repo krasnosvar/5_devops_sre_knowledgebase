@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: myapp-dev
+
+resources:
+  - ../../../02_examples/base
+
+patches:
+  - path: patch-replicas.yaml
+    target:
+      kind: Deployment
+      name: myapp
+
+  # Ответ 03: $patch: delete — убрать Ingress только в dev, base не трогаем
+  - path: patch-delete-ingress.yaml
+
+configMapGenerator:
+  - name: myapp-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=debug

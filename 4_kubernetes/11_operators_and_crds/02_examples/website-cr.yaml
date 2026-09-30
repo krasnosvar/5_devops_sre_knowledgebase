@@ -1,0 +1,7 @@
+apiVersion: example.com/v1
+kind: Website
+metadata:
+  name: my-blog
+spec:
+  domain: blog.example.com
+  replicas: 2

@@ -1,223 +1,117 @@
-# Bash-паттерны для DevOps
+# Bash и Скриптинг для DevOps: Паттерны и Подводные камни
 
-Не синтаксис, а идиомы: паттерны которые встречаются в реальных скриптах
-автоматизации, CI/CD пайплайнах и Dockerfile CMD/ENTRYPOINT.
+## Содержание
+1. [Subshells (Подоболочки) и почему переменные "теряются"](#1-subshells-подоболочки-и-почему-переменные-теряются)
+2. [Перенаправление потоков и Pipes (Трубы)](#2-перенаправление-потоков-и-pipes-трубы)
+3. [Strict Mode: Безопасные Bash-скрипты](#3-strict-mode-безопасные-bash-скрипты)
+4. [Отличие Environment Variables от локальных](#4-отличие-environment-variables-от-локальных)
+5. [Обработка сигналов (Traps) в Bash](#5-обработка-сигналов-traps-в-bash)
+6. [Типовые вопросы на собеседовании (Interview Q&A)](#6-типовые-вопросы-на-собеседовании-interview-qa)
 
-## Строгий режим — всегда включать
+---
 
+## 1. Subshells (Подоболочки) и почему переменные "теряются"
+
+Bash очень любит плодить дочерние процессы (subshells). Subshell — это полноценный форк (`fork()`) текущего bash-процесса.
+В subshell копируется текущее окружение. Если внутри subshell изменить переменную, это изменение **никогда** не вернется в родительский shell.
+
+**Что создает subshell?**
+- Скобки `( command )`.
+- Pipes (Пайпы): `command1 | command2`. В Bash (в отличие от zsh), каждая команда в пайпе запускается в отдельном subshell.
+- Подстановка команд: `var=$(command)`.
+
+*Классическая ошибка DevOps:*
 ```bash
-#!/usr/bin/env bash
+COUNT=0
+cat file.txt | while read line; do
+  COUNT=$((COUNT+1))
+done
+echo $COUNT # Выведет 0! Потому что while работал в пайпе, а значит в subshell.
+```
+*Правильно (без пайпа):* `while read line; do ... done < file.txt`
+
+## 2. Перенаправление потоков и Pipes (Трубы)
+
+- `>` перенаправляет стандартный вывод (FD 1). Перезаписывает файл.
+- `>>` дописывает в файл (Append).
+- `2>` перенаправляет ошибки (FD 2).
+- `2>&1` направляет поток ошибок (2) туда же, куда направлен stdout (1).
+
+**Pipes (`|`)**: Механизм IPC (межпроцессного взаимодействия) на уровне ядра. 
+`command A | command B` означает: STDOUT команды A привязывается к концу записи трубы, а STDIN команды B привязывается к концу чтения трубы. Данные в трубе хранятся в оперативной памяти (в кольцевом буфере ядра, ~64KB). Данные на диск не сбрасываются.
+
+## 3. Strict Mode: Безопасные Bash-скрипты
+
+По умолчанию, если в bash-скрипте происходит ошибка (например, `rm -rf /var/www/$NO_VAR/` при пустой переменной), Bash ругнется на ошибку, но **продолжит выполнять следующие строки!** Это фатальное поведение.
+
+Каждый DevOps-скрипт должен начинаться с **Unofficial Bash Strict Mode**:
+```bash
+#!/bin/bash
 set -euo pipefail
-
-# -e  : выход при ошибке любой команды
-# -u  : ошибка при обращении к неустановленной переменной
-# -o pipefail : ошибка если любая команда в pipe завершилась с ошибкой
-
-# Без pipefail это успех:
-cat /nonexistent | grep something   # cat вернул 1, но grep вернул 0
 ```
+- `-e` (errexit): Мгновенно завершить скрипт, если любая команда вернет ненулевой код возврата (exit code != 0).
+- `-u` (nounset): Завершить скрипт с ошибкой при попытке использовать необъявленную (пустую) переменную.
+- `-o pipefail`: По умолчанию код возврата пайпа `A | B | C` равен коду возврата последней команды (C). Если A упадет, скрипт продолжит работу. Эта опция заставит весь пайп упасть (вернуть ошибку), если упала хотя бы одна команда внутри него.
 
-## Idempotency — скрипт можно запустить несколько раз
+## 4. Отличие Environment Variables от локальных
+
+В скрипте можно объявить переменную так:
+`MY_VAR="hello"`
+Эта переменная локальна для процесса Bash. Если скрипт внутри себя запустит программу на Python, питон эту переменную **не увидит**.
+
+Для того чтобы переменная унаследовалась дочерними процессами, ее нужно экспортировать:
+`export MY_VAR="hello"`
+Тогда она помещается в блок памяти Environment Variables процесса (который клонируется при `fork()`).
+
+## 5. Обработка сигналов (Traps) в Bash
+
+Когда скрипт убивают по `Ctrl+C` (SIGINT) или прилетает SIGTERM, он может оставить за собой мусор (временные файлы, блокировки БД).
+В Bash можно использовать встроенную команду `trap`, чтобы перехватить сигналы и корректно убраться (Graceful shutdown):
 
 ```bash
-# Плохо: создаёт директорию, падает если уже есть
-mkdir /opt/myapp
-
-# Хорошо: идемпотентно
-mkdir -p /opt/myapp
-
-# Плохо: добавляет строку каждый раз
-echo "export PATH=$PATH:/opt/myapp/bin" >> ~/.bashrc
-
-# Хорошо: добавляет только если строки нет
-grep -qxF 'export PATH=$PATH:/opt/myapp/bin' ~/.bashrc \
-  || echo 'export PATH=$PATH:/opt/myapp/bin' >> ~/.bashrc
-
-# Идемпотентная установка пакета (не падает если уже установлен)
-dpkg -l nginx &>/dev/null || apt-get install -y nginx
-command -v nginx &>/dev/null || apt-get install -y nginx
-```
-
-## Retry с backoff
-
-```bash
-# простой retry с экспоненциальной задержкой
-retry() {
-  local max_attempts=${1}
-  local delay=${2:-1}
-  local attempt=1
-  shift 2
-
-  while true; do
-    "$@" && return 0
-
-    if (( attempt >= max_attempts )); then
-      echo "Failed after ${attempt} attempts: $*" >&2
-      return 1
-    fi
-
-    echo "Attempt ${attempt}/${max_attempts} failed, retrying in ${delay}s..." >&2
-    sleep "${delay}"
-    (( attempt++ ))
-    (( delay = delay * 2 ))   # экспоненциальный backoff
-  done
-}
-
-# использование
-retry 5 2 curl -f http://myservice/health
-retry 3 1 kubectl wait --for=condition=ready pod -l app=myapp --timeout=60s
-```
-
-## Lockfile — предотвратить параллельный запуск
-
-```bash
-LOCK_FILE="/var/run/myscript.lock"
-
-# через flock (рекомендуется)
-exec 9>"${LOCK_FILE}"
-if ! flock -n 9; then
-  echo "Script already running, exiting" >&2
-  exit 1
-fi
-# flock снимается автоматически при завершении скрипта
-
-# через mkdir (атомарная операция)
-if ! mkdir /tmp/myscript.lock 2>/dev/null; then
-  echo "Script already running" >&2
-  exit 1
-fi
-trap 'rm -rf /tmp/myscript.lock' EXIT
-```
-
-## trap — cleanup при завершении
-
-```bash
-TEMP_DIR=$(mktemp -d)
-TEMP_FILE=$(mktemp)
-
-# cleanup выполнится при любом завершении (успех, ошибка, сигнал)
+#!/bin/bash
+# Функция очистки
 cleanup() {
-  rm -rf "${TEMP_DIR}" "${TEMP_FILE}"
-  echo "Cleanup done"
+    echo "Удаляю временные файлы..."
+    rm -rf /tmp/my_lock
 }
+# Повесить trap на выход (EXIT покрывает и успешное завершение, и сигналы)
 trap cleanup EXIT
 
-# Graceful shutdown (для long-running процессов)
-RUNNING=true
-trap 'RUNNING=false' SIGTERM SIGINT
-
-while $RUNNING; do
-  do_work
-  sleep 5
-done
-
-echo "Shutting down gracefully..."
+echo "Работаем..."
+sleep 100
 ```
 
-## Работа с JSON через jq
+---
 
-```bash
-# получить значение
-kubectl get pod mypod -o json | jq '.status.phase'
+## 6. Типовые вопросы на собеседовании (Interview Q&A)
 
-# список всех image в поде
-kubectl get pod mypod -o json | jq '[.spec.containers[].image]'
+**1. Что делает команда `set -euo pipefail` в начале скрипта и почему это стандарт де-факто в DevOps?**
+*Ответ:* Это неофициальный "строгий режим" Bash. `-e` убивает скрипт при первой же ошибке (ненулевом коде возврата любой команды), `-u` убивает скрипт при попытке использовать пустую (необъявленную) переменную, защищая от катастроф вроде `rm -rf /$EMPTY_VAR`. `-o pipefail` заставляет возвращать ошибку, если упал любой элемент в цепи пайпов (по умолчанию пайп возвращает код только последней команды).
 
-# фильтровать pods в статусе Running
-kubectl get pods -o json | jq '.items[] | select(.status.phase == "Running") | .metadata.name'
+**2. Объясните конструкцию `2>&1` и `> /dev/null 2>&1`.**
+*Ответ:* `2>&1` означает перенаправление потока ошибок (Файловый Дескриптор 2) в то же место, куда направлен стандартный поток вывода (Файловый Дескриптор 1). Если написать `> /dev/null 2>&1`, то оба потока (и полезный выхлоп, и ошибки) будут отправлены в `/dev/null` (черную дыру), делая команду абсолютно "молчаливой".
 
-# обработать массив
-aws ec2 describe-instances --output json \
-  | jq '.Reservations[].Instances[] | {id: .InstanceId, state: .State.Name, ip: .PublicIpAddress}'
+**3. Почему счетчик, увеличенный внутри цикла `cat file | while read line; do COUNT=$((COUNT+1)); done`, после завершения цикла равен нулю?**
+*Ответ:* Потому что конвейер (pipe `|`) в bash запускает обе команды в отдельных дочерних процессах (subshells). Цикл `while` работает в копии процесса. Переменная `COUNT` исправно увеличивается внутри subshell, но когда цикл завершается, процесс умирает, и его память уничтожается. Родительский shell никогда не увидит эти изменения. Решение: использовать перенаправление потока `while ...; done < file` (без пайпа).
 
-# --raw-output (-r): убрать кавычки из строк
-kubectl get secret mysecret -o json | jq -r '.data.password' | base64 -d
+**4. В чем отличие `""` (двойных кавычек) от `''` (одинарных кавычек) в bash?**
+*Ответ:* В одинарных кавычках `''` (Strong quoting) текст трактуется строго буквально: никакие переменные (`$VAR`) и спецсимволы не раскрываются. В двойных кавычках `""` (Weak quoting) переменные и подстановка команд (`$(cmd)`) отрабатывают и заменяются на свои значения. Пример: `echo '$USER'` выведет строку `$USER`, а `echo "$USER"` выведет `root`.
 
-# итерация в скрипте
-while IFS= read -r line; do
-  echo "Processing: $line"
-done < <(kubectl get pods -o json | jq -r '.items[].metadata.name')
-```
+**5. Как работает Shebang `#!/bin/bash`? Что будет, если запустить скрипт как `sh script.sh`, а внутри написан шебанг bash?**
+*Ответ:* Шебанг (Shebang) — это первые два байта файла `#!`. Когда ядро Linux пытается запустить исполняемый текстовый файл, оно читает эту строку, находит интерпретатор (например, `/bin/bash`) и передает ему этот файл как аргумент. Если вы явно запускаете скрипт командой `sh script.sh`, ядро не вызывает шебанг, а напрямую запускает интерпретатор `sh` (обычно это POSIX-совместимый dash). В результате скрипт может упасть, так как `sh` не понимает специфичных расширений bash (bashisms).
 
-## Проверки и условия
+**6. Зачем нужна команда `export` в Bash? В чем разница между `VAR="a"` и `export VAR="a"`?**
+*Ответ:* Без слова `export` переменная является локальной (Internal Variable). Если скрипт вызовет стороннюю утилиту (Python, Terraform, Ansible), она эту переменную не увидит. Команда `export` помечает переменную как "переменную окружения" (Environment Variable). При создании нового дочернего процесса (через `fork`), ядро скопирует блок переменных окружения в новый процесс.
 
-```bash
-# Проверка наличия команды
-command -v kubectl &>/dev/null || { echo "kubectl not found"; exit 1; }
+**7. Как в bash выполнить команду в фоне и не дать ей умереть после закрытия SSH-сессии?**
+*Ответ:* Если добавить `&` в конец команды, она уйдет в фон, но все равно останется привязанной к текущему терминалу (получит SIGHUP при отключении SSH). Чтобы отвязать процесс от терминала, используется утилита `nohup` (`nohup command &`) или встроенная в bash команда `disown`. Современный подход — использовать `systemd-run --user` или `tmux/screen`.
 
-# Проверка переменной окружения
-: "${AWS_REGION:?AWS_REGION is required}"   # выход с ошибкой если не задана
-: "${DEBUG:=false}"                          # default value если не задана
+**8. Что делает команда `trap` в скриптах?**
+*Ответ:* `trap` позволяет перехватывать системные сигналы (SIGINT, SIGTERM, ERR, EXIT) и выполнять определенные функции. Чаще всего используется паттерн "Graceful shutdown" и очистка: `trap cleanup EXIT`. В этом случае функция `cleanup` (удаляющая временные файлы и снимающая блокировки) гарантированно запустится перед завершением скрипта, упал ли он с ошибкой или успешно отработал.
 
-# Проверка root
-(( EUID == 0 )) || { echo "Run as root"; exit 1; }
+**9. Что такое `$?` в bash? И что означает exit code 0?**
+*Ответ:* `$?` — это специальная переменная, хранящая код возврата (exit status) последней выполненной команды. В Linux и Bash код `0` означает, что команда завершилась **успешно**. Любое другое число от 1 до 255 означает ошибку (например, 1 — общая ошибка, 127 — команда не найдена).
 
-# Проверка ОС
-if [[ -f /etc/debian_version ]]; then
-  PACKAGE_MANAGER="apt"
-elif [[ -f /etc/fedora-release ]]; then
-  PACKAGE_MANAGER="dnf"
-fi
-
-# Проверка версии (сравнение)
-KUBECTL_VERSION=$(kubectl version --client -o json | jq -r '.clientVersion.minor')
-(( KUBECTL_VERSION >= 28 )) || { echo "kubectl 1.28+ required"; exit 1; }
-```
-
-## Heredoc — многострочные строки и файлы
-
-```bash
-# создать файл
-cat > /etc/myapp/config.yaml <<EOF
-database:
-  host: ${DB_HOST}
-  port: ${DB_PORT}
-  name: ${DB_NAME}
-EOF
-
-# передать stdin команде
-kubectl apply -f - <<EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: my-config
-data:
-  key: value
-EOF
-
-# одинарные кавычки — отключить подстановку переменных
-cat > /etc/script.sh <<'EOF'
-echo "This $variable is not expanded"
-EOF
-```
-
-## Параллельное выполнение
-
-```bash
-# запустить N задач параллельно
-for server in server1 server2 server3; do
-  ssh "$server" "apt-get update && apt-get upgrade -y" &
-done
-wait   # дождаться всех фоновых задач
-
-# с контролем параллельности (xargs -P)
-cat servers.txt | xargs -P 5 -I{} ssh {} "systemctl restart nginx"
-
-# GNU parallel
-parallel --jobs 4 ssh {} "systemctl status myapp" ::: server1 server2 server3 server4
-```
-
-## Логирование
-
-```bash
-log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$1] ${*:2}" >&2
-}
-
-log INFO "Starting deployment"
-log ERROR "Failed to connect to database"
-log WARN "Disk usage above 80%"
-
-# писать и в файл и в stderr
-exec 2> >(tee -a /var/log/myscript.log >&2)
-```
+**10. В чем разница между подстановкой `$(command)` и обратными кавычками `` `command` ``?**
+*Ответ:* И то, и другое выполняет команду в subshell и подставляет ее вывод в строку (Command Substitution). Разница в том, что `$(...)` — это современный POSIX-стандарт. Он позволяет легко вкладывать вызовы друг в друга (например, `echo $(ls $(dirname $PATH))`). Сделать вложенность с обратными кавычками крайне сложно из-за проблем с экранированием бэкслешами. Обратные кавычки устарели и не рекомендуются к использованию.

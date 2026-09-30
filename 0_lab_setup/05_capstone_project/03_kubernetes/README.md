@@ -1,10 +1,10 @@
 # Шаг 3 — Kubernetes
 
 🐳 Tier 1 (kind/k3d) или 🖥 Tier 2 (реальные VM — см. шаг 4). Теория —
-[3_kubernetes](../../3_kubernetes/) (Workloads, Networking, Scheduling).
+[4_kubernetes](../../../4_kubernetes/) (Workloads, Networking, Scheduling).
 
 Для самого k8s проще и быстрее взять kind/k3d
-([0_lab_setup/03_local_k8s](../03_local_k8s/)) — реальный bootstrap кластера
+([0_lab_setup/03_local_k8s](../../03_local_k8s/)) — реальный bootstrap кластера
 через kubeadm на VM намеренно вынесен в шаг 4 (IaC), там он уместнее.
 
 ## Поднять локальный кластер и собрать образ внутрь него

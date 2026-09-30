@@ -1,0 +1,41 @@
+---
+# Validate: запретить тег :latest
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: require-image-tag
+      match:
+        resources:
+          kinds: [Pod]
+      validate:
+        message: "Тег :latest запрещён, укажите конкретную версию образа"
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+
+---
+# Mutate: дефолтные resource limits, если разработчик забыл их указать
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-default-resources
+spec:
+  rules:
+    - name: default-resources
+      match:
+        resources:
+          kinds: [Pod]
+      mutate:
+        patchStrategicMerge:
+          spec:
+            containers:
+              - (name): "*"
+                resources:
+                  +(limits):
+                    memory: "256Mi"
+                    cpu: "200m"
