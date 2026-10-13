@@ -41,11 +41,18 @@
    Grafonnet (Jsonnet), grafana-operator для k8s, provisioning через ConfigMap;
    review дашбордов как код.
 
+9. [09_observability_at_scale](./09_observability_at_scale/) — когда один
+   Prometheus перестаёт справляться: cardinality explosion как первая
+   причина деградации (не объём), federation vs remote_write в кластерное
+   хранилище (Thanos/VictoriaMetrics cluster), sampling и tiered retention
+   для логов, дашборды и алертинг поверх множества кластеров.
+
 ## Как проходить
 
 01 → 02 → 04 — базовый мониторинг-стек. 05 и 06 параллельно. 03 — если
 Prometheus не справляется по ресурсам. 07 и 08 — после опыта с реальными
-дашбордами.
+дашбордами. 09 — когда стек из 01-08 уже работает в проде на нескольких
+кластерах и упирается в масштаб.
 
 ## Упражнения — тиры
 

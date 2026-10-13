@@ -27,6 +27,8 @@ SUID-бинарники — стандартный вектор privilege escala
 setfacl -m u:alice:rx /opt/app/config.yaml   # alice может читать файл, не входя в его группу
 getfacl /opt/app/config.yaml
 ```
+Полный разбор ACL (default ACL, mask, POSIX vs NFSv4) и учётных записей (`/etc/passwd`,
+`useradd`, группы, NSS) — в [`../../10_users_and_permissions/`](../../10_users_and_permissions/).
 
 ## 2. sudo и PAM: как на самом деле работает аутентификация
 

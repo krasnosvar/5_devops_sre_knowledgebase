@@ -78,12 +78,17 @@ Kubernetes от архитектуры до GitOps. Упор — на поним
     дистрибутивы (OpenShift, Rancher, k3s), инструменты (k9s, kubectx, stern),
     куда смотреть дальше. Без упражнений — это не тема для лабы.
 
+13. [13_troubleshooting](./13_troubleshooting/01_theory/kubernetes_troubleshooting.md) — системная
+    диагностика инцидентов: CrashLoopBackOff, OOMKilled (Exit Code 137), Pending и предикаты
+    kube-scheduler, Node NotReady и PLEG issues, сбои Service/Endpoints, CoreDNS задержки
+    (ndots:5), Ingress 502/504 keep-alive mismatch, kubectl debug с ephemeral containers.
+
 ## Как проходить
 
 01 → 02 → 03 строго по порядку (фундамент). 04–06 параллельно.
 07 → 09 (GitOps и манифесты — общая теория каждого раздела, потом конкретные
 инструменты внутри) — практический стек деплоя. 10–11 — по мере необходимости.
-08, 12 — справочные/операционные, открывать по задаче.
+08, 12, 13 — эксплуатационные и траблшутинг, открывать по задаче.
 
 ## Упражнения — тиры
 

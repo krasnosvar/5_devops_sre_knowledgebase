@@ -26,13 +26,15 @@
   Docker Compose, локальные VM (KVM / OrbStack / WSL2), локальный k8s (kind/k3d),
   облако и VPS.
 - [1_linux_and_shell](./1_linux_and_shell/) — фундамент: процессная модель, cgroups,
-  namespaces, файловые дескрипторы, systemd, bash-идиомы для DevOps.
+  namespaces, файловые дескрипторы, systemd, bash-идиомы для DevOps,
+  права доступа (ACL/NSS) и системный траблшутинг (USE, dmesg, OOM, I/O, eBPF).
 - [2_networking](./2_networking/) — сетевые технологии и протоколы: OSI, TCP/IP,
   DNS, HTTP/HTTPS, балансировка нагрузки (L4/L7), BGP, iptables, VPC.
 - [3_containers](./3_containers/) — Docker и Podman: OCI, image layers, overlay FS,
   rootless, security (capabilities, seccomp), multi-stage builds.
 - [4_kubernetes](./4_kubernetes/) — Kubernetes от архитектуры до GitOps: control/data
-  plane, scheduling, Helm, Kustomize, ArgoCD, RBAC, NetworkPolicy.
+  plane, scheduling, Helm, Kustomize, ArgoCD, RBAC, NetworkPolicy,
+  day-2 operations и глубокий траблшутинг инцидентов.
 - [5_iac](./5_iac/) — Infrastructure as Code: Terraform/OpenTofu (state, модули,
   workspaces), Terragrunt, Ansible (роли, идемпотентность), сравнение подходов.
 - [6_cicd](./6_cicd/) — CI/CD пайплайны: теория, GitLab CI, GitHub Actions, GitOps
@@ -51,7 +53,15 @@
 - [11_mlops](./11_mlops/) — MLOps и LLMOps: lifecycle моделей, experiment tracking,
   training pipelines, model serving, мониторинг моделей, LLM в продакшне, GPU
   инфраструктура (consumer, datacenter, cloud).
-- [other](./other/) — интервью DevOps/SRE, карьерный roadmap, книги, сертификации.
+- [12_interview_questions_prep](./12_interview_questions_prep/) — вопросы-ответы
+  для подготовки к DevOps/SRE интервью: Linux (процессы, сеть, ФС, bash), сети,
+  Docker, Kubernetes, CI/CD, Terraform, Ansible, мониторинг, базы данных, Git,
+  облака (AWS/GCP/Azure/Yandex), DevSecOps, MLOps, Python, Go, system design.
+- [13_books_certs_resources](./13_books_certs_resources/) — практические
+  сертификации (CKA/CKAD/CKS, AWS, Terraform) и проверенные книги/курсы/ресурсы.
+- [14_system_design](./14_system_design/) — system design для DevOps/SRE:
+  масштабирование высоконагруженных систем без/с Kubernetes, один кластер
+  против нескольких, CI/CD на тысячи хостов, IaC для десятков команд.
 
 ## Формат разделов
 
@@ -82,7 +92,11 @@
    [9_sre](./9_sre/), [10_devsecops](./10_devsecops/) — по порядку или по задаче.
 6. [11_mlops](./11_mlops/) — отдельный трек, можно проходить параллельно с основным
    после освоения k8s.
-7. [other](./other/) — справочник, открывать по необходимости.
+7. [12_interview_questions_prep](./12_interview_questions_prep/) и
+   [13_books_certs_resources](./13_books_certs_resources/) — справочники,
+   открывать по необходимости.
+8. [14_system_design](./14_system_design/) — раздел-синтез, после освоения
+   `4_kubernetes`, `5_iac`, `6_cicd`, `8_observability`, `9_sre`.
 
 ## Полезные ресурсы
 

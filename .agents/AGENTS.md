@@ -19,6 +19,17 @@ Russian, matching the rest of the repo.
   `03_exercises/`, `04_exercises_answers/`. Add examples/exercises only where a real
   hands-on lab makes sense; skip them (and say so explicitly in the theory doc, e.g.
   "без лабы: требует реальное облако") for cloud-only or reference-only topics.
+- **If `01_theory/` ever holds 2+ files, give each a numeric reading-order
+  prefix** (`01_`, `02_`, ...), e.g. `4_kubernetes/03_networking/01_theory/
+  {01_k8s_networking.md, 02_k8s_networking_flow.md}` (concepts first, deep-
+  dive second). Most topics here only need one file and that file keeps its
+  plain descriptive name (no prefix needed for a single file) — this only
+  applies once a topic's theory is split across multiple files, so a reader
+  browsing the bare directory (GitHub, no README open) can tell which one to
+  open first without guessing from alphabetical order. Same rule as the
+  sibling `6_ai_engineering_knowledgebase` repo, which hit this for real
+  across all 13 of its sections (lesson files there are numbered by
+  design, not just an edge case).
 - Lab tier legend (used everywhere upgrades/exercises reference a stand):
   🐳 Tier 1 — Docker Compose only; 🖥 Tier 2 — local VM (KVM/OrbStack/VirtualBox);
   ☁️ Tier 3 — real cloud/VPS.
@@ -66,6 +77,12 @@ For Kubernetes YAML that uses Kustomize, validate for real with `kubectl kustomi
 — this has caught real bugs, e.g. `$patch: delete` being silently ignored when
 nested under `metadata:` instead of placed as a top-level key alongside `apiVersion`/`kind`.
 
+## Git & Workspace Discipline
+
+- **Permissive mode enabled:** The user explicitly allows changing, modifying, and creating files across this repository directly without asking for confirmation beforehand.
+- **NEVER create git worktrees:** Agents must NEVER create or use git worktrees (`git worktree` / `git worktree add`) under any circumstances. Always work directly within the primary repository workspace.
+- **Do not commit without explicit instruction:** Never create git commits unless the user explicitly asks to commit.
+
 ---
 
 # Theory Files Formatting Rules
@@ -90,11 +107,10 @@ When generating or refactoring theoretical knowledge base files (like those in d
   non-duplicate questions beat padding to hit a number or artificially trimming good
   content. If a doc is a short addendum/pointer section or a pure reference/landscape
   page, it's fine to have fewer questions, or skip the section entirely.
-- **No duplication across files:** before adding a question, check whether the same
-  concept is already asked (verbatim or near-verbatim) in a file this one cross-links
-  to — pick ONE home for it and point the other file there instead of repeating it.
 - **Quality & Depth:** Questions should be challenging, deep, and often contain a "trick" (подвох) or edge case (e.g., "Why does an unprivileged user fail to use `renice -10` on their own process?"). 
 - **Relevance:** Questions must be strictly relevant to the exact topic of the file. Do not include questions that belong to a different technical domain.
+- **Company Anonymity:** Never mention specific company names (e.g., Yandex, Sber, VK, Alibaba, Amazon etc.) when formulating or cataloging interview questions. Present all questions objectively without attributing them to any specific employer.
+- **Format Constraint (.sh):** All interview question files MUST STRICTLY be created and maintained with a `.sh` file extension. NEVER convert them to `.md` or any other format. This is a hard requirement from the user.
 
 ## Example Structure:
 ```markdown
@@ -119,3 +135,112 @@ When generating or refactoring theoretical knowledge base files (like those in d
 
 (ровно 10 глубоких вопросов)
 ```
+
+## 4. Universal Line Length Rule (70–80 characters, `.md` AND `.sh`)
+- **Applies to ALL text in the repository**, both `.md` theory/documentation
+  files and `.sh` interview-question files: hard-wrap prose at ~70-80
+  characters (max 80), explicit line breaks, not reliance on a renderer's
+  soft-wrap.
+- **Known current gap, phased fix (explicit user decision, recorded here):**
+  an audit found many existing `.md` theory files (including ones written
+  this session, before this rule was reinstated) have unwrapped prose lines
+  of 100-600+ characters. That content is **not** compliant and is technical
+  debt, not an accepted exception — don't cite it as precedent for new
+  content.
+  - **Phase 1 (now, ongoing):** every `.md`/`.sh` file newly written, or
+    edited for any other reason, must be wrapped at 70-80 chars as part of
+    that same edit — both brand-new files and files you're touching for an
+    unrelated change. Don't leave touched files at their old unwrapped width.
+  - **Phase 2 (later, separate explicitly-scoped task):** a dedicated
+    retroactive reflow pass across every pre-existing long-line `.md` file
+    repo-wide (both this repo and the sibling `6_ai_engineering_knowledgebase`
+    repo), done on its own, not bundled silently into unrelated work. Dry-run
+    on copies first and scan for the reflow-script bug signature below before
+    applying destructively.
+- **Benefits:** comfortable reading in standard terminal viewports (`cat`,
+  `less`, `vim`), clean/granular `git diff`, repo-wide consistency.
+- **Allowed exceptions:** unbreakable URLs/links, code snippets where
+  wrapping breaks executable syntax, Markdown tables, diagram definitions.
+- When wrapping/rewrapping `.sh` files programmatically, dry-run on a copy
+  first and scan the result for a specific failure mode seen before: two
+  "label:\n- bullets" groups with no blank line between them can get merged
+  (the second label silently glued onto the tail of the previous bullet).
+
+## 5. Interview Questions (.sh) Formatting Rules
+- **Line Length (Перенос строк):** Strictly adhere to the 70-80 characters
+  per line limit (§4) with explicit line breaks. Apply indentation and
+  spacing exactly as seen in the first two questions of `01_linux/05_bash.sh`.
+- **Introductory Fundamentals:** Every `.sh` question file must begin with basic, foundational questions (e.g., "What is a process?", "What is Bash?", "What is Docker?", "What are cgroups and namespaces?"). Do not jump straight into advanced concepts without covering the underlying definitions and mechanisms first.
+- **Multi-line question headers:** when a question is too long for one line,
+  wrap the continuation WITHOUT repeating the `# ` prefix or any other marker
+  — just plain indented/unindented continuation text. A past bug produced
+  stray duplicated `#` prefixes mid-sentence; never reproduce that pattern.
+- **Follow-up sub-questions:** when a user asks a conceptual follow-up about
+  an *existing* numbered question, embed it inside that SAME question as a
+  `**Доп. вопрос: ...?**` paragraph — don't create a new top-level numbered
+  entry for it (keeps numbering stable; verify with
+  `grep -cE '^# [0-9]+\.' file.sh` unchanged before/after).
+
+## 6. Clarity Principle — explain WHAT/WHY before internals
+A real bug found and fixed in this repo: a kubelet/PLEG section jumped
+straight into an internal mechanism ("PLEG subscribes via gRPC streams")
+without ever plainly stating what kubelet actually does, and the specific
+mechanism claim was only half-true (true for newer Evented PLEG, false for
+the default Generic PLEG, which polls). Two failure modes to actively check
+for when writing or reviewing theory content:
+- **Jargon-before-plain-language:** a component/mechanism is named and an
+  internal detail asserted before the reader has been told, in plain terms,
+  what it does and what problem it solves. Fix: lead with a short plain-
+  language breakdown (numbered steps are fine) before any internals.
+- **Imprecise mechanism claims:** describing a mechanism in its simplified,
+  "commonly believed" form when the real mechanism is more specific (polling
+  vs push, sync vs async, default vs newer-opt-in variant). Verify the actual
+  mechanism before writing it down — don't repeat a plausible-sounding but
+  half-right claim just because it's commonly stated that way elsewhere.
+When auditing existing content at scale, parallel read-only fork/subagent
+passes (one per group of files, explicitly told not to edit) are an
+effective way to surface this class of issue across many files without
+blowing up the reviewing agent's own context — then triage and fix directly.
+
+## 7. Granularity Principle
+Don't compress multiple independent sub-themes that each deserve their own
+explanation/worked-example into one file or one section — split instead.
+Cautionary tale from a sibling repo in this series
+(`6_ai_engineering_knowledgebase`): several sections compressed 6-9 distinct
+listed concepts into a single ~100-line lesson file with exactly one
+self-check question, which under-serves every concept crammed into it.
+If a topic's own planning doc lists more than ~3-4 genuinely distinct
+sub-concepts, that's a signal to split into multiple theory files/sections
+rather than one dense file — matches this repo's own existing "Nested
+Sub-Tool Convention" and "exceed 10 Q&A questions rather than pad/trim"
+guidance above: more real, well-separated content beats one crowded file.
+
+## 8. Validation Checklist (run after any batch of edits)
+Run these repo-wide (not just on touched files — other files may reference
+what you changed), via a quick Bash/Python one-liner each:
+1. **Line width** — no `.sh` interview file line over 80 chars.
+2. **Fence balance** — ``` grep -c '^```' file ``` is even in every `.md`/`.sh`.
+3. **Sequential numbering** — `.sh` files: `grep -cE '^# [0-9]+\.'` count matches
+   the highest number used, no gaps, no duplicates.
+4. **No company-name attribution** — interview questions never say "spotted
+   at Yandex/Sber/Amazon/etc." (naming cloud products like AWS/GCP is fine;
+   attributing a *question* to a specific employer is not).
+5. **No trailing whitespace** — `grep -rnE ' +$'`.
+6. **No stray mixed-script glyphs** — a known artifact from prior edits is a
+   single CJK character accidentally inserted into Cyrillic/Latin text (e.g.
+   "тема架ектурная", "raскатку" with a Latin r). Scan with
+   `grep -nP '[\x{4e00}-\x{9fff}]'` across touched files.
+7. **Relative links resolve** — glob all `*.md`, regex `\]\(\.\./[^)]+\)` or
+   `\]\(\./[^)]+\)`, resolve each with `os.path.normpath(os.path.join(dirname,
+   link))`, assert `os.path.exists`. Run repo-wide after every structural
+   change (see "Cross-Reference Discipline" above) — this has caught real
+   off-by-one `../` depth errors when inserting new nested files.
+8. **TOC/heading match** — count of numbered TOC entries equals count of
+   numbered `## N.` headings in the same file; a real bug found this way was
+   a TOC entry for "§5" with no corresponding `## 5.` heading in the body.
+9. **Self-reporting hygiene** — if the repo (or a sibling repo) keeps a
+   top-level doc that states exact inventory numbers (lesson count, question
+   count, file count), update that doc in the SAME change that alters the
+   structure it's counting. A stale "35 lessons" claim after a restructure is
+   worse than no claim.
+

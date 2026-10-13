@@ -47,12 +47,25 @@
    см. [`../3_containers/05_security/`](../3_containers/05_security/) и
    [`../4_kubernetes/06_security/`](../4_kubernetes/06_security/).
 
+10. [10_users_and_permissions](./10_users_and_permissions/) — учётные записи и
+    группы (`/etc/passwd`/`shadow`/`group`, `useradd`/`usermod`, primary vs
+    supplementary группы), NSS (откуда ОС берёт пользователей — локально или
+    LDAP/AD), ACL по-настоящему (default ACL, mask, POSIX vs NFSv4). Не про
+    security-хардening (это в 09) — про то, как вообще устроены аккаунты и
+    точечный доступ.
+
+11. [11_troubleshooting](./11_troubleshooting/01_theory/linux_troubleshooting.md) — системный
+    анализ инцидентов и узких мест: методологии USE/RED, 60-секундный экспресс-чек-лист,
+    D-state процессы, Page Cache и Slab (`SUnreclaim`), механика OOM Killer и `oom_score_adj`,
+    насыщение дискового I/O (`r_await`/`w_await`), скрытые удаленные файлы (`lsof +L1`),
+    дропы в сокетных буферах и softirq, переполнение conntrack, профилирование через perf и eBPF.
+
 ## Как проходить
 
-Идти по порядку 00 → 09: каждый следующий раздел опирается на предыдущий.
+Идти по порядку 00 → 11: каждый следующий раздел опирается на предыдущий.
 Разделы 01–02 критичны для понимания контейнеров; 06 — для понимания k8s сети;
-09 использует знания почти всех предыдущих разделов (namespaces, systemd, /proc)
-и логично идёт последней.
+09–10 используют знания почти всех предыдущих разделов (namespaces, systemd,
+/proc, файловые права); 11 закрепляет системную диагностику всего стека.
 
 ## Связь с другими разделами
 
