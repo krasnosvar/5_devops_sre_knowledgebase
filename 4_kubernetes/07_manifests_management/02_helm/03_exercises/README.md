@@ -4,7 +4,8 @@
 
 ## 01 — Написать chart с нуля
 
-**Задача:** Создать Helm chart для nginx с параметризованным replicas, image, port.
+**Задача:** Создать Helm chart для nginx с параметризованным replicas, image,
+port.
 Эталон упрощённого чарта — [`../02_examples/myapp/`](../02_examples/myapp/).
 
 ```bash
@@ -100,4 +101,5 @@ helm diff upgrade my-podinfo podinfo/podinfo \
   -n demo
 ```
 
-Ответы — [`../04_exercises_answers/helm-answers.md`](../04_exercises_answers/helm-answers.md).
+Ответы —
+[`../04_exercises_answers/helm-answers.md`](../04_exercises_answers/helm-answers.md).

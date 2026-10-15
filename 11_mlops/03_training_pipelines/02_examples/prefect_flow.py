@@ -1,6 +1,11 @@
 """
 Prefect pipeline для обучения модели
-pip install prefect scikit-learn pandas mlflow
+pip install prefect scikit-learn pandas mlflow boto3
+
+Нужен MLflow-стенд из 02_experiment_tracking/02_examples и доступ
+клиента к его S3 (артефакты клиент пишет напрямую):
+    export MLFLOW_S3_ENDPOINT_URL=http://localhost:8333
+    export AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test
 
 Запуск: python prefect_flow.py
 или через Prefect Cloud: prefect deploy
@@ -75,7 +80,13 @@ def train_model(data: dict, n_estimators: int = 100, max_depth: int = 10) -> dic
         }
         mlflow.log_metrics(metrics)
 
-        model_uri = mlflow.sklearn.log_model(clf, "model").model_uri
+        # Новые MLflow (проверено на 3.17) сохраняют sklearn-модель через
+        # skops и требуют явно доверить типы деревьев RandomForest; в
+        # старых версиях параметра skops_trusted_types нет — уберите его.
+        model_uri = mlflow.sklearn.log_model(
+            clf, name="model",
+            skops_trusted_types=["sklearn.tree._tree.Tree"],
+        ).model_uri
         logger.info(f"Model saved: {model_uri}, AUC={metrics['auc_roc']:.4f}")
 
         return {"metrics": metrics, "model_uri": model_uri}

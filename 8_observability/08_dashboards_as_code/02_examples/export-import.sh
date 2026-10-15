@@ -4,7 +4,8 @@ set -euo pipefail
 
 GRAFANA="${GRAFANA_URL:-http://localhost:3000}"
 GRAFANA_AUTH="${GRAFANA_USER:-admin}:${GRAFANA_PASSWORD:-admin}"
-DASHBOARDS_DIR="${1:-./dashboards}"
+# $1 — команда (export/import/annotate), $2 — каталог для export/import
+DASHBOARDS_DIR="${2:-./dashboards}"
 
 # ── Экспорт всех дашбордов ────────────────────────────────────────────────────
 export_all() {
@@ -12,15 +13,15 @@ export_all() {
     echo "Exporting dashboards from $GRAFANA..."
 
     # Получить список всех дашбордов
-    curl -s "$GRAFANA/api/search?type=dash-db&limit=1000" \
+    curl -sf "$GRAFANA/api/search?type=dash-db&limit=1000" \
         -u "$GRAFANA_AUTH" \
         | jq -r '.[].uid' \
         | while read -r uid; do
             local title
-            title=$(curl -s "$GRAFANA/api/dashboards/uid/$uid" -u "$GRAFANA_AUTH" \
+            title=$(curl -sf "$GRAFANA/api/dashboards/uid/$uid" -u "$GRAFANA_AUTH" \
                 | jq -r '.dashboard.title' | tr ' /' '-_' | tr -dc 'a-zA-Z0-9_-')
             echo "  Exporting: $title ($uid)"
-            curl -s "$GRAFANA/api/dashboards/uid/$uid" -u "$GRAFANA_AUTH" \
+            curl -sf "$GRAFANA/api/dashboards/uid/$uid" -u "$GRAFANA_AUTH" \
                 | jq '.dashboard | del(.id, .version)' \
                 > "$DASHBOARDS_DIR/${title}.json"
         done
@@ -34,7 +35,7 @@ import_all() {
         local title
         title=$(jq -r '.title' "$f")
         echo "  Importing: $title"
-        curl -s -X POST "$GRAFANA/api/dashboards/db" \
+        curl -sf -X POST "$GRAFANA/api/dashboards/db" \
             -u "$GRAFANA_AUTH" \
             -H "Content-Type: application/json" \
             -d "{\"dashboard\": $(cat "$f"), \"overwrite\": true, \"folderId\": 0}" \
@@ -45,7 +46,7 @@ import_all() {
 # ── Добавить deployment аннотацию ─────────────────────────────────────────────
 annotate_deploy() {
     local service="${1:?}" version="${2:?}"
-    curl -s -X POST "$GRAFANA/api/annotations" \
+    curl -sf -X POST "$GRAFANA/api/annotations" \
         -u "$GRAFANA_AUTH" \
         -H "Content-Type: application/json" \
         -d "{

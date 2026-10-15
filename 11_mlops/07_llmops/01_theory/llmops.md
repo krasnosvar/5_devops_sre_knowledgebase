@@ -143,9 +143,11 @@ model.print_trainable_parameters()
 > [04_model_serving/03_exercises](../../04_model_serving/03_exercises/README.md).
 
 ```bash
-# запустить API совместимый с OpenAI
+# запустить API совместимый с OpenAI (Llama 3.1 — gated-модель:
+# нужен HF-токен с принятой лицензией)
 docker run --runtime nvidia --gpus all \
   -p 8000:8000 \
+  -e HF_TOKEN="$HF_TOKEN" \
   vllm/vllm-openai:latest \
   --model meta-llama/Llama-3.1-8B-Instruct \
   --tensor-parallel-size 1 \
@@ -172,7 +174,7 @@ Throughput (токен/сек) — сколько токенов генерир�
 TTFT (Time To First Token) — время до первого токена (важно для UX)
 ITL (Inter-Token Latency) — время между токенами (влияет на плавность)
 
-Batching: статический (ждём пока batch заполнится) vs 
+Batching: статический (ждём пока batch заполнится) vs
           continuous (добавляем запросы на лету) ← vLLM использует continuous
 ```
 

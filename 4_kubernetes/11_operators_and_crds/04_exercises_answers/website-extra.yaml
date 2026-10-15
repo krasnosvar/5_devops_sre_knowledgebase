@@ -1,0 +1,18 @@
+# Дополнительные CR для проверки ответов.
+# Документ 1 — валидный второй сайт (replicas не задан -> default: 1 из CRD).
+# Документ 2 — невалидный: нет обязательного spec.domain, API-сервер его
+# отклонит по OpenAPI-схеме CRD ещё до записи в etcd.
+---
+apiVersion: example.com/v1
+kind: Website
+metadata:
+  name: shop
+spec:
+  domain: shop.example.com
+---
+apiVersion: example.com/v1
+kind: Website
+metadata:
+  name: broken
+spec:
+  replicas: 2

@@ -121,7 +121,7 @@ with mlflow.start_run():
 mlflow ui --port 5000
 
 # Docker Compose стенд
-# docker-compose.yml в 03_exercises/01_mlflow_basics/
+# MLflow + S3 в Docker Compose: 02_experiment_tracking/02_examples/
 ```
 
 ## DVC — версионирование данных и моделей

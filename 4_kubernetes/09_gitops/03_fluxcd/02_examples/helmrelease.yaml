@@ -1,0 +1,43 @@
+# Flux: установка Helm-чарта декларативно — HelmRepository (откуда брать
+# чарт) + HelmRelease (какой чарт, какая версия, с какими values и куда).
+# Аналог `helm repo add` + `helm upgrade --install`, но helm-controller
+# выполняет его сам в кластере и повторяет на каждом interval.
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 1h                    # как часто перечитывать index.yaml
+  url: https://stefanprodan.github.io/podinfo
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: flux-system
+spec:
+  interval: 10m                   # период сверки релиза с желаемым
+  releaseName: podinfo
+  targetNamespace: demo
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3                  # повторить неудачную установку
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true  # откатить релиз, если upgrade не удался
+  chart:
+    spec:
+      chart: podinfo
+      version: "6.x"              # semver-диапазон: новые 6.* подтянутся сами
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+  values:
+    replicaCount: 2
+    ui:
+      message: "Deployed by Flux"

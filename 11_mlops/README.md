@@ -14,6 +14,19 @@ ML в продакшне — это DevOps плюс работа с данным
 | Мониторинг = uptime/latency | Мониторинг + data drift + model drift |
 | Воспроизводимость из кода | Воспроизводимость из кода + данных + seed |
 
+## Пререквизиты
+
+- [3_containers](../3_containers/) — образы и Docker Compose: все стенды
+  раздела поднимаются в контейнерах.
+- [4_kubernetes](../4_kubernetes/) — для частей про KServe, Kubeflow,
+  Training Operator и GPU в кластере (Deployment, Service, CRD, Helm).
+- [6_cicd](../6_cicd/) — понятия pipeline и артефакта; в MLOps они
+  переносятся на данные и модели.
+- [8_observability](../8_observability/) — Prometheus и Grafana для
+  мониторинга моделей и GPU.
+- Python на уровне чтения и запуска скриптов — соседний репозиторий
+  [4_python_my_knowledgebase](../../4_python_my_knowledgebase/).
+
 ## Подразделы
 
 1. [01_ml_lifecycle](./01_ml_lifecycle/) — полный цикл модели: постановка задачи,
@@ -54,7 +67,8 @@ ML в продакшне — это DevOps плюс работа с данным
    - guardrails и safety: output validation, PII detection, moderation.
 
 8. [08_gpu_infrastructure](./08_gpu_infrastructure/) — GPU инфраструктура
-   для ML (подробнее в следующей секции).
+   для ML: классы GPU, VRAM и bandwidth, GPU в Kubernetes (device plugin,
+   GPU Operator, MIG, time-slicing), облачные инстансы, мониторинг.
 
 ## Как проходить
 
@@ -64,6 +78,24 @@ ML в продакшне — это DevOps плюс работа с данным
 
 ## Упражнения — тиры
 
-🐳 Tier 1: MLflow + MinIO в Docker Compose; vLLM с открытой моделью локально
-🖥 Tier 2: Kubeflow Pipelines в kind; BentoML + Triton в k3d
-☁️ Tier 3: распределённое обучение на AWS (Spot GPU instances)
+🐳 Tier 1: MLflow + S3-хранилище (SeaweedFS) в Docker Compose; LLM на CPU
+через Ollama (OpenAI-совместимый API), BentoML, A/B через nginx
+([04_model_serving](./04_model_serving/)); RAG, промпты, Langfuse
+([07_llmops](./07_llmops/)). Образ vLLM требует NVIDIA GPU — без неё
+используется Ollama или llama.cpp server.
+🖥 Tier 2: Kubeflow Pipelines и KServe в локальном кластере — описаны в
+теории, отдельных лаб пока нет.
+☁️ Tier 3: GPU-инстансы в облаке для vLLM и распределённого обучения
+([08_gpu_infrastructure](./08_gpu_infrastructure/)).
+
+## Когда двигаться дальше
+
+- Можете поднять MLflow с S3-хранилищем, залогировать run и
+  зарегистрировать модель.
+- Можете отдать модель через API (BentoML или OpenAI-совместимый LLM
+  сервер) и разделить трафик между двумя версиями.
+- Можете объяснить, как обнаружить data drift и когда переобучать
+  модель.
+- Можете собрать простой RAG и показать trace LLM-вызова.
+
+Далее: [12_interview_questions_prep](../12_interview_questions_prep/).

@@ -34,7 +34,16 @@
 ## 4. Хранилища: Jaeger vs Grafana Tempo
 
 Собранные спаны нужно где-то хранить.
-- **Jaeger**: Классический движок от Uber. Для поиска трейсов (по тегам) он требует мощной поисковой базы данных (Elasticsearch или Cassandra). Управление кластером Elasticsearch дорогое и сложное (требует много RAM/SSD).
+- **Jaeger**: классический движок (изначально от Uber, сейчас CNCF).
+  **Jaeger v2** (2024+) переписан поверх OpenTelemetry Collector: это
+  сборка Collector с компонентами Jaeger (storage, query/UI), конфиг в
+  том же YAML-формате (receivers/processors/exporters/extensions),
+  OTLP принимается нативно на 4317/4318. Старые компоненты v1 —
+  jaeger-agent, порт 14250 (gRPC-протокол Jaeger), образ `all-in-one` —
+  ушли в прошлое; v1 снят с поддержки. Для поиска трейсов по тегам
+  Jaeger нужен индексируемый backend (Elasticsearch/OpenSearch,
+  Cassandra; для лабы — memory или Badger), а кластер Elasticsearch
+  дорог в эксплуатации (много RAM/SSD).
 - **Grafana Tempo**: Cloud-native движок нового поколения. Он **вообще не требует индексации** (как и Loki). Tempo хранит все спаны просто в сжатых файлах в дешевом AWS S3 (Объектном хранилище). *Как искать трейс без индекса?* Tempo полагается на связку (Correlation). Вы находите `TraceID` в логах Loki (или в метриках Exemplars), передаете этот точный `TraceID` в Tempo, и Tempo за миллисекунды достает нужное дерево из S3 по ключу.
 
 ---

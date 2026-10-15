@@ -198,7 +198,7 @@ Kubelet имеет встроенный демон выселения (`eviction
 Если `curl http://my-service` внутри кластера не работает:
 
 ```
-[Client Pod] 
+[Client Pod]
       │
       ▼
  1. DNS Resolution (CoreDNS) ──► Не вернул IP? ──► Проблема в DNS

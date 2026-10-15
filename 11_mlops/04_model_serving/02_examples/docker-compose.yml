@@ -1,44 +1,58 @@
-# MLOps serving stack: vLLM + MLflow + MinIO
-# Требования: NVIDIA GPU + NVIDIA Container Toolkit.
+# MLOps serving stack: vLLM + MLflow + S3-хранилище (SeaweedFS)
+# Требования для vllm: NVIDIA GPU + NVIDIA Container Toolkit.
 # Образ vllm/vllm-openai собран под CUDA и без GPU не работает —
 # удаление GPU-настроек его в CPU-версию не превращает. Без GPU:
-# запустите только minio + mlflow (docker compose up -d minio mlflow),
+# запустите только хранилище + mlflow (docker compose up -d s3 mlflow),
 # а LLM поднимите через Ollama (см. ../03_exercises/README.md, упр. 01).
 # BentoML-сервис для классической модели — см. упражнение 02.
+#
+# Почему не MinIO: MinIO перестал публиковать community-образы
+# (minio/minio на Docker Hub больше не скачивается). Вместо него —
+# SeaweedFS с S3-API; другие варианты — Garage, Ceph RGW. Без
+# настроенных пользователей SeaweedFS ключи не проверяет, поэтому
+# AWS_* ниже фиктивные.
 
 services:
   # ── Model Registry ────────────────────────────────────────────────────────
-  minio:
-    image: minio/minio:latest
+  s3:
+    image: chrislusf/seaweedfs:4.48
+    # -ip.bind=0.0.0.0: иначе S3-порт слушает только 127.0.0.1 внутри
+    # контейнера и недоступен ни с хоста, ни из других сервисов
+    command: server -s3 -dir=/data -ip.bind=0.0.0.0
     ports:
-      - "9000:9000"
-      - "9001:9001"   # UI
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
+      - "8333:8333"   # S3 API
     volumes:
-      - minio_data:/data
+      - s3_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 5s
+      retries: 20
+
+  # Создать bucket mlflow один раз при старте
+  s3-init:
+    image: chrislusf/seaweedfs:4.48
+    entrypoint: ["/bin/sh", "-c", "echo 's3.bucket.create -name mlflow' | weed shell -master=s3:9333"]
+    depends_on:
+      s3:
+        condition: service_healthy
+    restart: "no"
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
     ports:
       - "5000:5000"
     environment:
-      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: minioadmin
-      AWS_SECRET_ACCESS_KEY: minioadmin
+      MLFLOW_S3_ENDPOINT_URL: http://s3:8333
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
     command: >
       mlflow server
       --backend-store-uri sqlite:///mlflow.db
       --default-artifact-root s3://mlflow/
       --host 0.0.0.0
     depends_on:
-      minio:
-        condition: service_healthy
+      s3-init:
+        condition: service_completed_successfully
 
   # ── LLM Inference (требует GPU) ────────────────────────────────────────────
   vllm:
@@ -62,5 +76,5 @@ services:
               capabilities: [gpu]
 
 volumes:
-  minio_data:
+  s3_data:
   hf_cache:

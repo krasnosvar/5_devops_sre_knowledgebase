@@ -8,7 +8,8 @@ kind create cluster --name operators-lab
 
 ## 01 — CRD без Operator: схема есть, поведения нет
 
-**Задача:** Применить CRD `Website` и создать CR, наглядно убедиться, что "ничего не происходит".
+**Задача:** Применить CRD `Website` и создать CR, наглядно убедиться, что
+"ничего не происходит".
 
 ```bash
 kubectl apply -f ../02_examples/website-crd.yaml
@@ -23,7 +24,9 @@ kubectl get deployments        # TODO: убедиться что Deployment дл
 
 ## 02 — additionalPrinterColumns
 
-**Задача:** Убедиться, что `kubectl get websites` показывает колонки `Domain`/`Phase` из `additionalPrinterColumns`, а не просто `NAME`/`AGE` как для произвольного ресурса.
+**Задача:** Убедиться, что `kubectl get websites` показывает колонки
+`Domain`/`Phase` из `additionalPrinterColumns`, а не просто `NAME`/`AGE` как для
+произвольного ресурса.
 
 ```bash
 kubectl get websites -o wide
@@ -33,7 +36,8 @@ kubectl get websites -o wide
 
 ## 03 — Симуляция Reconcile (без написания настоящего оператора)
 
-**Задача:** Bash-скриптом эмулировать простейший reconcile loop: следить за CR и создавать/удалять Deployment по его `spec`.
+**Задача:** Bash-скриптом эмулировать простейший reconcile loop: следить за CR и
+создавать/удалять Deployment по его `spec`.
 
 ```bash
 # TODO: написать скрипт, который в цикле (или через `kubectl get --watch`)
@@ -41,3 +45,6 @@ kubectl get websites -o wide
 # Deployment, если он уже отличается — это тот же паттерн, что у настоящего
 # оператора, только без Informer/client-go, реализованный поверх kubectl.
 ```
+
+Ответы —
+[`../04_exercises_answers/operators-answers.md`](../04_exercises_answers/operators-answers.md).

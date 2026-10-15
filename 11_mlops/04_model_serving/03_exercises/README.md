@@ -122,7 +122,7 @@ server {
 for i in $(seq 100); do
   curl -s http://localhost:8080/predict \
     -H "Content-Type: application/json" \
-    -d "[[5.1, 3.5, 1.4, 0.2]]" \
+    -d '{"data": [[5.1, 3.5, 1.4, 0.2]]}' \
     -w "\n" | jq -r .version
 done | sort | uniq -c
 # Ожидаем ~80 ответов от v1, ~20 от v2

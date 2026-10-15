@@ -14,11 +14,14 @@ kubectl top nodes   # должно заработать через 30-60 сек�
 
 ## 01 — HPA на CPU
 
-**Задача:** Развернуть под с `resources.requests.cpu`, применить `hpa.yaml`, нагрузить CPU и увидеть автоскейлинг.
+**Задача:** Развернуть под с `resources.requests.cpu`, применить `hpa.yaml`,
+нагрузить CPU и увидеть автоскейлинг.
 
 ```bash
 kubectl create deployment myapp --image=nginx --replicas=2
 kubectl set resources deployment myapp --requests=cpu=50m --limits=cpu=100m
+# Service нужен генератору нагрузки: он ходит на http://myapp
+kubectl expose deployment myapp --port=80
 
 # TODO: применить ../02_examples/hpa.yaml (target Deployment: myapp)
 kubectl apply -f ../02_examples/hpa.yaml
@@ -36,6 +39,8 @@ kubectl get hpa myapp -w   # смотреть как растут REPLICAS
 
 ```bash
 kubectl create deployment myapp-norequests --image=nginx --replicas=2
+# в свежих kubectl флаг --cpu-percent помечен устаревшим (замена: --cpu=50%),
+# но пока работает
 kubectl autoscale deployment myapp-norequests --cpu-percent=50 --min=1 --max=5
 
 kubectl get hpa myapp-norequests
@@ -44,7 +49,8 @@ kubectl get hpa myapp-norequests
 
 ## 03 — KEDA: scale-to-zero
 
-**Задача:** Поставить KEDA, развернуть consumer с `ScaledObject`, убедиться что при отсутствии сообщений реплики падают до 0.
+**Задача:** Поставить KEDA, развернуть consumer с `ScaledObject`, убедиться что
+при отсутствии сообщений реплики падают до 0.
 
 ```bash
 helm repo add kedacore https://kedacore.github.io/charts
@@ -56,3 +62,6 @@ kubectl apply -f ../02_examples/keda-scaledobject.yaml
 
 kubectl get deployment myapp-consumer -w   # REPLICAS должен упасть до 0 при пустой очереди
 ```
+
+Ответы —
+[`../04_exercises_answers/hpa-answers.md`](../04_exercises_answers/hpa-answers.md).

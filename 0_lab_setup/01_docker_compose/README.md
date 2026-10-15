@@ -1,5 +1,8 @@
 # 01. Tier 1 — Docker Compose
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Самый быстрый способ поднять стенд: одна команда поднимает приложение,
@@ -22,6 +25,8 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: команды, флаги, типовой
+  compose-файл.
 - [01_theory/docker_compose_basics.md](01_theory/docker_compose_basics.md) —
   установка, структура compose файла, команды, паттерн стендов.
 - [02_examples/full-stack.yaml](02_examples/full-stack.yaml) — стенд

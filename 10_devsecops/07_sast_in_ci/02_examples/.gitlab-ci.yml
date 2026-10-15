@@ -37,8 +37,11 @@ trivy-fs:
   stage: security
   image: aquasec/trivy:latest
   script:
+    # --exit-code 0 = не блокировать пайплайн (1 — падать на HIGH/CRITICAL).
+    # Комментарий нельзя ставить внутри многострочной команды: в YAML
+    # " #" обрывает скаляр и ломает разбор файла.
     - trivy fs
-        --exit-code 0         # 0 = не блокировать (изменить на 1 для критических)
+        --exit-code 0
         --severity HIGH,CRITICAL
         --format template
         --template "@/contrib/gitlab.tpl"
@@ -64,10 +67,12 @@ trivy-image:
     # Подставить свой образ
     TARGET_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   script:
+    # --exit-code 1: блокировать при CRITICAL CVE в образе;
+    # --ignore-unfixed: игнорировать CVE, для которых ещё нет фикса.
     - trivy image
-        --exit-code 1         # блокировать при CRITICAL CVE в образе
+        --exit-code 1
         --severity CRITICAL
-        --ignore-unfixed       # игнорировать CVE без фикса
+        --ignore-unfixed
         $TARGET_IMAGE
   allow_failure: true          # убрать когда образ будет чистый
   cache:
@@ -81,6 +86,7 @@ checkov:
   stage: security
   image: bridgecrew/checkov:latest
   script:
+    # --soft-fail: не блокировать пайплайн, пока находки не устранены.
     - checkov
         --directory terraform/
         --framework terraform
@@ -88,7 +94,7 @@ checkov:
         --output cli
         --output junitxml
         --output-file-path checkov-results.xml
-        --soft-fail    # не блокировать пока не устраним
+        --soft-fail
   artifacts:
     when: always
     reports:

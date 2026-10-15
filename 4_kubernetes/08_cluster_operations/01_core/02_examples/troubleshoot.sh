@@ -12,7 +12,7 @@ kubectl get pods -A --field-selector='status.phase!=Running,status.phase!=Succee
 echo -e "\n=== CrashLoopBackOff ==="
 kubectl get pods -A | grep CrashLoopBackOff || echo "Нет CrashLoopBackOff"
 
-echo -e "\n=== OOMKilled за последние 10 минут ==="
+echo -e "\n=== Последние события OOMKilling ==="
 kubectl get events -A --field-selector reason=OOMKilling \
     --sort-by='.lastTimestamp' 2>/dev/null | tail -5
 

@@ -1,5 +1,7 @@
 ---
-# Ответ: ArgoCD Application с auto-sync + selfHeal
+# Ответ 01 + 03: Application из публичного репозитория примеров Argo CD
+# с auto-sync + selfHeal. Для проверки автосинхронизации на изменения в
+# Git сделайте fork argoproj/argocd-example-apps и подставьте свой repoURL.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -8,24 +10,22 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/org/gitops-config.git
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
     targetRevision: HEAD
-    path: overlays/production
-
+    path: guestbook
   destination:
     server: https://kubernetes.default.svc
-    namespace: production
-
+    namespace: guestbook
   syncPolicy:
     automated:
       prune: true
-      selfHeal: true   # КЛЮЧЕВОЕ: восстанавливать ручные изменения
+      selfHeal: true   # Ответ 03: откатывать ручные изменения в кластере
     syncOptions:
       - CreateNamespace=true
 
 ---
-# Ответ 02: Application, указывающий на готовый Kustomize overlay
-# (сам overlay — см. ../../../07_manifests_management/03_kustomize/02_examples/overlays/prod/)
+# Ответ 02: Application, указывающий на готовый Kustomize overlay из этой
+# базы знаний. <you> — ваш GitHub-аккаунт с fork'ом репозитория.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -34,9 +34,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/org/gitops-config.git
+    repoURL: https://github.com/<you>/5_devops_sre_knowledgebase.git
     targetRevision: HEAD
-    path: 07_manifests_management/03_kustomize/02_examples/overlays/prod
+    path: 4_kubernetes/07_manifests_management/03_kustomize/02_examples/overlays/prod
   destination:
     server: https://kubernetes.default.svc
     namespace: myapp-prod
@@ -46,3 +46,36 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+
+---
+# Ответ 04: ApplicationSet с git directories generator — по одному
+# Application на каждый каталог overlays/* (dev, prod, ...)
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: myapp-overlays
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/<you>/5_devops_sre_knowledgebase.git
+        revision: HEAD
+        directories:
+          - path: 4_kubernetes/07_manifests_management/03_kustomize/02_examples/overlays/*
+  template:
+    metadata:
+      name: "myapp-{{.path.basename}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/<you>/5_devops_sre_knowledgebase.git
+        targetRevision: HEAD
+        path: "{{.path.path}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "myapp-{{.path.basename}}"
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true

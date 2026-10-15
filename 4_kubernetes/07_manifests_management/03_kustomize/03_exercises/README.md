@@ -8,7 +8,8 @@ kind create cluster --name manifests-lab
 
 ## 01 — Собрать base + overlay и посмотреть на разницу окружений
 
-**Задача:** Отрендерить `base` без изменений, затем `overlays/dev` и `overlays/prod` — сравнить итоговый YAML.
+**Задача:** Отрендерить `base` без изменений, затем `overlays/dev` и
+`overlays/prod` — сравнить итоговый YAML.
 
 ```bash
 cd ../02_examples
@@ -25,7 +26,8 @@ diff /tmp/dev.yaml /tmp/prod.yaml
 
 ## 02 — ConfigMapGenerator и автоматический Rolling Update
 
-**Задача:** Убедиться, что при изменении конфига в overlay меняется имя ConfigMap и Deployment получает новый Rolling Update без ручных действий.
+**Задача:** Убедиться, что при изменении конфига в overlay меняется имя
+ConfigMap и Deployment получает новый Rolling Update без ручных действий.
 
 ```bash
 kubectl apply -k overlays/dev/ --dry-run=client -o yaml | grep -A2 "kind: ConfigMap"
@@ -37,7 +39,8 @@ kubectl kustomize overlays/dev/ | grep -A2 "kind: ConfigMap"
 
 ## 03 — Удалить ресурс из base через `$patch: delete`
 
-**Задача:** В `overlays/dev/` Ingress не нужен (используется port-forward для локальной разработки). Убрать его, не трогая `base/`.
+**Задача:** В `overlays/dev/` Ingress не нужен (используется port-forward для
+локальной разработки). Убрать его, не трогая `base/`.
 
 ```bash
 # TODO: создай overlays/dev/patch-delete-ingress.yaml с содержимым:
@@ -58,7 +61,9 @@ kubectl kustomize overlays/prod/ | grep -c "kind: Ingress"  # должно ос�
 
 ## 04 — JSON Patch: точечное изменение аргумента запуска
 
-**Задача:** В `overlays/prod/` добавить контейнеру аргумент `--verbose=false`, не трогая остальную структуру `args` через Strategic Merge (предположим что args — позиционный массив без имён, где Strategic Merge неудобен).
+**Задача:** В `overlays/prod/` добавить контейнеру аргумент `--verbose=false`,
+не трогая остальную структуру `args` через Strategic Merge (предположим что args
+— позиционный массив без имён, где Strategic Merge неудобен).
 
 ```bash
 # TODO: добавь в overlays/prod/kustomization.yaml патч типа JSON Patch:

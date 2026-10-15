@@ -88,6 +88,36 @@ Section READMEs additionally carry `## Пререквизиты` and
 `## Когда двигаться дальше`. Git is not taught in this repo — link to
 `../4_python_my_knowledgebase/0_tooling_and_workflow/01_git_essentials/`.
 
+## Cheat-Sheet Convention (CHEATSHEET.md)
+
+Quick reference for an engineer who already knows the topic (added
+2026-10-15). Format follows the sibling repos'
+`4_python_my_knowledgebase/.../01_git_essentials/CHEATSHEET.md`.
+
+- **One `CHEATSHEET.md` per topic dir** — every dir that holds
+  `01_theory/` in sections 0–11 and 14, next to its `README.md`, even
+  for small topics (chosen over combined per-section sheets so the
+  README link is always `./CHEATSHEET.md` and no anchors break).
+  Nested sub-tools (`02_helm/`, `03_fluxcd/`, ...) get their own sheet.
+  None in `12_interview_questions_prep` (separate Q&A format) or
+  `13_books_certs_resources`.
+- Layout: `# <Тема> — шпаргалка`; first line links the theory file(s)
+  and says `⚠️` = опасная команда / частая ловушка; unnumbered `##`
+  groups with dense `| :--- |` tables (commands + key flags, query
+  patterns, defaults/typical values, «когда что использовать»,
+  «Симптом → куда смотреть», one-line pitfalls); short fenced snippets
+  allowed; no prose paragraphs; ~1–3 screens. `|` inside cells is
+  escaped as `\|`.
+- Content comes only from what the topic's theory teaches; if a sheet
+  and the theory disagree, fix the wrong one so both match.
+- Last line: `> Проверка: <how verified, tool versions>; не проверено:
+  <list or —>.` Never claim verification that wasn't run.
+- Topic `README.md` links it right under the H1
+  (`> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) ...`) and
+  as the first `## Файлы` bullet; root `README.md` keeps a
+  `## Шпаргалки` index grouped by section — update it when a topic is
+  added/renamed.
+
 ## Canonical Homes (de-duplication)
 
 - Pod Security Standards / PSA — `10_devsecops/05_pod_security/`;
@@ -141,9 +171,22 @@ nested under `metadata:` instead of placed as a top-level key alongside `apiVers
 
 ## Git & Workspace Discipline
 
-- **Permissive mode enabled:** The user explicitly allows changing, modifying, and creating files across this repository directly without asking for confirmation beforehand.
-- **NEVER create git worktrees:** Agents must NEVER create or use git worktrees (`git worktree` / `git worktree add`) under any circumstances. Always work directly within the primary repository workspace.
-- **Do not commit without explicit instruction:** Never create git commits unless the user explicitly asks to commit.
+- **Line Length (70–80 символов):** Весь текст — как в ответах пользователю
+  в чате, так и во всех файлах репозитория — СТРОГО форматировать с жестким
+  переносом строк по 70–80 символов (длинные неперенесённые строки
+  неудобно читать с монитора 24 дюйма).
+- **Permissive mode enabled (Правка файлов и запуск команд без уточнения):**
+  Всегда править, модифицировать и создавать файлы напрямую без
+  предварительного запроса подтверждения или лишних уточнений, если
+  пользователь явно не запретил редактирование. Команды на чтение,
+  диагностику, проверку синтаксиса, поиск и валидацию (python3, bash -n,
+  git status/diff, grep, find, линтеры) выполнять автономно без лишних
+  вопросов.
+- **NEVER create git worktrees:** Agents must NEVER create or use git
+  worktrees (`git worktree` / `git worktree add`) under any circumstances.
+  Always work directly within the primary repository workspace.
+- **Do not commit without explicit instruction:** Never create git commits
+  unless the user explicitly asks to commit.
 
 ---
 
@@ -330,4 +373,13 @@ what you changed), via a quick Bash/Python one-liner each:
    count, file count), update that doc in the SAME change that alters the
    structure it's counting. A stale "35 lessons" claim after a restructure is
    worse than no claim.
+10. **Cheat-sheets complete & verified** — every topic dir with
+   `01_theory/` in sections 0–11 and 14 has a `CHEATSHEET.md` linked from
+   its README and from the root `## Шпаргалки` index; commands added or
+   changed in a sheet were checked (`--help`, `bash -n`, `promtool check
+   rules`, `yamllint`, `terraform validate` in a scratch dir, `kubectl`
+   only with `--context kind-...`), and its `> Проверка:` line is
+   updated. Run the glued Latin/Cyrillic and CJK scans (item 6) in
+   Python — `grep` may be aliased to `ugrep`, where the PCRE Cyrillic
+   class silently matches nothing.
 

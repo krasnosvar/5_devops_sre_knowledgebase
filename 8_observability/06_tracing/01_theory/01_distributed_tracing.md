@@ -103,7 +103,7 @@ span.SetAttributes(attribute.String("payment.method", "card"))
 Сервис A                           Сервис B
 ────────                           ────────
 span = start("handle-request")
-ctx = inject(span.context)         
+ctx = inject(span.context)
 → HTTP запрос с заголовком →
   traceparent: 00-abc123-def456-01
 
@@ -131,7 +131,9 @@ traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
 # Трейсить 10% запросов
 sampler = TraceIdRatioBased(0.1)
 
-# Трейсить все с ошибками + 1% остальных
+# Следовать решению родителя (флаг sampled в traceparent), а для
+# корневых spans — 1%. Head-based не умеет «все с ошибками»: ошибка
+# ещё не случилась в момент решения — для этого tail-based ниже.
 sampler = ParentBased(root=TraceIdRatioBased(0.01))
 ```
 

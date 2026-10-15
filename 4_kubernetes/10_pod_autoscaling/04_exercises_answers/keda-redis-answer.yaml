@@ -1,0 +1,74 @@
+---
+# Ответ 03: KEDA scale-to-zero на Redis List (вместо Kafka — для kind).
+# Redis — официальный образ, без пароля: только для лабы.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: redis}
+  template:
+    metadata:
+      labels: {app: redis}
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector: {app: redis}
+  ports:
+    - port: 6379
+
+---
+# Консьюмер: забирает сообщения из списка orders по одному (BLPOP)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-consumer
+spec:
+  replicas: 0                 # стартовое значение; дальше управляет KEDA
+  selector:
+    matchLabels: {app: myapp-consumer}
+  template:
+    metadata:
+      labels: {app: myapp-consumer}
+    spec:
+      containers:
+        - name: consumer
+          image: redis:7-alpine
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              while true; do
+                redis-cli -h redis BLPOP orders 5
+                sleep 1   # имитация обработки сообщения
+              done
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: myapp-consumer
+spec:
+  scaleTargetRef:
+    name: myapp-consumer
+  minReplicaCount: 0
+  maxReplicaCount: 5
+  pollingInterval: 5          # как часто KEDA опрашивает Redis
+  cooldownPeriod: 30          # через сколько секунд пустой очереди -> 0
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.default.svc:6379
+        listName: orders
+        listLength: "5"       # целевое число сообщений на одну реплику

@@ -29,10 +29,11 @@ Error budget: 0.1% × 30 дней × 24 ч × 60 мин = 43.2 минуты
 
 ## Шаг 2 — Настроить SLO метрики в Prometheus
 
-Добавить в `prometheus.yml` (или через recording rules) запросы для отслеживания:
+Положить rule-файл в каталог `alerts/` стенда (его читает `rule_files`
+в `prometheus.yml`):
 
 ```yaml
-# slo_rules.yml
+# alerts/slo_rules.yml
 groups:
   - name: payment-api-slo
     interval: 30s
@@ -123,17 +124,19 @@ curl -X POST http://localhost:9090/-/reload
 
 ## Шаг 5 — Симуляция инцидента
 
+Сервис `payment-api` здесь условный. Чтобы увидеть то же самое вживую,
+используйте демо-сервер
+[app.py](../8_observability/02_metrics_prometheus/04_exercises_answers/app.py)
+(job `myapp`) и генератор ~2% ошибок из
+[упражнений по SLO](./01_slo_sli_sla/03_exercises/README.md); в правилах
+выше замените `job="payment-api"` на `job="myapp"`.
+
 ```bash
-# Симулировать нагрузку на тестовый сервис
-# (в реальности это ваши пользователи или load тест)
-
-# Генерировать ошибки чтобы сработал burn rate алерт:
-# заменить nginx на образ который возвращает 500
-kubectl set image deployment/myapp app=hashicorp/http-echo:latest -- \
-  -text="error" -status=500   # если в k8s
-
-# или через docker (для локального теста):
-docker run -d -p 8081:8080 hashicorp/http-echo:latest -text="Server Error" -status=500
+python app.py &
+while true; do
+  for i in $(seq 49); do curl -s -o /dev/null localhost:8001/; done
+  curl -s -o /dev/null localhost:8001/error
+done
 ```
 
 **Наблюдать:**
@@ -157,7 +160,7 @@ docker run -d -p 8081:8080 hashicorp/http-echo:latest -text="Server Error" -stat
 
 14:12 UTC — Решение: откатить
   kubectl rollout undo deployment/payment-api
-  
+
 14:17 UTC — Error rate начал снижаться
 14:22 UTC — Всё ok, алерт resolved
 

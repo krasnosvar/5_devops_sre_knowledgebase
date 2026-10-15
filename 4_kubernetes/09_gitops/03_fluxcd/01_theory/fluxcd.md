@@ -71,6 +71,14 @@ spec:
 ближе к Unix-философии "одна утилита — одна задача", чем к единому объекту
 ArgoCD.
 
+Для Helm-чартов пара ресурсов та же по смыслу: `HelmRepository` (или
+`OCIRepository`) — откуда брать чарт, `HelmRelease` — какой чарт, какая
+версия (можно semver-диапазон), с какими values и в какой namespace.
+helm-controller сам выполняет аналог `helm upgrade --install`, хранит
+обычный Helm-релиз (его видно в `helm ls`, в отличие от Argo CD) и умеет
+автоматически откатывать неудачный upgrade (`upgrade.remediation`).
+Пример — [`../02_examples/helmrelease.yaml`](../02_examples/helmrelease.yaml).
+
 ## 3. Image Automation Controller
 
 Аналог ArgoCD Image Updater, но встроенный в тот же GitOps Toolkit (отдельные

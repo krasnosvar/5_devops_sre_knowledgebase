@@ -103,7 +103,7 @@ Kubernetes от архитектуры до GitOps. Упор — на поним
     дистрибутивы (OpenShift, Rancher, k3s), инструменты (k9s, kubectx, stern),
     куда смотреть дальше. Без упражнений — это не тема для лабы.
 
-13. [13_troubleshooting](./13_troubleshooting/01_theory/kubernetes_troubleshooting.md)
+13. [13_troubleshooting](./13_troubleshooting/)
     — системная диагностика инцидентов: CrashLoopBackOff, OOMKilled (Exit Code
     137), Pending и предикаты kube-scheduler, Node NotReady и PLEG issues, сбои
     Service/Endpoints, CoreDNS задержки (ndots:5), Ingress 502/504 keep-alive

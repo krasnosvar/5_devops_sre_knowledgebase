@@ -1,0 +1,31 @@
+# Ответ к упражнению 04: burn rate алерты для SLO 99.9% (бюджет 0.001).
+# Скопировать в 8_observability/02_metrics_prometheus/02_examples/alerts/
+groups:
+  - name: slo-alerts
+    rules:
+      # 14.4x за 1 час: при такой скорости 30-дневный бюджет сгорит
+      # за 30 / 14.4 ≈ 2 дня (за этот час тратится 2% бюджета)
+      - alert: ErrorBudgetBurnFast
+        expr: |
+          (
+            sum by (job) (rate(http_requests_total{job="myapp", status=~"5.."}[1h]))
+            / sum by (job) (rate(http_requests_total{job="myapp"}[1h]))
+          ) > 14.4 * 0.001
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error budget of {{ $labels.job }} burning fast (~2 days to exhaustion)"
+
+      # 6x за 6 часов: бюджет сгорит за 30 / 6 = 5 дней
+      - alert: ErrorBudgetBurnSlow
+        expr: |
+          (
+            sum by (job) (rate(http_requests_total{job="myapp", status=~"5.."}[6h]))
+            / sum by (job) (rate(http_requests_total{job="myapp"}[6h]))
+          ) > 6 * 0.001
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Error budget of {{ $labels.job }} burning (~5 days to exhaustion)"

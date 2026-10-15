@@ -1,6 +1,10 @@
 """
 Мониторинг data drift с помощью Evidently
-pip install evidently scikit-learn pandas prometheus_client
+pip install "evidently<0.7" scikit-learn pandas prometheus_client
+
+Версия Evidently зафиксирована: в 0.7 API переработан, и импорты
+evidently.report / evidently.test_suite ниже в новых версиях не
+работают (проверено на 0.6.7).
 """
 
 import pandas as pd
