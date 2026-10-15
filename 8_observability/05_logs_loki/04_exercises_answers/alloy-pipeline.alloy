@@ -1,0 +1,22 @@
+// Ответ к упражнению 04: заменить этим блок loki.process "containers"
+// в 02_examples/alloy-config.alloy, затем docker compose restart alloy.
+loki.process "containers" {
+  stage.match {
+    selector = "{service=\"log-generator\"}"
+
+    stage.json {
+      expressions = { status = "status", method = "method" }
+    }
+
+    stage.drop {
+      source = "status"
+      value  = "200"
+    }
+
+    stage.labels {
+      values = { status = "" }
+    }
+  }
+
+  forward_to = [loki.write.default.receiver]
+}

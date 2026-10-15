@@ -77,7 +77,10 @@ spec:
 
   containers:
     - name: app
-      image: bitnami/kubectl:latest
+      # Образ с kubectl от Bitnami больше не стоит брать: с 2025 года
+      # бесплатный каталог Bitnami урезан (часть образов перенесена в
+      # bitnamilegacy без обновлений). Для демо RBAC достаточно curl.
+      image: curlimages/curl:8.10.1
       command: ["sleep", "3600"]
       securityContext:
         allowPrivilegeEscalation: false

@@ -32,7 +32,8 @@
   DNS, HTTP/HTTPS, балансировка нагрузки (L4/L7), BGP, iptables, VPC.
 - [3_containers](./3_containers/) — Docker и Podman: OCI, image layers, overlay FS,
   rootless, security (capabilities, seccomp), multi-stage builds.
-- [4_kubernetes](./4_kubernetes/) — Kubernetes от архитектуры до GitOps: control/data
+- [4_kubernetes](./4_kubernetes/) — Kubernetes от первых шагов (kind, kubectl,
+  первый Pod/Deployment/Service) до GitOps: control/data
   plane, scheduling, Helm, Kustomize, ArgoCD, RBAC, NetworkPolicy,
   day-2 operations и глубокий траблшутинг инцидентов.
 - [5_iac](./5_iac/) — Infrastructure as Code: Terraform/OpenTofu (state, модули,
@@ -63,6 +64,16 @@
   масштабирование высоконагруженных систем без/с Kubernetes, один кластер
   против нескольких, CI/CD на тысячи хостов, IaC для десятков команд.
 
+## Пререквизиты
+
+- Уверенная работа в терминале Linux/macOS (cd, ls, редактор).
+- **Git** в этой базе не преподаётся, но нужен с первых упражнений (стенды,
+  CI/CD, GitOps). Если git ещё не освоен — пройдите блок
+  [Git essentials](../4_python_my_knowledgebase/0_tooling_and_workflow/01_git_essentials/)
+  в соседнем Python-репозитории: clone/commit/branch/merge, разрешение
+  конфликтов, remote.
+- Базовое чтение YAML — используется почти в каждом разделе.
+
 ## Формат разделов
 
 Большинство тем устроены по одному шаблону:
@@ -70,18 +81,21 @@
 - `01_theory/` — краткая теория без лишней воды: почему так, а не как;
 - `02_examples/` — конфиги, манифесты, скрипты, которые можно запускать;
 - `03_exercises/` — упражнения с лабораторными стендами (Docker Compose или Terraform);
-- `04_exercises_answers/` — эталонные решения для самопроверки;
+- `04_exercises_answers/` — эталонные решения для самопроверки в `.md`:
+  команды по порядку, ожидаемый вывод и короткое объяснение;
 - `README.md` — навигация по теме.
 
 Каждое упражнение указывает **минимальный тир лабы**, необходимый для его выполнения:
 - 🐳 **Tier 1** — только Docker Compose, работает везде
 - 🖥 **Tier 2** — локальные VM (KVM / OrbStack / WSL2+VirtualBox)
-- ☁️ **Tier 3** — облако или VPS (AWS free tier / Hetzner)
+- ☁️ **Tier 3** — облако или VPS (AWS — с июля 2025 новые аккаунты получают
+  кредитный Free plan вместо 12-месячного free tier; Hetzner)
 
 ## Как проходить
 
-1. Начать с [0_lab_setup](./0_lab_setup/) — поднять минимальную среду (хватит Tier 1
-   для большинства разделов).
+1. Начать с [0_lab_setup](./0_lab_setup/) — поднять минимальную среду (хватит
+   Tier 1 для большинства разделов). Финальный проект
+   `0_lab_setup/05_capstone_project` пока пропустить — см. пункт 9.
 2. Пройти [1_linux_and_shell](./1_linux_and_shell/), [2_networking](./2_networking/) и [3_containers](./3_containers/)
    как фундамент — это то, на чём строится всё остальное.
 3. Перейти к [4_kubernetes](./4_kubernetes/) и [5_iac](./5_iac/) — основа современного
@@ -97,6 +111,14 @@
    открывать по необходимости.
 8. [14_system_design](./14_system_design/) — раздел-синтез, после освоения
    `4_kubernetes`, `5_iac`, `6_cicd`, `8_observability`, `9_sre`.
+9. **Финальный проект** —
+   [0_lab_setup/05_capstone_project](./0_lab_setup/05_capstone_project/):
+   одно приложение проходит путь от голого Linux до k8s, IaC, CI/CD,
+   наблюдаемости, SRE-инцидента и security. Делается **в конце**, а не на
+   шаге 0, хотя лежит в `0_lab_setup`. Каждый этап открывается после своего
+   раздела: 01 → после `1_linux_and_shell`, 02 → `3_containers`,
+   03 → `4_kubernetes`, 04 → `5_iac`, 05 → `6_cicd`,
+   06 → `8_observability`, 07 → `9_sre`, 08 → `10_devsecops`.
 
 ## Полезные ресурсы
 

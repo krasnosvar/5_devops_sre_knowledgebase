@@ -1,0 +1,34 @@
+# Упражнение 01: alice может только читать pods и их логи в production.
+# Разбор команд: rbac-answers.md.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: production
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  # Логи — отдельный subresource, без него `kubectl logs` вернёт Forbidden
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: alice-pod-reader
+  namespace: production
+subjects:
+  - kind: User
+    name: alice          # совпадает с CN из сертификата
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io

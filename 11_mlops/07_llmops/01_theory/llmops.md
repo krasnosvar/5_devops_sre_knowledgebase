@@ -70,12 +70,13 @@ def rag_answer(question: str) -> str:
         input=question
     ).data[0].embedding
 
-    # 2. найти похожие документы
-    results = client.search(
+    # 2. найти похожие документы (query_points — актуальный API
+    #    qdrant-client; старый client.search() удалён)
+    results = client.query_points(
         collection_name="docs",
-        query_vector=embedding,
+        query=embedding,
         limit=5
-    )
+    ).points
     context = "\n".join(r.payload["text"] for r in results)
 
     # 3. ответить с контекстом
@@ -135,6 +136,11 @@ model.print_trainable_parameters()
 ## Serving LLM в продакшне
 
 ### vLLM — оптимизированный inference сервер
+
+> Образ `vllm/vllm-openai` требует NVIDIA GPU (сборка под CUDA). Без
+> GPU для экспериментов берут Ollama или llama.cpp server с тем же
+> OpenAI-совместимым API — см.
+> [04_model_serving/03_exercises](../../04_model_serving/03_exercises/README.md).
 
 ```bash
 # запустить API совместимый с OpenAI

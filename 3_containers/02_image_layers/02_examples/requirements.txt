@@ -1,0 +1,2 @@
+# Минимальный набор зависимостей для Dockerfile.optimized
+flask==3.0.3

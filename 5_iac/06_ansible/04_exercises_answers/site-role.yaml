@@ -1,0 +1,23 @@
+---
+# Ответ к упражнению 03: тот же результат, что site.yaml, но через роль.
+# Запуск (из этой директории):
+#   ansible-playbook -i ../02_examples/inventory.yaml site-role.yaml \
+#     --check --diff
+#   ansible-playbook -i ../02_examples/inventory.yaml site-role.yaml
+- name: Configure web servers via role
+  hosts: webservers
+  become: true
+
+  roles:
+    - role: nginx
+      # nginx_port: 8080   # переопределение дефолта роли
+
+  post_tasks:
+    - name: Verify nginx responds
+      ansible.builtin.uri:
+        url: "http://localhost:{{ nginx_port }}/health"
+        status_code: 200
+      register: health_check
+      retries: 3
+      delay: 5
+      until: health_check.status == 200

@@ -1,0 +1,45 @@
+# Решение шага 7: SLI/SLO и burn-rate алерты для shortener.
+# Требует метрику shortener_http_responses_total{code} — её добавляет
+# middleware из ANSWERS.md (action item постмортема).
+# SLO: 99.5% пользовательских запросов за 30 дней — без 5xx.
+# Error budget = 0.5% = 0.005.
+groups:
+  - name: shortener-sli
+    rules:
+      - record: shortener:sli_errors:ratio_rate5m
+        expr: >
+          sum(rate(shortener_http_responses_total{code=~"5.."}[5m]))
+          / sum(rate(shortener_http_responses_total[5m]))
+      - record: shortener:sli_errors:ratio_rate30m
+        expr: >
+          sum(rate(shortener_http_responses_total{code=~"5.."}[30m]))
+          / sum(rate(shortener_http_responses_total[30m]))
+      - record: shortener:sli_errors:ratio_rate1h
+        expr: >
+          sum(rate(shortener_http_responses_total{code=~"5.."}[1h]))
+          / sum(rate(shortener_http_responses_total[1h]))
+      - record: shortener:sli_errors:ratio_rate6h
+        expr: >
+          sum(rate(shortener_http_responses_total{code=~"5.."}[6h]))
+          / sum(rate(shortener_http_responses_total[6h]))
+
+  - name: shortener-slo-alerts
+    rules:
+      # Быстрое сгорание: темп 14.4x съедает 2% месячного бюджета за час.
+      - alert: ShortenerErrorBudgetFastBurn
+        expr: >
+          shortener:sli_errors:ratio_rate1h > (14.4 * 0.005)
+          and shortener:sli_errors:ratio_rate5m > (14.4 * 0.005)
+        labels:
+          severity: critical
+        annotations:
+          summary: "shortener быстро сжигает error budget (SLO 99.5%)"
+      # Медленное сгорание: темп 6x съедает 5% бюджета за 6 часов.
+      - alert: ShortenerErrorBudgetSlowBurn
+        expr: >
+          shortener:sli_errors:ratio_rate6h > (6 * 0.005)
+          and shortener:sli_errors:ratio_rate30m > (6 * 0.005)
+        labels:
+          severity: warning
+        annotations:
+          summary: "shortener медленно сжигает error budget (SLO 99.5%)"

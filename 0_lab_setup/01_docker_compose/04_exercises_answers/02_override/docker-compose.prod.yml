@@ -1,0 +1,12 @@
+# prod: только явно, через -f docker-compose.yml -f docker-compose.prod.yml.
+services:
+  web:
+    image: lab/web:1.0       # готовый образ из registry, без build
+    ports:
+      - "80:8000"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M

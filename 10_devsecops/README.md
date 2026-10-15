@@ -11,6 +11,17 @@
 > [`../3_containers/05_security/`](../3_containers/05_security/),
 > [`../4_kubernetes/06_security/`](../4_kubernetes/06_security/).
 
+## Пререквизиты
+
+- [1_linux_and_shell](../1_linux_and_shell/) — права, capabilities,
+  seccomp ([09_linux_security](../1_linux_and_shell/09_linux_security/)).
+- [3_containers](../3_containers/) — образы, изоляция контейнеров.
+- [4_kubernetes](../4_kubernetes/) — особенно
+  [06_security](../4_kubernetes/06_security/) (RBAC, NetworkPolicy,
+  policy engines) и [07_manifests_management](../4_kubernetes/07_manifests_management/)
+  (Helm для установки инструментов).
+- [6_cicd](../6_cicd/) — pipeline, в который встраиваются сканеры.
+
 ## Подразделы
 
 1. [01_k8s_rbac](./01_k8s_rbac/) — Kubernetes RBAC: ServiceAccount, Role/ClusterRole,
@@ -41,8 +52,9 @@
    Rekor, Fulcio) для подписания артефактов; атаки на supply chain и защита.
 
 7. [07_sast_in_ci](./07_sast_in_ci/) — статический анализ в CI: Semgrep для
-   кода, Checkov и tfsec для Terraform, kubesec для манифестов, hadolint для
-   Dockerfile; как интегрировать без превращения CI в узкое место.
+   кода, Checkov и trivy config (бывший tfsec) для Terraform, kubesec для
+   манифестов, hadolint для Dockerfile; как интегрировать без превращения
+   CI в узкое место.
 
 8. [08_runtime_security](./08_runtime_security/) — защита в runtime: Falco
    (eBPF-based, обнаружение аномального поведения в k8s), audit log для
@@ -57,3 +69,16 @@
 
 🐳 Tier 1: Trivy, Semgrep, Checkov локально; Vault в Docker Compose
 🖥 Tier 2: External Secrets Operator + Vault в kind кластере, Falco
+
+## Когда двигаться дальше
+
+- Можете выдать приложению минимальные RBAC-права и проверить их через
+  `kubectl auth can-i`.
+- Можете объяснить, где в вашей системе хранятся секреты и как они
+  попадают в Pod.
+- Можете включить Pod Security Admission на namespace без поломки
+  существующих workloads.
+- Можете собрать security stage в CI (SAST, IaC, образ) и объяснить,
+  какие находки блокируют merge.
+
+Далее: [11_mlops](../11_mlops/).

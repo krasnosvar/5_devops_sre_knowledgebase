@@ -1,0 +1,57 @@
+---
+# Роль рассчитана на Debian/Ubuntu (sites-available/sites-enabled,
+# пользователь www-data) — как VM из 0_lab_setup.
+- name: Fail on unsupported OS family
+  ansible.builtin.assert:
+    that: ansible_os_family == "Debian"
+    fail_msg: "Роль nginx поддерживает только Debian/Ubuntu"
+
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  notify: Restart nginx
+
+- name: Create web root
+  ansible.builtin.file:
+    path: "{{ nginx_web_root }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Deploy index page
+  ansible.builtin.copy:
+    content: |
+      <h1>Server: {{ inventory_hostname }}</h1>
+      <p>Managed by Ansible role nginx</p>
+    dest: "{{ nginx_web_root }}/index.html"
+    mode: "0644"
+
+- name: Deploy site config
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "/etc/nginx/sites-available/{{ nginx_site_name }}"
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable site
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ nginx_site_name }}"
+    dest: "/etc/nginx/sites-enabled/{{ nginx_site_name }}"
+    state: link
+  notify: Reload nginx
+
+- name: Disable default site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+
+- name: Ensure nginx is running and enabled
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true

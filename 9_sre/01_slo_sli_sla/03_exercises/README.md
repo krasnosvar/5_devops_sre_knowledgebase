@@ -1,6 +1,6 @@
 # Упражнения — SLO / SLI / SLA
 
-Стенд: 🐳 Tier 1 — Prometheus + Grafana из 7_observability/02_metrics_prometheus/02_examples/
+Стенд: 🐳 Tier 1 — Prometheus + Grafana из 8_observability/02_metrics_prometheus/02_examples/
 
 ## 01 — Определить SLI и SLO
 

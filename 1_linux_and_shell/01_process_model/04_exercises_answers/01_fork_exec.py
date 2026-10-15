@@ -4,18 +4,19 @@
 import os, time, subprocess
 
 # 1. Fork и наблюдение
-print(f"Parent PID: {os.getpid()}")
+print(f"Parent PID: {os.getpid()}", flush=True)
 
 pid = os.fork()
 if pid == 0:
     # Дочерний процесс
-    print(f"Child PID: {os.getpid()}, Parent: {os.getppid()}")
+    # flush=True: os._exit() не сбрасывает буфер stdout, вывод бы пропал
+    print(f"Child PID: {os.getpid()}, Parent: {os.getppid()}", flush=True)
     time.sleep(0.2)
     os._exit(0)
 else:
-    print(f"Parent spawned child PID: {pid}")
+    print(f"Parent spawned child PID: {pid}", flush=True)
     os.wait()  # reap child — предотвратить zombie
-    print("Child reaped, no zombie")
+    print("Child reaped, no zombie", flush=True)
 
 # 2. exec — замена образа процесса
 # subprocess.run — это fork() + exec() под капотом

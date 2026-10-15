@@ -1,5 +1,6 @@
 services:
-  # OTel Collector — принимает OTLP, маршрутизирует в Jaeger и Prometheus
+  # OTel Collector — принимает OTLP от приложений, отправляет traces в
+  # Jaeger, а OTLP-метрики отдаёт в формате Prometheus на :8889
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     ports:
@@ -12,16 +13,19 @@ services:
     depends_on:
       - jaeger
 
-  # Jaeger — distributed tracing backend
+  # Jaeger v2 — tracing backend (сам построен на OTel Collector).
+  # all-in-one режим: приём OTLP + хранение в памяти + UI.
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/jaeger:latest
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "14250:14250"  # gRPC (от OTel Collector)
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
+      - "16686:16686"  # Jaeger UI и HTTP API (/api/services, /api/traces)
+    # OTLP (4317/4318) принимается внутри сети compose от otel-collector;
+    # наружу публикуем только UI. Порт 14250 (старый gRPC-протокол
+    # Jaeger) в v2 не используется.
 
-  # Grafana Tempo — альтернатива Jaeger (uncomment если нужен Tempo)
+  # Grafana Tempo — альтернатива Jaeger (uncomment если нужен Tempo;
+  # tempo.yaml в примерах нет — его нужно написать, и не публиковать
+  # 4317 одновременно с otel-collector)
   # tempo:
   #   image: grafana/tempo:latest
   #   command: ["-config.file=/etc/tempo.yaml"]
@@ -29,13 +33,16 @@ services:
   #     - ./tempo.yaml:/etc/tempo.yaml:ro
   #   ports:
   #     - "3200:3200"
-  #     - "4317:4317"
 
-  # Демо-приложение с трейсингом (генерирует traces)
+  # Демо-приложение HotROD (Jaeger) — генерирует traces по нажатию
+  # кнопок в UI: сервисы frontend, customer, driver, route, mysql, redis
   demo-app:
-    image: ghcr.io/open-telemetry/demo:latest
+    image: jaegertracing/example-hotrod:latest
+    command: ["all"]
     ports:
-      - "8080:8080"    # frontend
+      - "8080:8080"    # UI HotROD
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-      - OTEL_SERVICE_NAME=demo-app
+      # HotROD экспортирует OTLP по HTTP (порт 4318)
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    depends_on:
+      - otel-collector

@@ -14,12 +14,18 @@
 docker run --rm alpine sh -c "cat /proc/1/status | grep Cap"
 
 # TODO: запустить nginx с минимальными правами
-docker run -d \
+# (официальный образ: master стартует от root и слушает порт 80)
+docker run -d --name nginx-caps \
   --cap-drop ALL \
   --cap-add ??? \
-  --user 1000:1000 \
-  -p 8080:8080 \
+  -p 8080:80 \
   nginx:alpine
+docker logs nginx-caps   # ошибки [emerg] подскажут, какой capability не хватает
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080
+docker rm -f nginx-caps
+
+# TODO (вариант без root): образ nginxinc/nginx-unprivileged слушает 8080
+# и работает от UID 101 — какие capabilities нужны ему?
 ```
 
 ## 02 — Read-only filesystem
@@ -31,7 +37,8 @@ docker run -d \
 docker run --rm --read-only nginx:alpine
 
 # Посмотреть в какие директории nginx пишет
-docker run --rm nginx:alpine sh -c "nginx -T 2>&1 | grep -i path"
+# (пути временных файлов и pid вкомпилированы — их показывает nginx -V)
+docker run --rm nginx:alpine sh -c "nginx -V 2>&1 | tr ' ' '\\n' | grep -i path"
 
 # TODO: добавить правильные --tmpfs монты
 docker run -d --read-only \

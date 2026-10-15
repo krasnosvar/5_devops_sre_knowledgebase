@@ -5,6 +5,19 @@
 а понимание механики: почему контейнеры работают именно так, что такое cgroup
 в контексте k8s limits, как systemd управляет процессами в кластерных нодах.
 
+## Пререквизиты
+
+- [0_lab_setup](../0_lab_setup/) — 🐳 Tier 1
+  ([01_docker_compose](../0_lab_setup/01_docker_compose/)) для
+  упражнений на контейнерах; для тем с systemd, cgroups, AppArmor и
+  `ip netns` нужен 🖥 Tier 2
+  ([02_local_vms](../0_lab_setup/02_local_vms/)).
+- Уверенная работа в терминале: cd, ls, редактор, SSH-ключи.
+
+Docker, kind и kubectl встречаются в отдельных упражнениях раньше, чем
+разбираются в своих разделах, — такие места помечены «Забегание вперёд»
+и их можно пропустить.
+
 ## Подразделы
 
 0. [00_architecture_and_boot](./00_architecture_and_boot/) — user space vs kernel
@@ -29,9 +42,11 @@
 5. [05_systemd](./05_systemd/) — unit lifecycle, targets, socket activation,
    journald, cgroup-дерево через systemd; как k8s управляет kubelet как сервисом.
 
-6. [06_networking_basics](./06_networking_basics/) — сетевой стек Linux: netfilter,
-   iptables/nftables, veth pairs, bridges, routing. Фундамент для понимания
-   k8s networking (CNI, kube-proxy, Services).
+6. [06_networking_basics](./06_networking_basics/) — сеть глазами Linux-
+   инструментов: `ip` (адреса, маршруты), `ss` и TIME_WAIT, `/etc/hosts`/
+   nsswitch/`resolv.conf`, network namespaces и veth, базовый tcpdump.
+   Протоколы (TCP, DNS, TLS, балансировка, iptables) — в
+   [`../2_networking/`](../2_networking/).
 
 7. [07_bash_for_devops](./07_bash_for_devops/) — bash-идиомы для DevOps-скриптов:
    idempotency, retry с backoff, lockfiles, trap для cleanup, heredoc, работа
@@ -51,10 +66,10 @@
     группы (`/etc/passwd`/`shadow`/`group`, `useradd`/`usermod`, primary vs
     supplementary группы), NSS (откуда ОС берёт пользователей — локально или
     LDAP/AD), ACL по-настоящему (default ACL, mask, POSIX vs NFSv4). Не про
-    security-хардening (это в 09) — про то, как вообще устроены аккаунты и
+    hardening (это в 09) — про то, как вообще устроены аккаунты и
     точечный доступ.
 
-11. [11_troubleshooting](./11_troubleshooting/01_theory/linux_troubleshooting.md) — системный
+11. [11_troubleshooting](./11_troubleshooting/) — системный
     анализ инцидентов и узких мест: методологии USE/RED, 60-секундный экспресс-чек-лист,
     D-state процессы, Page Cache и Slab (`SUnreclaim`), механика OOM Killer и `oom_score_adj`,
     насыщение дискового I/O (`r_await`/`w_await`), скрытые удаленные файлы (`lsof +L1`),
@@ -66,6 +81,18 @@
 Разделы 01–02 критичны для понимания контейнеров; 06 — для понимания k8s сети;
 09–10 используют знания почти всех предыдущих разделов (namespaces, systemd,
 /proc, файловые права); 11 закрепляет системную диагностику всего стека.
+
+## Когда двигаться дальше
+
+- можете объяснить, из каких механизмов ядра (namespaces, cgroups v2,
+  OverlayFS) собран контейнер, и показать каждый руками;
+- можете написать unit-файл systemd и идемпотентный bash-скрипт со
+  strict mode, retry и trap;
+- можете по 60-секундному чек-листу определить, какой ресурс хоста
+  насыщен, и найти виновный процесс.
+
+Дальше: [2_networking](../2_networking/) — протоколы поверх
+Linux-инструментов из темы 06.
 
 ## Связь с другими разделами
 

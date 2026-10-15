@@ -1,0 +1,29 @@
+# Упражнение 04: исправленный insecure-rbac.yaml.
+# 1) wildcard-правила заменены на конкретные ресурсы и глаголы;
+# 2) ClusterRole -> Role (приложению нужны права в одном namespace);
+# 3) ClusterRoleBinding -> RoleBinding в production;
+# 4) roleRef указывает на app-role, а не на cluster-admin.
+# Разбор: rbac-answers.md.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-role
+  namespace: production
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-binding
+  namespace: production
+subjects:
+  - kind: ServiceAccount
+    name: myapp
+    namespace: production
+roleRef:
+  kind: Role
+  name: app-role
+  apiGroup: rbac.authorization.k8s.io

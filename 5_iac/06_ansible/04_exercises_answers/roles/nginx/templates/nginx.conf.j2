@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+server {
+    listen {{ nginx_port }};
+    server_name _;
+
+    location / {
+        root {{ nginx_web_root }};
+        index index.html;
+    }
+
+    location /health {
+        return 200 "ok\n";
+        add_header Content-Type text/plain;
+    }
+}

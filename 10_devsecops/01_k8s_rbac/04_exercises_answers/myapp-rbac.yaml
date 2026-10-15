@@ -1,0 +1,48 @@
+# Упражнение 02: ServiceAccount myapp читает только ConfigMap app-config.
+# Разбор команд: rbac-answers.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: default
+data:
+  LOG_LEVEL: info
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-config-reader
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    # resourceNames работает для get/update/delete, но не для list/watch
+    # без fieldSelector — поэтому даём только get
+    resourceNames: ["app-config"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: myapp-app-config-reader
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: myapp
+    namespace: default
+roleRef:
+  kind: Role
+  name: app-config-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+  namespace: default
+spec:
+  serviceAccountName: myapp
+  containers:
+    - name: curl
+      image: curlimages/curl:8.10.1
+      command: ["sleep", "3600"]

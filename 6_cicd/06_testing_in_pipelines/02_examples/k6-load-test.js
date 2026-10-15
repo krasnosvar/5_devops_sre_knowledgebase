@@ -21,7 +21,7 @@ export const options = {
     { duration: '1m', target: 0 },    // охлаждение
   ],
   thresholds: {
-    http_req_duration: ['p95<500'],    // 95% запросов < 500ms
+    http_req_duration: ['p(95)<500'],    // 95% запросов < 500ms
     errors: ['rate<0.01'],             // ошибок < 1%
     http_req_failed: ['rate<0.01'],
   },

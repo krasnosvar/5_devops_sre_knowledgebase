@@ -1,0 +1,46 @@
+---
+# Ответ к упражнению 04: те же политики, что в 02_examples, но с
+# failurePolicy: Ignore — при недоступности Kyverno API-сервер пропустит
+# запрос без проверки (fail-open). Применять, пока Kyverno работает.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+spec:
+  failurePolicy: Ignore
+  rules:
+    - name: require-image-tag
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      validate:
+        failureAction: Enforce
+        message: "Тег :latest запрещён, укажите конкретную версию образа"
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-default-resources
+spec:
+  failurePolicy: Ignore
+  rules:
+    - name: default-resources
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      mutate:
+        patchStrategicMerge:
+          spec:
+            containers:
+              - (name): "*"
+                resources:
+                  +(limits):
+                    memory: "256Mi"
+                    cpu: "200m"

@@ -1,0 +1,38 @@
+# Ответ к упражнению 02: скопировать в 02_examples/alerts/node.yml
+groups:
+  - name: node-alerts
+    rules:
+      # CPU > 80% в течение 5 минут
+      - alert: HighCPU
+        expr: |
+          100 - avg by (instance) (
+            rate(node_cpu_seconds_total{mode="idle"}[5m])
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU above 80% on {{ $labels.instance }}"
+          # $value уже в процентах (0-100), поэтому не humanizePercentage
+          description: 'CPU is {{ $value | printf "%.1f" }}%'
+
+      # Диск > 85% (без псевдо-ФС вроде tmpfs/overlay)
+      - alert: DiskAlmostFull
+        expr: |
+          (node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}
+            - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"})
+          / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} is above 85%"
+
+      # Сервис down (up == 0)
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Target {{ $labels.instance }} of {{ $labels.job }} is down"

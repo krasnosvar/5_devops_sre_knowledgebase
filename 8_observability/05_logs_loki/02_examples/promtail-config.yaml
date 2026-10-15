@@ -1,3 +1,7 @@
+# LEGACY: Promtail снят с поддержки (LTS, затем EOL) — для новых установок
+# используйте Grafana Alloy (alloy-config.alloy рядом делает то же самое).
+# Файл оставлен для сравнения и для поддержки старых инсталляций.
+# Запуск: docker compose --profile promtail up -d (без сервиса alloy).
 server:
   http_listen_port: 9080
 
@@ -14,31 +18,16 @@ scrape_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 5s
     relabel_configs:
+      # Не собирать логи самих агентов
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        regex: 'promtail|alloy'
+        action: drop
       - source_labels: [__meta_docker_container_name]
         regex: '/(.*)'
         target_label: container
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: service
       - source_labels: [__meta_docker_container_label_app]
         target_label: app
       - source_labels: [__meta_docker_container_label_environment]
         target_label: env
-    pipeline_stages:
-      # Попытаться парсить JSON логи
-      - json:
-          expressions:
-            level: level
-            msg: message
-            ts: time
-      - labels:
-          level:
-      # Не собирать логи самого promtail
-      - drop:
-          source: container
-          expression: "promtail"
-
-  # Системные логи
-  - job_name: system
-    static_configs:
-      - targets: [localhost]
-        labels:
-          job: syslog
-          __path__: /var/log/syslog

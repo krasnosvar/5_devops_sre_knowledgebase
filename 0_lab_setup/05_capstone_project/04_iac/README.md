@@ -8,9 +8,12 @@ VM: поднимаем кластер через Terraform, кладём k8s ч�
 
 ## 1. Поднять VM под кластер
 
+Команды выполняются по порядку, начиная из папки `04_iac/`.
+
 ```bash
 cd ../../02_local_vms/linux_kvm/02_examples/cluster/
 terraform init
+terraform plan -var="master_count=1" -var="worker_count=2"
 terraform apply -var="master_count=1" -var="worker_count=2"
 terraform output ssh_commands
 ```
@@ -21,7 +24,7 @@ terraform output ssh_commands
 ## 2. Развернуть k8s через kubeadm
 
 ```bash
-cd ../../../05_capstone_project/04_iac/ansible/
+cd ../../../../05_capstone_project/04_iac/ansible/
 ansible-playbook -i inventory.ini site.yaml
 ```
 
@@ -32,7 +35,7 @@ ansible-playbook -i inventory.ini site.yaml
 ## 3. Накатить приложение (те же манифесты, что на шаге 3)
 
 ```bash
-scp -i ~/.ssh/lab_key -r ../03_kubernetes/manifests lab@<master-ip>:/tmp/
+scp -i ~/.ssh/lab_key -r ../../03_kubernetes/manifests lab@<master-ip>:/tmp/
 ssh -i ~/.ssh/lab_key lab@<master-ip> "kubectl apply -f /tmp/manifests/"
 ```
 
@@ -51,6 +54,6 @@ ssh -i ~/.ssh/lab_key lab@<master-ip> "kubectl apply -f /tmp/manifests/"
   который мы разбирали в самой базе знаний.
 
 ```bash
-cd ../../02_local_vms/linux_kvm/02_examples/cluster/
-terraform destroy
+cd ../../../02_local_vms/linux_kvm/02_examples/cluster/
+terraform destroy -var="master_count=1" -var="worker_count=2"
 ```

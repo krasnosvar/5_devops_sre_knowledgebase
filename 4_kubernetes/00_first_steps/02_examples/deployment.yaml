@@ -1,0 +1,27 @@
+# Deployment держит заданное число одинаковых подов (replicas)
+# и пересоздаёт их, если под удалили или он упал.
+# Применить: kubectl apply -f deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web            # каких подов касается этот Deployment
+  template:               # шаблон, по которому создаются поды
+    metadata:
+      labels:
+        app: web          # должно совпадать с selector выше
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          resources:
+            requests: {cpu: 50m, memory: 32Mi}
+            limits: {memory: 64Mi}

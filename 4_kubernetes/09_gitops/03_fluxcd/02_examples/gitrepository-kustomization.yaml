@@ -1,0 +1,83 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gitops-config
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/org/gitops-config.git
+  ref:
+    branch: main
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: myapp-production
+  namespace: flux-system
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: gitops-config
+  path: "./overlays/production"
+  prune: true
+  targetNamespace: production
+  wait: true
+  timeout: 3m
+
+---
+# Image Automation: следить за новыми тегами и коммитить обновление обратно в Git.
+# API image.toolkit.fluxcd.io/v1 — GA с Flux 2.7 (v1beta2 удалён в Flux 2.9).
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  image: registry.example.com/myapp
+  interval: 5m
+
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: myapp
+  policy:
+    semver:
+      range: ">=1.0.0"
+
+---
+# Коммитит выбранный ImagePolicy тег обратно в Git. В манифесте
+# Deployment строка с образом помечается маркером, например:
+#   image: registry.example.com/myapp:1.0.0 # {"$imagepolicy": "flux-system:myapp"}
+# Для записи в Git у GitRepository должен быть Secret с write-доступом.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  interval: 30m
+  sourceRef:
+    kind: GitRepository
+    name: gitops-config
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: fluxcdbot
+        email: fluxcdbot@example.com
+      messageTemplate: "chore: update images"
+    push:
+      branch: main
+  update:
+    path: ./overlays/production
+    strategy: Setters

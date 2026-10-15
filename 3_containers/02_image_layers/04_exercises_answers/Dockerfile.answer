@@ -16,16 +16,16 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 3. Код приложения (меняется часто — инвалидирует кэш только для следующих слоёв)
-COPY src/ src/
+COPY . .
 
 # 4. Non-root пользователь
 RUN useradd --create-home --uid 1001 appuser
 USER appuser
 
 EXPOSE 8080
-CMD ["python", "-m", "src.main"]
+CMD ["python", "app.py"]
 
 # Проверка кэша:
 # 1й build: все слои выполняются
-# Изменить src/main.py
+# Изменить app.py
 # 2й build: слои 1-2 берутся из кэша, пересобираются только 3-4 → в 3-5x быстрее

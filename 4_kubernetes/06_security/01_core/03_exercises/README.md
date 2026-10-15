@@ -2,33 +2,51 @@
 
 Стенд: 🐳 Tier 1 — kind или k3d кластер
 
+Ответы: [04_exercises_answers/rbac-answers.md](../04_exercises_answers/rbac-answers.md).
+
 ```bash
 kind create cluster --name lab
 ```
 
 ## 01 — Default deny NetworkPolicy
 
-**Задача:** Применить default-deny к namespace `production`. Убедиться что Pod'ы не могут общаться между собой. Затем добавить политику разрешающую трафик только от frontend к backend.
+**Задача:** Применить default-deny к namespace `production`. Убедиться,
+что поды не могут общаться между собой. Затем добавить политики,
+разрешающие трафик только от frontend к backend на порт 80.
+
+NetworkPolicy применяет CNI-плагин. В свежих версиях kind встроенный
+kindnet их поддерживает; если у вас трафик после default deny всё
+равно проходит — CNI политики не применяет (см.
+[03_networking](../../../03_networking/) §3), поставьте Calico или
+Cilium.
 
 ```bash
 kubectl create namespace production
 
-# TODO: применить default-deny-all из 02_examples/networking-demo.yaml
-kubectl apply -f ../../../03_networking/02_examples/networking-demo.yaml
+# backend (nginx) + Service с тем же именем; frontend и "чужой" под
+kubectl run backend --image=nginx:1.27-alpine -n production \
+    --labels=app=backend --port=80 --expose
+kubectl run frontend --image=busybox:1.36 -n production \
+    --labels=app=frontend -- sleep 3600
+kubectl run other --image=busybox:1.36 -n production \
+    --labels=app=other -- sleep 3600
 
-# Создать два Pod'а для проверки
-kubectl run frontend --image=busybox -n production -- sleep 3600
-kubectl run backend  --image=busybox -n production -- sleep 3600
+# До политик: frontend → backend работает
+kubectl exec -n production frontend -- wget -qO- -T 3 http://backend
 
-# Проверить: frontend → backend должно быть заблокировано
-kubectl exec -n production frontend -- wget -qO- http://backend --timeout=3 || echo "Blocked ✓"
-
-# TODO: добавить NetworkPolicy разрешающую frontend → backend port 80
+# Написать и применить: default-deny-all (Ingress + Egress),
+# разрешение DNS, frontend → backend:80. Проверить, что frontend
+# достаёт backend, а other — нет.
 ```
 
 ## 02 — Pod Security Standards
 
-**Задача:** Создать namespace с enforce=restricted. Попробовать задеплоить Pod без securityContext (должно быть запрещено). Исправить Pod чтобы соответствовал restricted.
+Что такое Pod Security Standards и уровни privileged/baseline/restricted —
+в [10_devsecops/05_pod_security](../../../../10_devsecops/05_pod_security/).
+
+**Задача:** Создать namespace с enforce=restricted. Попробовать задеплоить
+Pod без securityContext (должно быть запрещено). Исправить Pod чтобы
+соответствовал restricted.
 
 ```bash
 kubectl create namespace secure-test
@@ -43,28 +61,39 @@ kubectl run bad-pod --image=nginx -n secure-test || echo "Rejected ✓"
 
 ## 03 — ServiceAccount с минимальными правами
 
-**Задача:** Создать ServiceAccount для приложения, которое должно только читать ConfigMap `app-config` в namespace `production`. Запустить Pod с этим SA и проверить что права работают.
+**Задача:** Создать ServiceAccount для приложения, которое должно только
+читать ConfigMap `app-config` в namespace `production`. Запустить Pod с этим
+SA и проверить что права работают.
+
+Флаг `kubectl run --serviceaccount` удалён из kubectl, поэтому под с
+нужным ServiceAccount описывается манифестом через
+`spec.serviceAccountName`. Внутри пода права проверяются запросом к
+API с токеном ServiceAccount (образ с curl, без kubectl).
 
 ```bash
-# TODO: создать ServiceAccount, Role, RoleBinding из answers
-kubectl apply -f ../04_exercises_answers/rbac-answer.yaml
+# Написать ServiceAccount, Role (с resourceNames), RoleBinding,
+# ConfigMap app-config и Pod test-pod:
+#   spec.serviceAccountName: myapp
+#   image: curlimages/curl:8.10.1, command: ["sleep", "3600"]
+kubectl apply -f my-rbac.yaml
 
-# Создать Pod с SA
-kubectl run test-pod --image=bitnami/kubectl -n production \
-    --serviceaccount=myapp \
-    --command -- sleep 3600
+# Проверить права снаружи (от имени SA)
+kubectl auth can-i get configmap/app-config -n production \
+    --as=system:serviceaccount:production:myapp          # yes
+kubectl auth can-i list secrets -n production \
+    --as=system:serviceaccount:production:myapp          # no
 
-# Проверить права внутри Pod
-kubectl exec -n production test-pod -- \
-    kubectl get configmap app-config -n production   # OK
-
-kubectl exec -n production test-pod -- \
-    kubectl get secrets -n production || echo "Forbidden ✓"
+# Проверить изнутри пода: запрос к API с токеном SA
+kubectl exec -n production test-pod -- sh -c '
+  SA=/var/run/secrets/kubernetes.io/serviceaccount
+  curl -s --cacert $SA/ca.crt -H "Authorization: Bearer $(cat $SA/token)" \
+    https://kubernetes.default.svc/api/v1/namespaces/production/configmaps/app-config'
 ```
 
 ## 04 — Аудит RBAC
 
-**Задача:** Запустить скрипт аудита и найти ServiceAccount'ы с избыточными правами.
+**Задача:** Запустить скрипт аудита и найти ServiceAccount'ы с избыточными
+правами.
 
 Готового скрипта в этом разделе нет намеренно — аудит "живой" кластерной RBAC
 это уже не туториал, а тулза. Она лежит в `10_devsecops`, где собраны такие

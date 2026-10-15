@@ -1,0 +1,51 @@
+# 🐳 Tier 1 стенд: GitLab CE + GitLab Runner (docker executor) в Compose.
+# Требует 4+ GB RAM. Запуск и регистрация раннера — см.
+# ../03_exercises/README.md, раздел «00 — Стенд».
+#
+# Версии раннера и сервера держим одинаковыми (major.minor).
+
+name: gitlab-lab
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:18.4.2-ce.0
+    hostname: gitlab
+    environment:
+      # external_url задаёт и адрес для ссылок/clone URL, и порт, на котором
+      # слушает встроенный nginx (8929), поэтому пробрасываем 8929:8929.
+      # Имя gitlab резолвится внутри сети compose; с хоста открывайте
+      # http://localhost:8929 (или добавьте "127.0.0.1 gitlab" в /etc/hosts).
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab:8929'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2224
+    ports:
+      - "8929:8929"
+      - "2224:22"
+    shm_size: 256m
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:v18.4.0
+    depends_on:
+      - gitlab
+    volumes:
+      # config.toml появится здесь после `gitlab-runner register`
+      - runner_config:/etc/gitlab-runner
+      # docker executor запускает контейнеры джоб через Docker хоста
+      - /var/run/docker.sock:/var/run/docker.sock
+
+# Явное имя сети: контейнеры джоб создаются Docker'ом хоста вне compose,
+# и чтобы они видели хост `gitlab` (git clone, артефакты), раннер
+# регистрируется с --docker-network-mode gitlab-lab.
+networks:
+  default:
+    name: gitlab-lab
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
+  runner_config:

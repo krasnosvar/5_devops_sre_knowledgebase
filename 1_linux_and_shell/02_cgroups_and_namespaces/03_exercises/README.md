@@ -1,6 +1,20 @@
 # Упражнения — cgroups и namespaces
 
-Требуется: Linux с root доступом или sudo. Часть упражнений — в Docker.
+Стенд: 🖥 Tier 2 — Linux VM с root/sudo и cgroups v2 (упражнения 01 и 03).
+Упражнение 02 требует Docker, упражнение 04 — kind и kubectl.
+
+> **Забегание вперёд.** Здесь используется Docker, который подробно
+> разбирается в [3_containers](../../../3_containers/). Для этой темы
+> достаточно: `docker run -d`, `docker inspect`, `docker rm -f`. Если Docker
+> ещё не освоен — упражнение 02 можно пропустить и вернуться к нему позже.
+
+> **Забегание вперёд.** Упражнение 04 использует kind (локальный
+> Kubernetes-кластер в Docker, см.
+> [0_lab_setup/03_local_k8s](../../../0_lab_setup/03_local_k8s/)) и kubectl
+> (см. [4_kubernetes/00_first_steps](../../../4_kubernetes/00_first_steps/)).
+> Для этой темы достаточно: `kind create/delete cluster`, `kubectl apply -f`,
+> `kubectl get pod -w`, `kubectl describe pod`. Если Kubernetes ещё не
+> освоен — упражнение 04 можно пропустить и вернуться к нему позже.
 
 ## 01 — PID namespace: свой PID 1
 
@@ -27,7 +41,7 @@ CONTAINER_PID=$(docker inspect ns-demo --format '{{.State.Pid}}')
 echo "Container main PID on host: $CONTAINER_PID"
 
 # Посмотреть namespaces
-ls -la /proc/$CONTAINER_PID/ns/
+sudo ls -la /proc/$CONTAINER_PID/ns/   # чужой (root) процесс — нужен sudo
 
 # Войти в network namespace контейнера
 sudo nsenter --net -t $CONTAINER_PID ip addr show
@@ -42,23 +56,29 @@ docker rm -f ns-demo
 # Проверить cgroups v2
 mount | grep cgroup2
 
-# Создать cgroup
+# Создать cgroup (контроллер memory должен быть в
+# /sys/fs/cgroup/cgroup.subtree_control — на systemd-хостах он там есть)
 sudo mkdir /sys/fs/cgroup/mytest
 
-# Установить лимит 50 MB
+# Установить лимит 50 MB и запретить swap, чтобы сработал именно OOM
 echo "52428800" | sudo tee /sys/fs/cgroup/mytest/memory.max
+echo "0" | sudo tee /sys/fs/cgroup/mytest/memory.swap.max
 
-# Запустить процесс в этом cgroup
-# (нужен bash >= 5.1 для cgroup delegation)
-sudo cgexec -g memory:mytest python3 -c "
+# Программа, которая съедает по 1 MB каждые 0.1 с
+cat > alloc.py <<'PY'
 import time
 data = []
 for i in range(100):
     data.append(b'x' * 1024 * 1024)  # 1 MB за раз
-    print(f'Allocated {i+1} MB')
+    print(f'Allocated {i+1} MB', flush=True)
     time.sleep(0.1)
-"
-# Процесс должен быть убит OOM killer после ~50 MB
+PY
+
+# Запустить процесс в этом cgroup: шелл переносит САМ СЕБЯ в группу
+# (пишет свой PID в cgroup.procs), затем exec заменяет его на python3 —
+# PID и cgroup при exec сохраняются
+sudo sh -c 'echo $$ > /sys/fs/cgroup/mytest/cgroup.procs && exec python3 alloc.py'
+# Процесс должен быть убит OOM killer после ~50 MB (shell напишет Killed)
 
 # Проверить
 sudo cat /sys/fs/cgroup/mytest/memory.events | grep oom
@@ -84,14 +104,17 @@ spec:
       resources:
         limits:
           memory: "64Mi"
-      command: ["python3", "-c", "
-import time
-data = []
-while True:
-    data.append(b'x' * 1024 * 1024)
-    print(f'Allocated {len(data)} MB')
-    time.sleep(0.5)
-"]
+      # Многострочный Python — через блочный скаляр YAML (|): строка
+      # в кавычках склеила бы переводы строк в пробелы и сломала отступы
+      command: ["python3", "-c"]
+      args:
+        - |
+          import time
+          data = []
+          while True:
+              data.append(b'x' * 1024 * 1024)
+              print(f'Allocated {len(data)} MB', flush=True)
+              time.sleep(0.5)
 EOF
 
 # Наблюдать как k8s убивает Pod при OOMKill

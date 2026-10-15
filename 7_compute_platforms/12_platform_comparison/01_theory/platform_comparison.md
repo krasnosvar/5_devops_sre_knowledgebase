@@ -71,6 +71,9 @@ Break-even cloud vs bare metal: ~18-24 месяца при постоянной 
 **Рекомендация: Hybrid (vSphere + Cloud)**
 
 - Не выбрасывать инвестиции в vSphere
+- Но пересчитать TCO к ближайшему продлению: после покупки VMware
+  Broadcom перешёл на подписку и бандлы, бессрочные лицензии больше не
+  продаются (подробнее — [11_vmware_vsphere](../../11_vmware_vsphere/))
 - Новые сервисы в облаке
 - Постепенная миграция на k8s (KubeVirt или Konveyor)
 
@@ -80,8 +83,8 @@ Break-even cloud vs bare metal: ~18-24 месяца при постоянной 
 Latency (P99, простой HTTP):
   Bare metal:            < 1ms (внутри сервера)
   On-prem VM:            1-2ms
-  Cloud VM same AZ:      2-5ms
-  Cloud VM cross-AZ:     1-3ms
+  Cloud VM same AZ:      < 1ms
+  Cloud VM cross-AZ:     1-2ms
   Cloud VM cross-region: 50-300ms
 
 Disk I/O:
@@ -91,7 +94,7 @@ Disk I/O:
 
 Network:
   Bare metal 100GbE:     12 GB/s
-  Cloud (c5n.18xlarge):  25 Gbps = 3 GB/s (дорого)
+  Cloud (c5n.18xlarge):  до 100 Gbps = ~12 GB/s (дорого)
   Cloud standard:        1-10 Gbps
 ```
 

@@ -1,7 +1,12 @@
+# Пайплайн капстоуна: test → build → deploy.
+# Рассчитан на то, что корень GitLab-репозитория = содержимое
+# 05_capstone_project/ (папки app/, 03_kubernetes/, 05_cicd/ ...), а этот
+# файл скопирован в корень как .gitlab-ci.yml. Подробности — README.md рядом.
 stages: [test, build, deploy]
 
 variables:
-  IMAGE: registry.example.com/shortener:$CI_COMMIT_SHORT_SHA
+  # Встроенный registry проекта GitLab: тот же, в который логинимся ниже.
+  IMAGE: $CI_REGISTRY_IMAGE/shortener:$CI_COMMIT_SHORT_SHA
 
 test:
   stage: test
@@ -15,19 +20,29 @@ build:
   stage: build
   image: docker:27
   services: [docker:27-dind]
+  variables:
+    # TLS между job и dind-сервисом (рекомендация GitLab для docker:dind)
+    DOCKER_TLS_CERTDIR: "/certs"
   script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
     - docker build -t "$IMAGE" app/
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - docker push "$IMAGE"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 
 deploy:
   stage: deploy
-  image: bitnami/kubectl:1.34
+  # Официальный бинарник kubectl с dl.k8s.io вместо образов Bitnami
+  # (каталог Bitnami с 2025 года платный/ограниченный).
+  image: alpine:3.22
+  before_script:
+    - apk add --no-cache curl
+    - curl -fsSLo /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable-1.34.txt)/bin/linux/amd64/kubectl"
+    - chmod +x /usr/local/bin/kubectl
   script:
+    # KUBECONFIG — CI/CD-переменная типа File с доступом к кластеру
     - kubectl -n shortener set image deployment/shortener shortener="$IMAGE"
-    - kubectl -n shortener rollout status deployment/shortener
+    - kubectl -n shortener rollout status deployment/shortener --timeout=120s
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   environment:

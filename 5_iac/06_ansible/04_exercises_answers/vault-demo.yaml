@@ -1,0 +1,20 @@
+---
+# Ответ к упражнению 04: playbook, читающий переменную из
+# зашифрованного vars/secrets.yaml (создаётся по шагам из
+# ansible-answers.md, в репозиторий не коммитится).
+- name: Use a vaulted variable
+  hosts: webservers
+  become: true
+
+  vars_files:
+    - vars/secrets.yaml
+
+  tasks:
+    - name: Write app secret to a root-only file
+      ansible.builtin.copy:
+        content: "DB_PASSWORD={{ db_password }}\n"
+        dest: /etc/app.env
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true   # не печатать секрет в вывод/логи

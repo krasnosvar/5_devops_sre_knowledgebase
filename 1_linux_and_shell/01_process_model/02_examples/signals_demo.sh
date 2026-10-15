@@ -6,7 +6,7 @@ echo "=== Сигналы и graceful shutdown ==="
 
 # 1. Запустить процесс и послать SIGTERM
 cat > /tmp/app.py << 'PYEOF'
-import signal, time, sys
+import os, signal, time, sys
 
 def on_sigterm(sig, frame):
     print(f"[app] Got SIGTERM, cleaning up...", flush=True)
@@ -16,9 +16,6 @@ def on_sigterm(sig, frame):
 
 signal.signal(signal.SIGTERM, on_sigterm)
 print(f"[app] Started, PID={os.getpid()}", flush=True)
-
-import os
-print(f"[app] PID={os.getpid()}", flush=True)
 while True:
     time.sleep(0.1)
 PYEOF
@@ -29,8 +26,9 @@ sleep 0.3
 
 echo "Sending SIGTERM to PID $APP_PID"
 kill -SIGTERM $APP_PID
-wait $APP_PID 2>/dev/null || true
-echo "Exit code: $?"
+rc=0
+wait "$APP_PID" || rc=$?
+echo "Exit code: $rc"
 
 # 2. Посмотреть /proc
 echo -e "\n=== /proc информация о текущем процессе ==="

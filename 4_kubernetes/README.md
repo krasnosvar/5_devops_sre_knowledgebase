@@ -1,28 +1,45 @@
-# Раздел 3. Kubernetes
+# Раздел 4. Kubernetes
 
 Kubernetes от архитектуры до GitOps. Упор — на понимание механики планировщика,
 сети и хранилища, а не на заучивание kubectl-команд.
 
 > Команды kubectl/helm/argocd → [`../1_sysadm_sre_devops_tools/.../kubernetes/`](../../1_sysadm_sre_devops_tools/1_linux/2_services/3_containers_and_orchestration/kubernetes/)
 
+## Пререквизиты
+
+- [3_containers](../3_containers/) — образы, контейнеры, namespaces и
+  cgroups: Kubernetes управляет именно ими.
+- [2_networking](../2_networking/) — IP, маршрутизация, DNS, NAT,
+  L4 vs L7: без этого не понять Service, kube-proxy и Ingress.
+- [0_lab_setup/03_local_k8s](../0_lab_setup/03_local_k8s/) — локальный
+  кластер (kind/minikube) для упражнений.
+
 ## Подразделы
 
 **Фундамент**
 
+0. [00_first_steps](./00_first_steps/) — для тех, кто ещё не работал с
+   Kubernetes: что такое кластер, control plane и ноды, Pod/Deployment/
+   Service, kubeconfig и контексты, локальный кластер на kind, базовые
+   команды kubectl (get/describe/logs/exec/port-forward, `--dry-run`,
+   `explain`).
+
 1. [01_architecture](./01_architecture/) — control plane (kube-apiserver, etcd,
-   scheduler, controller-manager) и data plane (kubelet, kube-proxy, container runtime);
-   как создание Pod проходит через всю цепочку компонентов; способы поднять
-   кластер (kubeadm, Managed, Kops, Kubespray).
+   scheduler, controller-manager) и data plane (kubelet, kube-proxy, container
+   runtime); как создание Pod проходит через всю цепочку компонентов; способы
+   поднять кластер (kubeadm, Managed, Kops, Kubespray).
 
-2. [02_workloads](./02_workloads/) — Pod lifecycle, Deployment/StatefulSet/DaemonSet/Job;
-   liveness/readiness/startup probes.
+2. [02_workloads](./02_workloads/) — Pod lifecycle,
+   Deployment/StatefulSet/DaemonSet/Job; liveness/readiness/startup probes.
 
-3. [03_networking](./03_networking/) — Service (ClusterIP/NodePort/LoadBalancer),
-   kube-proxy (iptables vs IPVS), CNI-плагины, DNS (CoreDNS), Ingress и Gateway API,
-   Service Mesh (Istio); автоматизация вокруг Ingress (ExternalDNS, cert-manager, MetalLB).
+3. [03_networking](./03_networking/) — Service
+   (ClusterIP/NodePort/LoadBalancer), kube-proxy (iptables vs IPVS),
+   CNI-плагины, DNS (CoreDNS), Ingress и Gateway API, Service Mesh (Istio);
+   автоматизация вокруг Ingress (ExternalDNS, cert-manager, MetalLB).
 
-4. [04_storage](./04_storage/) — PersistentVolume/PVC/StorageClass; CSI-драйверы;
-   динамический провижининг; ReadWriteMany vs ReadWriteOnce; StatefulSet и storage.
+4. [04_storage](./04_storage/) — PersistentVolume/PVC/StorageClass;
+   CSI-драйверы; динамический провижининг; ReadWriteMany vs ReadWriteOnce;
+   StatefulSet и storage.
 
 5. [05_scheduling](./05_scheduling/) — как работает kube-scheduler: filtering,
    scoring, affinity/anti-affinity, taints и tolerations, PodDisruptionBudget;
@@ -31,44 +48,52 @@ Kubernetes от архитектуры до GitOps. Упор — на поним
 
 6. [06_security](./06_security/) — безопасность кластера, двумя подтемами:
    - [01_core](./06_security/01_core/) — RBAC (Role/ClusterRole/RoleBinding),
-     ServiceAccount и OIDC-аутентификация; SecurityContext и Pod Security Admission;
-     NetworkPolicy (Zero Trust); секреты (ESO, SOPS); runtime security (Falco); аудит.
-     Основы — за инструментами и готовыми скриптами аудита → [`../10_devsecops/`](../10_devsecops/).
+     ServiceAccount и OIDC-аутентификация; SecurityContext и Pod Security
+     Admission; NetworkPolicy (Zero Trust); секреты (ESO, SOPS); runtime
+     security (Falco); аудит. Основы — за инструментами и готовыми скриптами
+     аудита → [`../10_devsecops/`](../10_devsecops/).
    - [02_policy_engines](./06_security/02_policy_engines/) — OPA Gatekeeper
-     (Rego, ConstraintTemplate) vs Kyverno (нативный YAML, Validate/Mutate); failurePolicy.
+     (Rego, ConstraintTemplate) vs Kyverno (нативный YAML, Validate/Mutate);
+     failurePolicy.
 
 **Манифесты и деплой**
 
-7. [07_gitops](./07_gitops/) — GitOps: общая теория (Push vs Pull, Drift, Image
-   Updater, секреты) и три конкретных инструмента:
-   - [02_argocd](./07_gitops/02_argocd/) — Application, ApplicationSet/App-of-Apps, SyncWaves.
-   - [03_fluxcd](./07_gitops/03_fluxcd/) — Source Controller, Kustomize/Helm Controller,
-     Image Automation; Flux vs ArgoCD.
-   - [04_argo_rollouts](./07_gitops/04_argo_rollouts/) — прогрессивная доставка:
-     Canary (steps, AnalysisTemplate с автоматическим rollback по метрикам), Blue/Green.
+7. [07_manifests_management](./07_manifests_management/) — работа с
+   манифестами: общая теория (labels, Client-Side vs Server-Side Apply,
+   dry-run/diff) и два инструмента. Helm и Kustomize идут до GitOps:
+   GitOps-инструменты (09) применяют именно Helm-чарты и
+   Kustomize-оверлеи.
+   - [02_helm](./07_manifests_management/02_helm/) — chart структура, values,
+     templating, зависимости, helm diff, helmfile.
+   - [03_kustomize](./07_manifests_management/03_kustomize/) — bases/overlays,
+     ConfigMapGenerator и авто-Rolling-Update, Strategic Merge vs JSON Patch,
+     `$patch: delete`.
 
 8. [08_cluster_operations](./08_cluster_operations/) — эксплуатация кластера,
    двумя подтемами:
    - [01_core](./08_cluster_operations/01_core/) — cordon/drain, обновление
      кластера, etcd backup/Velero, ротация сертификатов; troubleshooting
-     (CrashLoopBackOff, OOMKilled, Pending, ImagePullBackOff — что реально смотреть).
-   - [02_node_autoscaling](./08_cluster_operations/02_node_autoscaling/) — Cluster
-     Autoscaler vs Karpenter (JIT provisioning), Consolidation/bin-packing.
+     (CrashLoopBackOff, OOMKilled, Pending, ImagePullBackOff — что реально
+     смотреть).
+   - [02_node_autoscaling](./08_cluster_operations/02_node_autoscaling/) —
+     Cluster Autoscaler vs Karpenter (JIT provisioning),
+     Consolidation/bin-packing.
 
-9. [09_manifests_management](./09_manifests_management/) — работа с манифестами:
-   общая теория (labels, Client-Side vs Server-Side Apply, dry-run/diff) и два
-   инструмента:
-   - [02_helm](./09_manifests_management/02_helm/) — chart структура, values,
-     templating, зависимости, helm diff, helmfile.
-   - [03_kustomize](./09_manifests_management/03_kustomize/) — bases/overlays,
-     ConfigMapGenerator и авто-Rolling-Update, Strategic Merge vs JSON Patch,
-     `$patch: delete`.
+9. [09_gitops](./09_gitops/) — GitOps: общая теория (Push vs Pull, Drift, Image
+   Updater, секреты) и три конкретных инструмента:
+   - [02_argocd](./09_gitops/02_argocd/) — Application,
+     ApplicationSet/App-of-Apps, SyncWaves.
+   - [03_fluxcd](./09_gitops/03_fluxcd/) — Source Controller, Kustomize/Helm
+     Controller, Image Automation; Flux vs ArgoCD.
+   - [04_argo_rollouts](./09_gitops/04_argo_rollouts/) — прогрессивная доставка:
+     Canary (steps, AnalysisTemplate с автоматическим rollback по метрикам),
+     Blue/Green.
 
 **Автоскейлинг подов и расширение кластера**
 
 10. [10_pod_autoscaling](./10_pod_autoscaling/) — HPA (формула, метрики,
-    stabilization window), VPA (и почему не уживается с HPA), KEDA (event-driven,
-    scale-to-zero).
+    stabilization window), VPA (и почему не уживается с HPA), KEDA
+    (event-driven, scale-to-zero).
 
 11. [11_operators_and_crds](./11_operators_and_crds/) — CRD как схема данных,
     Operator как reconcile loop, идемпотентность; где в этой базе уже
@@ -78,21 +103,37 @@ Kubernetes от архитектуры до GitOps. Упор — на поним
     дистрибутивы (OpenShift, Rancher, k3s), инструменты (k9s, kubectx, stern),
     куда смотреть дальше. Без упражнений — это не тема для лабы.
 
-13. [13_troubleshooting](./13_troubleshooting/01_theory/kubernetes_troubleshooting.md) — системная
-    диагностика инцидентов: CrashLoopBackOff, OOMKilled (Exit Code 137), Pending и предикаты
-    kube-scheduler, Node NotReady и PLEG issues, сбои Service/Endpoints, CoreDNS задержки
-    (ndots:5), Ingress 502/504 keep-alive mismatch, kubectl debug с ephemeral containers.
+13. [13_troubleshooting](./13_troubleshooting/01_theory/kubernetes_troubleshooting.md)
+    — системная диагностика инцидентов: CrashLoopBackOff, OOMKilled (Exit Code
+    137), Pending и предикаты kube-scheduler, Node NotReady и PLEG issues, сбои
+    Service/Endpoints, CoreDNS задержки (ndots:5), Ingress 502/504 keep-alive
+    mismatch, kubectl debug с ephemeral containers.
 
 ## Как проходить
 
-01 → 02 → 03 строго по порядку (фундамент). 04–06 параллельно.
-07 → 09 (GitOps и манифесты — общая теория каждого раздела, потом конкретные
-инструменты внутри) — практический стек деплоя. 10–11 — по мере необходимости.
-08, 12, 13 — эксплуатационные и траблшутинг, открывать по задаче.
+00 — если Kubernetes для вас новый (иначе пролистать и сверить
+критерии в его README). 01 → 02 → 03 строго по порядку (фундамент).
+04–06 параллельно. 07 → 09 — практический стек деплоя: сначала Helm и
+Kustomize (07), потом GitOps (09), который применяет их результаты;
+внутри каждого — общая теория, потом конкретные инструменты. 10–11 —
+по мере необходимости. 08, 12, 13 — эксплуатационные и траблшутинг,
+открывать по задаче.
 
 ## Упражнения — тиры
 
 🐳 Tier 1: большинство упражнений на kind (Kubernetes in Docker)
 🖥 Tier 2: kubeadm-кластер из 3 VM для разделов 05, 06, 08
-☁️ Без лабы: 08_cluster_operations/02_node_autoscaling — Cluster Autoscaler/Karpenter
-требуют реальное облако
+☁️ Без лабы: 08_cluster_operations/02_node_autoscaling — Cluster
+Autoscaler/Karpenter требуют реальное облако
+
+## Когда двигаться дальше
+
+- Можете объяснить путь `kubectl apply` → apiserver → etcd → scheduler
+  → kubelet и что сломается при отказе каждого звена.
+- Без подсказки разбираете Pending, CrashLoopBackOff и "Service не
+  отвечает" через `describe`, `logs`, EndpointSlice и Events.
+- Пишете Deployment с probes, resources и securityContext, оборачиваете
+  его в Helm-чарт или Kustomize-оверлей и доставляете через GitOps.
+
+Дальше — [5_iac](../5_iac/): описать сами кластеры и инфраструктуру
+под ними кодом.

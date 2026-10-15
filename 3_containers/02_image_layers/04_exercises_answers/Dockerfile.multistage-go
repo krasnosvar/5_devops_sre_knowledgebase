@@ -4,7 +4,8 @@
 FROM golang:1.22-alpine AS builder
 WORKDIR /app
 
-COPY go.mod go.sum ./
+# go.sum* — wildcard: файла нет, пока у модуля нет внешних зависимостей
+COPY go.mod go.sum* ./
 RUN go mod download
 
 COPY . .
@@ -21,5 +22,5 @@ COPY --from=builder /app/server /server
 EXPOSE 8080
 ENTRYPOINT ["/server"]
 
-# Размер: golang:1.22-alpine = ~250MB, итоговый scratch образ = ~7-15MB
+# Размер: golang:1.22-alpine = ~250MB, итоговый scratch образ = ~5 MB
 # Проверить: docker build -t myapp:go . && docker images myapp:go

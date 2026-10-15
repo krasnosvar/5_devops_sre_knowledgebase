@@ -1,7 +1,28 @@
 # Tier 2 — WSL2 + VirtualBox (Windows)
 
-На Windows лучший путь — WSL2 (Windows Subsystem for Linux 2) для
-повседневной работы + VirtualBox для VM когда нужен Tier 2.
+## Зачем
+
+На Windows Linux-окружение для повседневной работы (shell, Docker,
+Terraform, kubectl) даёт WSL2, а полноценные VM для Tier-2 лаб (systemd,
+Ansible по SSH, kubeadm) — VirtualBox, Hyper-V или Multipass. Стенды из
+[linux_kvm](../linux_kvm/) здесь напрямую не работают: им нужен libvirt.
+
+## Пререквизиты
+
+- Windows 10/11 с включённой аппаратной виртуализацией в BIOS/UEFI.
+- Базовая работа в shell и SSH — [1_linux_and_shell](../../../1_linux_and_shell/).
+
+## Файлы
+
+Только этот README: отдельных `02_examples/`/`03_exercises/` нет — VM
+создаются Vagrant или Multipass, а упражнения выполняются на них из
+соответствующих разделов базы.
+
+## Как проходить
+
+1. Установить WSL2 и Docker внутри него — этого хватает для Tier 1.
+2. Для Tier 2 выбрать один путь: Vagrant + VirtualBox или Multipass.
+3. Поднять 1–2 VM и проверить SSH-доступ.
 
 ## WSL2 — установка и настройка
 
@@ -30,46 +51,54 @@ sudo usermod -aG docker $USER
 docker compose version
 ```
 
-## VirtualBox для Tier-2 VM
+## VirtualBox + Vagrant для Tier-2 VM
 
-```bash
-# в WSL2: установить Terraform
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp.gpg
-echo "deb [signed-by=/usr/share/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-sudo apt update && sudo apt install terraform
+Terraform-провайдер для VirtualBox (`terra-farm/virtualbox`) заброшен, на
+него не стоит опираться. Для декларативного описания нескольких VM на
+VirtualBox используется Vagrant: `Vagrantfile` описывает машины,
+`vagrant up` их создаёт, `vagrant destroy` удаляет.
 
-# VirtualBox устанавливается на Windows (не в WSL2)
-# https://www.virtualbox.org/wiki/Downloads
-# Terraform VirtualBox provider управляет им через API
+VirtualBox и Vagrant ставятся на **Windows** (не внутрь WSL2):
+
+```powershell
+winget install Oracle.VirtualBox
+winget install Hashicorp.Vagrant
 ```
 
-```hcl
-# Terraform с VirtualBox provider
-terraform {
-  required_providers {
-    virtualbox = {
-      source  = "terra-farm/virtualbox"
-      version = "~> 0.2"
-    }
-  }
-}
+```ruby
+# Vagrantfile — две Ubuntu VM в общей private-сети
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
 
-resource "virtualbox_vm" "lab_node" {
-  count  = 2
-  name   = "lab-node-${count.index + 1}"
-  image  = "https://app.vagrantup.com/ubuntu/boxes/jammy64/versions/20240301.0.0/providers/virtualbox.box"
-  cpus   = 2
-  memory = "2048 mib"
-  network_adapter {
-    type           = "nat"
-    host_interface = "VirtualBox Host-Only Ethernet Adapter"
-  }
-}
+  (1..2).each do |i|
+    config.vm.define "lab-node-#{i}" do |node|
+      node.vm.hostname = "lab-node-#{i}"
+      node.vm.network "private_network", ip: "192.168.56.1#{i}"
+      node.vm.provider "virtualbox" do |vb|
+        vb.cpus = 2
+        vb.memory = 2048
+      end
+    end
+  end
+end
 ```
+
+```powershell
+# в папке с Vagrantfile (PowerShell на Windows)
+vagrant up              # создать и запустить VM
+vagrant status
+vagrant ssh lab-node-1
+vagrant destroy -f      # удалить все VM стенда
+```
+
+Если включён Hyper-V (его использует WSL2), VirtualBox работает через
+Hyper-V-бэкенд и может быть медленнее или нестабилен; в этом случае
+проще взять Multipass (ниже) или создать VM в самом Hyper-V Manager.
 
 ## Альтернатива: Multipass
 
-Multipass от Canonical — простой способ создавать Ubuntu VM на Windows/macOS/Linux.
+Multipass от Canonical — простой способ создавать Ubuntu VM на
+Windows/macOS/Linux (на Windows использует Hyper-V или VirtualBox).
 
 ```powershell
 # Windows — установить Multipass
@@ -91,7 +120,17 @@ multipass delete lab-node-1 && multipass purge
 
 ## Ограничения WSL2
 
-- WSL2 использует Hyper-V, поэтому VirtualBox на Windows 10 может
-  конфликтовать (на Windows 11 совместимость улучшена)
-- Нет доступа к `/dev/kvm` внутри WSL2 — KVM/libvirt недоступен
-- Для большинства Tier-1 (Docker Compose) упражнений WSL2 достаточно
+- WSL2 использует Hyper-V, поэтому VirtualBox на той же машине может
+  работать медленнее или конфликтовать (зависит от версий Windows и
+  VirtualBox).
+- KVM/libvirt внутри WSL2 — не основной путь: `/dev/kvm` доступен только
+  при вложенной виртуализации, и это зависит от версии Windows и
+  настроек. Стенды из [linux_kvm](../linux_kvm/) здесь не рассчитаны.
+- Для большинства Tier-1 (Docker Compose) упражнений WSL2 достаточно.
+
+## Когда двигаться дальше
+
+- В WSL2 работают `docker compose version` и `docker run --rm hello-world`.
+- Можете поднять 2 VM (Vagrant или Multipass), зайти на них по SSH и
+  удалить.
+- Дальше — [03_local_k8s](../../03_local_k8s/).

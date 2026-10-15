@@ -1,0 +1,18 @@
+# Ответ к упражнению 03: скопировать в 02_examples/alerts/recording.yml
+# Имена по конвенции level:metric:operations — level=job, значит
+# результат агрегирован by (job).
+groups:
+  - name: node-recording
+    rules:
+      - record: job:node_cpu_usage:rate5m
+        expr: |
+          100 - avg by (job) (
+            rate(node_cpu_seconds_total{mode="idle"}[5m])
+          ) * 100
+
+      - record: job:node_memory_usage_percent:current
+        expr: |
+          avg by (job) (
+            (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+            * 100
+          )

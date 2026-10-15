@@ -1,3 +1,8 @@
+# Паттерн "app + db + cache + reverse proxy".
+# Перед запуском: cp .env.example .env
+# myapp — образ вашего приложения (слушает 8080, отдаёт /health); здесь это
+# заглушка. Синтаксис (после cp .env.example .env) проверяется и без него:
+#   docker compose -f production-stack.yaml config -q
 services:
   app:
     image: myapp:${APP_VERSION:-latest}

@@ -1,0 +1,8 @@
+# Prometheus как datasource Grafana (provisioning при старте контейнера)
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    url: http://prometheus:9090
+    isDefault: true

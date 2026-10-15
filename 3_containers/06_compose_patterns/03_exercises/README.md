@@ -13,8 +13,11 @@ services:
       POSTGRES_PASSWORD: test
 
   app:
-    image: python:3.12-slim
-    command: python -c "import psycopg2; conn = psycopg2.connect('postgresql://postgres:test@db/postgres'); print('Connected!')"
+    # клиент psql из того же образа — стартует мгновенно, без установки пакетов
+    image: postgres:16-alpine
+    environment:
+      PGPASSWORD: test
+    command: psql -h db -U postgres -c "SELECT 'Connected!'"
     depends_on:
       - db    # просто ждёт старта контейнера, не готовности
 ```
@@ -30,15 +33,38 @@ docker compose -f good-compose.yml up  # должно работать
 
 ## 02 — Именованные volumes и backup
 
+`compose.yaml` для упражнения (volume с фиксированным именем, иначе compose
+добавит к нему префикс проекта):
+
+```yaml
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
+      interval: 3s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+    name: postgres_data
+```
+
 ```bash
-# Поднять postgres
-docker compose up -d db
+# Поднять postgres и дождаться healthcheck
+docker compose up -d --wait db
 
 # Записать данные
 docker compose exec db psql -U postgres -c "CREATE TABLE test (id serial, val text);"
 docker compose exec db psql -U postgres -c "INSERT INTO test(val) VALUES ('hello from exercise 02');"
 
-# Backup volume в tar архив
+# Остановить БД (копия файлов работающего postgres может быть
+# неконсистентной) и сделать backup volume в tar архив
+docker compose stop db
 docker run --rm \
   -v postgres_data:/source:ro \
   -v $(pwd):/backup \
@@ -47,15 +73,16 @@ docker run --rm \
 # Удалить всё включая volume
 docker compose down -v
 
-# Восстановить данные из бэкапа
-docker compose up -d db
+# Восстановить данные из бэкапа: create создаёт volume и контейнер,
+# но не запускает postgres (иначе он успеет инициализировать пустую БД)
+docker compose create db
 docker run --rm \
   -v postgres_data:/target \
   -v $(pwd):/backup:ro \
   alpine tar xzf /backup/pg-backup.tar.gz -C /target
 
-# Перезапустить и проверить данные
-docker compose restart db
+# Запустить и проверить данные
+docker compose up -d --wait db
 docker compose exec db psql -U postgres -c "SELECT * FROM test;"
 ```
 
@@ -110,5 +137,6 @@ services:
 ```bash
 docker compose up -d
 docker stats --no-stream   # посмотреть лимиты и использование
-docker inspect <container> | jq '.[0].HostConfig | {Memory, CpuQuota}'
+# cpus: "0.5" Docker хранит в NanoCpus (CpuQuota останется 0)
+docker inspect <container> | jq '.[0].HostConfig | {Memory, MemoryReservation, NanoCpus}'
 ```

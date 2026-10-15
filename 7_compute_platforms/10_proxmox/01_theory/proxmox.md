@@ -31,9 +31,11 @@ qm create 101 \
   --vga serial0 \
   --agent enabled=1
 
-# Импортировать cloud image как диск
+# Импортировать cloud image как диск (появится как unused0)
+# Современный синтаксис — qm disk import; старый qm importdisk остался
+# алиасом и встречается в старых инструкциях
 wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
-qm importdisk 101 noble-server-cloudimg-amd64.img local-lvm
+qm disk import 101 noble-server-cloudimg-amd64.img local-lvm
 
 # Настроить диск и boot
 qm set 101 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-101-disk-0
@@ -66,6 +68,8 @@ qm clone 101 103 --name linked-1        # linked clone (экономит мес�
 pct list
 
 # Создать контейнер
+# --unprivileged 1 — root контейнера отображается на непривилегированный
+# UID хоста; --features nesting=1 — нужно для Docker внутри LXC
 pct create 200 \
   local:vztmpl/debian-12-standard_12.0-1_amd64.tar.zst \
   --hostname mycontainer \
@@ -74,8 +78,8 @@ pct create 200 \
   --net0 name=eth0,bridge=vmbr0,ip=dhcp \
   --storage local-lvm \
   --rootfs local-lvm:8 \
-  --unprivileged 1 \    # rootless
-  --features nesting=1  # для Docker внутри LXC
+  --unprivileged 1 \
+  --features nesting=1
 
 # Управление
 pct start 200
@@ -149,8 +153,8 @@ ha-manager add vm:101
 ha-manager set vm:101 --state started --max_restart 3
 
 # migrate VM между нодами
-qm migrate 101 node2 --live        # live migration (без остановки)
-qm migrate 101 node2 --online      # online migration
+qm migrate 101 node2 --online      # live migration работающей VM
+qm migrate 101 node2               # offline: VM должна быть остановлена
 ```
 
 ## Terraform Provider

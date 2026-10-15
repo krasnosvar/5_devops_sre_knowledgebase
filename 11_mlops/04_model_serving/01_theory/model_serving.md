@@ -11,17 +11,31 @@
 
 ## vLLM — для LLM inference
 
+> **Нужна GPU.** Официальный образ `vllm/vllm-openai` собран под NVIDIA
+> CUDA: без GPU и NVIDIA Container Toolkit он не запустится, флаг
+> `--device cpu` эту сборку не превращает в CPU-версию. CPU-бэкенд у
+> vLLM есть, но ставится отдельной сборкой (см. официальную
+> документацию vLLM, раздел про установку на CPU). Для лабы без GPU
+> используйте Ollama или llama.cpp server — они тоже отдают
+> OpenAI-совместимый API (`/v1/chat/completions`), см.
+> [упражнение 01](../03_exercises/README.md).
+
 ```bash
-# Запуск (GPU)
+# Запуск (GPU). Llama 3.1 — gated-модель: нужен HF-токен с принятой
+# лицензией. --tensor-parallel-size 1 — модель целиком на 1 GPU;
+# --max-num-seqs — максимум одновременно обрабатываемых запросов.
 docker run --runtime nvidia --gpus all \
   -p 8000:8000 \
+  -e HF_TOKEN="$HF_TOKEN" \
   vllm/vllm-openai:latest \
   --model meta-llama/Llama-3.1-8B-Instruct \
-  --tensor-parallel-size 1 \          # 1 GPU
+  --tensor-parallel-size 1 \
   --max-model-len 8192 \
   --gpu-memory-utilization 0.85 \
-  --max-num-seqs 256 \                # максимум параллельных запросов
-  --quantization awq                  # AWQ quantization для экономии VRAM
+  --max-num-seqs 256
+# Для экономии VRAM берут уже квантованный чекпойнт (например,
+# AWQ-версию модели) и добавляют --quantization awq; на обычной fp16
+# модели этот флаг не сработает.
 
 # Проверить
 curl http://localhost:8000/v1/models
@@ -45,55 +59,58 @@ curl http://localhost:8000/metrics | grep vllm
 
 ```bash
 # Tensor Parallelism — разделить модель между GPU
---tensor-parallel-size 2   # 2 GPU, модель разделена по layers
+--tensor-parallel-size 2   # 2 GPU, матрицы каждого слоя делятся
 
 # Pipeline Parallelism — разделить pipeline между GPU
---pipeline-parallel-size 2  # 2 GPU, разные stages
+--pipeline-parallel-size 2  # 2 GPU, разные группы слоёв
 
 # Quantization — уменьшить VRAM
---quantization awq          # AWQ: quality ~ FP16, VRAM вдвое меньше
---quantization gptq         # GPTQ: чуть хуже AWQ
+--quantization awq          # AWQ 4-bit: веса ~в 4 раза меньше FP16
+--quantization gptq         # GPTQ: тоже нужен GPTQ-чекпойнт
 --dtype bfloat16            # по умолчанию для современных GPU
 ```
 
 ## BentoML — для классических ML и custom serving
 
+Ниже — API BentoML 1.2+ (класс с декоратором `@bentoml.service`).
+Старый API (`bentoml.Service`, runners, `bentoml.io`) объявлен
+устаревшим; в чужом коде он ещё встречается, но новые сервисы пишут так:
+
 ```python
+# train.py — один раз сохранить модель в локальный BentoML store
+# (~/bentoml/models): bentoml.sklearn.save_model("fraud_detector", model,
+#     metadata={"accuracy": 0.97})
+
 # service.py
 import bentoml
 import numpy as np
-from bentoml.io import NumpyNdarray, JSON
 
-# сохранить модель в BentoML store
-bentoml.sklearn.save_model("fraud_detector", model,
-                           signatures={"predict": {"batchable": True}},
-                           metadata={"accuracy": 0.97, "version": "v3.1"})
 
-# определить сервис
-svc = bentoml.Service("fraud_detector_svc",
-                      runners=[bentoml.sklearn.get("fraud_detector:latest").to_runner()])
+@bentoml.service(resources={"cpu": "2"}, traffic={"timeout": 10})
+class FraudDetector:
+    def __init__(self) -> None:
+        # загружается один раз на воркер, а не на каждый запрос
+        self.model = bentoml.sklearn.load_model("fraud_detector:latest")
 
-@svc.api(input=JSON(), output=JSON())
-async def predict(input_data: dict) -> dict:
-    features = np.array(input_data["features"])
-    predictions = await svc.runners["fraud_detector_svc"].predict.async_run(features)
-    return {
-        "prediction": int(predictions[0]),
-        "probability": float(predictions[1][0])
-    }
+    @bentoml.api
+    def predict(self, features: np.ndarray) -> dict:
+        proba = self.model.predict_proba(features)[0]
+        return {"prediction": int(proba.argmax()),
+                "probability": float(proba.max())}
 ```
 
 ```bash
-# тестовый запуск
-bentoml serve service:svc --reload
+# тестовый запуск (HTTP на :3000, эндпоинт /predict,
+# тело запроса — JSON с именами аргументов: {"features": [[...]]})
+bentoml serve service:FraudDetector
 
-# собрать bento (образ для деплоя)
+# собрать bento (нужен bentofile.yaml) и OCI-образ из него
 bentoml build
-bentoml containerize fraud_detector_svc:latest
+bentoml list                       # тег bento из вывода build
+bentoml containerize <bento_tag>
 
-# деплой в k8s
-helm install fraud-detector bentoml/yatai \
-  --set bentoDeployment.bento=fraud_detector_svc:abc123
+# деплой в k8s: полученный образ запускается обычным Deployment +
+# Service (или через KServe, см. ниже)
 ```
 
 ## KServe (KFServing) — serving в k8s

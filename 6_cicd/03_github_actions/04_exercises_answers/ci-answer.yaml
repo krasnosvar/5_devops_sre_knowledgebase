@@ -1,8 +1,8 @@
-# Ответ: GitHub Actions — все упражнения
-# Упражнение 01: Hello World + commit info
-# Упражнение 02: Matrix (3 OS × 2 Python)
-# Упражнение 03: Reusable workflow
-# Упражнение 04: OIDC без статических ключей
+# Ответ: GitHub Actions — упражнения 01-04 в одном workflow.
+# Пошаговые решения и ожидаемый вывод — README.md рядом.
+# Упражнение 03 (reusable workflow) — deploy.yaml рядом.
+#
+# Минимальный проект: tests/test_smoke.py (def test_ok(): assert 1 + 1 == 2)
 
 name: Complete CI Answer
 
@@ -13,12 +13,18 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Упражнение 01: базовый job с информацией о коммите
+# По умолчанию — только чтение; джобы расширяют права явно
+permissions:
+  contents: read
+
 jobs:
+  # Упражнение 01: информация о коммите
   info:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # по умолчанию 1 — git log покажет один коммит
       - name: Show commit info
         run: |
           echo "SHA: ${{ github.sha }}"
@@ -40,10 +46,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-          cache: pip
       - run: python --version
-      - run: pip install pytest
-      - run: pytest tests/ -v 2>/dev/null || echo "No tests yet"
+      - run: python -m pip install pytest
+      - run: python -m pytest tests/ -v
+
+  # Упражнение 03: вызов reusable workflow (deploy.yaml)
+  deploy-staging:
+    needs: test-matrix
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      environment: staging
+      image-tag: ${{ github.sha }}
+    secrets:
+      KUBECONFIG: ${{ secrets.STAGING_KUBECONFIG }}
 
   # Упражнение 04: OIDC → AWS без статических ключей
   deploy-oidc:
@@ -51,13 +67,15 @@ jobs:
     needs: test-matrix
     if: github.ref == 'refs/heads/main'
     permissions:
-      id-token: write   # нужно для получения OIDC токена
-      contents: read
+      id-token: write   # получить OIDC JWT от GitHub
+      contents: read    # checkout (явный permissions обнуляет остальное)
+    # environment меняет claim sub на repo:ORG/REPO:environment:production
+    # — Trust Policy роли должна совпадать (aws-trust-policy.json)
     environment: production
     steps:
       - uses: actions/checkout@v4
 
-      # Нет access_key_id / secret_access_key!
+      # Нет access_key_id / secret_access_key
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
@@ -65,9 +83,3 @@ jobs:
 
       - name: Verify identity
         run: aws sts get-caller-identity
-
-      - name: Deploy
-        run: |
-          echo "Deploying ${{ github.sha }} to production"
-          # aws eks update-kubeconfig --name prod-cluster
-          # kubectl set image deployment/myapp app=$IMAGE:${{ github.sha }}

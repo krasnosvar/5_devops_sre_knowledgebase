@@ -1,4 +1,4 @@
-# Multi-stage + non-root — паттерн из 2_containers/05_security
+# Multi-stage + non-root — паттерн из 3_containers/05_security
 FROM python:3.13-slim AS builder
 WORKDIR /app
 COPY requirements.txt .

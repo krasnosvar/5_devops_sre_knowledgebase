@@ -207,4 +207,4 @@ increase(http_requests_total[1h]) * 100
 1. **SLO → Error Budget**: цифры переведены в конкретное время. Команда понимает что означает "потратить 3.5% бюджета".
 2. **Burn rate алерт**: срабатывает на симптом (быстрый рост ошибок), а не на threshold (ошибки > X%).
 3. **Incident → Postmortem**: каждый инцидент улучшает систему через action items.
-4. **Упражнения к теме** → в остальных разделах базы (k8s troubleshooting — `3_kubernetes/09_cluster_operations/`, Prometheus — `7_observability/02_metrics_prometheus/03_exercises/`, Grafana — `7_observability/04_grafana/`).
+4. **Упражнения к теме** → в остальных разделах базы (k8s troubleshooting — `4_kubernetes/08_cluster_operations/`, `4_kubernetes/13_troubleshooting/`, Prometheus — `8_observability/02_metrics_prometheus/03_exercises/`, Grafana — `8_observability/04_grafana/`).

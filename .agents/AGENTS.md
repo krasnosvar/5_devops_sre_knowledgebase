@@ -55,8 +55,70 @@ subdirectories *inside* the parent subsection, continuing that parent's own
   existing parent (cross-cutting bridge topics like Operators/CRDs, or reference/
   landscape pages like the ecosystem overview).
 - Worked examples on disk: `4_kubernetes/06_security/{01_core/, 02_policy_engines/}`,
-  `4_kubernetes/07_gitops/{01_theory/, 02_argocd/, 03_fluxcd/, 04_argo_rollouts/}`,
-  `4_kubernetes/09_manifests_management/{01_theory/, 02_helm/, 03_kustomize/}`.
+  `4_kubernetes/07_manifests_management/{01_theory/, 02_helm/, 03_kustomize/}`,
+  `4_kubernetes/09_gitops/{01_theory/, 02_argocd/, 03_fluxcd/, 04_argo_rollouts/}`.
+
+## Renumbering History (grep old names as plain text after any rename)
+
+- 2026-10-14: `4_kubernetes/07_gitops` <-> `09_manifests_management` swapped
+  (GitOps used Helm/Kustomize before they were taught) — now
+  `07_manifests_management/` and `09_gitops/`.
+- 2026-10-14: new beginner topic `4_kubernetes/00_first_steps/` (cluster,
+  kind, kubectl basics, first Pod/Deployment/Service) before
+  `01_architecture`.
+- 2026-10-14: `13_books_certs_resources/{02_certifications,
+  03_books_and_resources}` -> `{01_certifications, 02_books_and_resources}`.
+- 2026-10-14: multi-file theory dirs got reading-order prefixes:
+  `7_compute_platforms/02_aws/01_theory/00_aws_core.md` (overview first),
+  `8_observability/02_*/01_theory/{01_prometheus,02_promql}.md`,
+  `8_observability/05_*/01_theory/{01_loki,02_loki_logql}.md`,
+  `8_observability/06_*/01_theory/{01_distributed_tracing,02_tracing}.md`.
+- Older stale names seen in the wild: `7_observability`, `4_iac`,
+  `3_kubernetes`, `2_containers` (pre-renumber) — must not reappear.
+
+## Topic README Template
+
+Every topic dir (`<section>/<NN_topic>/`) has a `README.md` with:
+`# NN. Название`, `## Зачем` (concrete problem), `## Пререквизиты` (links;
+tools used before they're taught get an explicit «Забегание вперёд» note
+with a link and the minimum needed, or the part is marked optional),
+`## Файлы` (every file/dir linked), `## Как проходить`,
+`## Когда двигаться дальше` (self-check criteria + next topic link).
+Section READMEs additionally carry `## Пререквизиты` and
+`## Когда двигаться дальше`. Git is not taught in this repo — link to
+`../4_python_my_knowledgebase/0_tooling_and_workflow/01_git_essentials/`.
+
+## Canonical Homes (de-duplication)
+
+- Pod Security Standards / PSA — `10_devsecops/05_pod_security/`;
+  `3_containers/05_security` and `4_kubernetes/06_security` keep a short
+  gloss + link.
+- GitOps — `4_kubernetes/09_gitops/`; `6_cicd/05_gitops_cd` keeps only the
+  CI side (tag bump, promotion) + link.
+- Protocols — `2_networking/`; `1_linux_and_shell/06_networking_basics` is
+  a Linux-tooling intro linking forward.
+- Certifications — `13_books_certs_resources/01_certifications/`.
+
+## Exercise Answer Format
+
+- `04_exercises_answers/` holds `.md` files, not runnable `.sh` "answer
+  scripts": per exercise `## Упражнение N — ...`, the commands a learner
+  types in order (```bash), expected output (```text, approximate), and a
+  short «почему так». Exercise numbers/titles must match
+  `03_exercises/README.md`.
+- Real config files that are part of the answer (`.yaml/.tf/.py/.conf`) stay
+  as files and are referenced from the `.md`. A `.sh` may remain only when
+  the exercise literally asks to write a script — then it must be correct
+  (`set -euo pipefail`, `bash -n` clean, no `|| true`, no faked output).
+- No `-auto-approve`, plan before apply, destroy at the end.
+- Examples with destructive live commands (`terraform state rm`,
+  `aws ec2 terminate-instances`) are `.md` with fenced code, never
+  executable `.sh`.
+- `12_interview_questions_prep/**/*.sh` Q&A files are a separate,
+  intentional format — never convert them.
+- The capstone `0_lab_setup/05_capstone_project/` is the FINAL project
+  (done after the sections each stage depends on), despite living in
+  `0_lab_setup`.
 
 ## Cross-Reference Discipline
 
@@ -215,7 +277,28 @@ rather than one dense file — matches this repo's own existing "Nested
 Sub-Tool Convention" and "exceed 10 Q&A questions rather than pad/trim"
 guidance above: more real, well-separated content beats one crowded file.
 
-## 8. Validation Checklist (run after any batch of edits)
+## 8. Lessons From the Sibling Python Repo's Full Audit (2026-10-13)
+A repo-wide clarity audit of `4_python_my_knowledgebase` found problems no
+structural check catches. Those that carry over to this repo:
+- **Every topic README answers "зачем"** — the concrete problem the topic
+  solves, not only a list of files.
+- **Run code you add or change — reading is not verification.** Bugs found
+  only by running: a missing import, a parameter read from the wrong place,
+  an example that didn't demonstrate what the prose claimed. Here: run the
+  bash snippets/scripts, `kubectl kustomize`, `docker compose config`,
+  `terraform validate` wherever the tool is available.
+- **Reordering can move the bug instead of fixing it** — after moving a
+  section/file earlier, re-check that it doesn't now use terms defined only
+  later.
+- **Audit full files, not the first file per topic** — spot-checks missed
+  bugs a full read found immediately; parallel read-only forks per group of
+  topics, each reading everything in full, worked well.
+- **Pointers into sibling repos are not explanations** — a reader may not
+  have that repo; explain inline briefly and link as "подробнее".
+- **Mixed Latin+Cyrillic words** ("коммit", "formы", "momент") — see §9
+  item 6.
+
+## 9. Validation Checklist (run after any batch of edits)
 Run these repo-wide (not just on touched files — other files may reference
 what you changed), via a quick Bash/Python one-liner each:
 1. **Line width** — no `.sh` interview file line over 80 chars.
@@ -229,7 +312,11 @@ what you changed), via a quick Bash/Python one-liner each:
 6. **No stray mixed-script glyphs** — a known artifact from prior edits is a
    single CJK character accidentally inserted into Cyrillic/Latin text (e.g.
    "тема架ектурная", "raскатку" with a Latin r). Scan with
-   `grep -nP '[\x{4e00}-\x{9fff}]'` across touched files.
+   `grep -nP '[\x{4e00}-\x{9fff}]'` across touched files. Also scan for words
+   glued from Latin + Cyrillic:
+   `grep -rnoP '\b\w*(?:[а-яё][a-z]|[a-z][а-яё])\w*\b' --include='*.md'
+   --include='*.sh' .` — review hits by hand (string escapes like `\nтекст`
+   are legit).
 7. **Relative links resolve** — glob all `*.md`, regex `\]\(\.\./[^)]+\)` or
    `\]\(\./[^)]+\)`, resolve each with `os.path.normpath(os.path.join(dirname,
    link))`, assert `os.path.exists`. Run repo-wide after every structural

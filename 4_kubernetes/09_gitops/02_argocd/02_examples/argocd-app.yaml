@@ -1,0 +1,105 @@
+---
+# ArgoCD Application — деплоить из Kustomize overlay
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp-production
+  namespace: argocd
+  # Finalizer — при удалении Application каскадно удалить и все созданные
+  # им k8s-ресурсы (без finalizer'а ресурсы остаются в кластере "сиротами")
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/org/gitops-config.git
+    targetRevision: HEAD
+    path: overlays/production
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+
+  syncPolicy:
+    automated:
+      prune: true       # удалять ресурсы удалённые из git
+      selfHeal: true    # восстанавливать при ручных изменениях
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - PrunePropagationPolicy=foreground
+
+---
+# ApplicationSet — генерировать Application для каждого окружения
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: myapp-envs
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - env: dev
+            cluster: https://kubernetes.default.svc
+            namespace: dev
+            autoSync: true
+          - env: staging
+            cluster: https://kubernetes.default.svc
+            namespace: staging
+            autoSync: true
+          - env: production
+            cluster: https://kubernetes.default.svc
+            namespace: production
+            autoSync: false          # production — только manual sync
+
+  template:
+    metadata:
+      name: "myapp-{{.env}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/org/gitops-config.git
+        targetRevision: HEAD
+        path: "overlays/{{.env}}"
+      destination:
+        server: "{{.cluster}}"
+        namespace: "{{.namespace}}"
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+  # Булево поле строковой подстановкой в template не задать —
+  # автосинк включается условно через templatePatch (Go-шаблон)
+  templatePatch: |
+    {{- if .autoSync }}
+    spec:
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+    {{- end }}
+
+---
+# Пример Kustomization для overlay (overlays/production/kustomization.yaml)
+# apiVersion: kustomize.config.k8s.io/v1beta1
+# kind: Kustomization
+# resources:
+#   - ../../base
+# namespace: production
+# replicas:
+#   - name: myapp
+#     count: 3
+# images:
+#   - name: myapp
+#     newTag: "abc123sha"   # обновляется CI/Image Updater
+# patches:
+#   - patch: |-
+#       - op: replace
+#         path: /spec/template/spec/containers/0/resources/limits/memory
+#         value: "512Mi"
+#     target:
+#       kind: Deployment
+#       name: myapp

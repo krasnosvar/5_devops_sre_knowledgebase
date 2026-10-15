@@ -1,6 +1,7 @@
 # Упражнения — GitHub Actions
 
-Стенд: ☁️ Tier 3 — GitHub.com (бесплатно для public repos, 2000 мин/мес для private)
+Стенд: ☁️ Tier 3 — GitHub.com (бесплатно для public repos, 2000 мин/мес для
+private)
 
 ## 01 — Hello World workflow
 
@@ -93,11 +94,13 @@ jobs:
 
 ## 04 — OIDC без статических credentials
 
-**Задача:** Настроить workflow который получает AWS credentials через OIDC (без access_key_id).
+**Задача:** Настроить workflow который получает AWS credentials через OIDC (без
+access_key_id).
 
 ```yaml
 jobs:
   deploy:
+    runs-on: ubuntu-latest
     permissions:
       id-token: write   # нужно для OIDC
       contents: read
@@ -110,4 +113,5 @@ jobs:
 ```
 
 Создать IAM Role в AWS с Trust Policy для GitHub OIDC.
-Документация: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+Документация:
+https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services

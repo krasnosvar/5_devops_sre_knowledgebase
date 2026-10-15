@@ -9,8 +9,10 @@
 
 ## Поднять локальный кластер и собрать образ внутрь него
 
+Команды выполняются по порядку, начиная из папки `03_kubernetes/`.
+
 ```bash
-cd ../03_local_k8s/02_examples/
+cd ../../03_local_k8s/02_examples/
 kind create cluster --config kind-cluster.yaml --name shortener
 
 cd ../../05_capstone_project/app/

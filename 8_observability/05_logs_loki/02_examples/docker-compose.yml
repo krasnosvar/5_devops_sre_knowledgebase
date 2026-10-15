@@ -7,22 +7,40 @@ services:
       - ./loki-config.yaml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
-      interval: 10s
-      retries: 5
+    # healthcheck не задан: образ Loki 3.x distroless — внутри нет ни sh,
+    # ни wget. Готовность проверяется снаружи: curl localhost:3100/ready.
+    # Агенты (alloy/promtail) сами повторяют push, пока Loki стартует.
 
+  # Grafana Alloy — агент сбора логов: читает stdout/stderr контейнеров
+  # через Docker API и пушит в Loki (конфиг: alloy-config.alloy)
+  alloy:
+    image: grafana/alloy:latest
+    ports:
+      - "12345:12345"   # UI Alloy: граф компонентов и их состояние
+    volumes:
+      - ./alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    depends_on:
+      - loki
+
+  # Promtail — legacy-агент (снят с поддержки, новые установки — Alloy).
+  # Оставлен для сравнения конфигов; запускается только явно:
+  #   docker compose --profile promtail up -d
+  # Не запускать вместе с alloy — логи задвоятся.
   promtail:
     image: grafana/promtail:latest
+    profiles: ["promtail"]
     volumes:
       - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
-      - /var/log:/var/log:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: -config.file=/etc/promtail/config.yaml
     depends_on:
-      loki:
-        condition: service_healthy
+      - loki
 
   grafana:
     image: grafana/grafana:latest
@@ -38,10 +56,12 @@ services:
     depends_on:
       - loki
 
-  # Тестовое приложение которое генерирует логи
+  # Тестовое приложение, которое генерирует логи (JSON access-log).
+  # Пишет в stdout (-t stdout): агент забирает именно stdout контейнера,
+  # запись в файл внутри контейнера (-t log) он бы не увидел.
   log-generator:
     image: mingrammer/flog:latest
-    command: -f json -l -d 1s -t log
+    command: -f json -t stdout -l -d 500ms
     labels:
       app: log-generator
       environment: demo

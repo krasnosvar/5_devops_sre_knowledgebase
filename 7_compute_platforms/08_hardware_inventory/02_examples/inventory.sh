@@ -11,7 +11,7 @@ import json, subprocess, os, platform
 
 def run(cmd):
     try:
-        return subprocess.check_output(cmd, shell=True, text=True, stderr='/dev/null').strip()
+        return subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL).strip()
     except:
         return "unknown"
 

@@ -1,0 +1,5 @@
+---
+# Самый низкий приоритет: переопределяется из inventory/playbook
+nginx_port: 80
+nginx_site_name: app
+nginx_web_root: /var/www/html

@@ -1,7 +1,8 @@
 ---
-# Ответ: упражнения 01-04 — правильные RBAC объекты
+# RBAC-объекты к упражнениям 03 и 04 (разбор команд: rbac-answers.md).
 
-# Ответ 01: пользователь alice — только читать pods в production
+# Дополнительно (к теории §1): пользователь alice — только читать pods
+# в production через namespace-Role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -17,8 +18,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: alice-pod-reader
-  namespace: production
+  name: alice-pod-reader-role   # другое имя, чем в 02_examples:
+  namespace: production         # roleRef существующего binding менять нельзя
 subjects:
   - kind: User
     name: alice
@@ -29,7 +30,8 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
-# Ответ 02: ServiceAccount с правами только на конкретный ConfigMap
+# Ответ к упражнению 03: ServiceAccount с правами только на конкретный
+# ConfigMap
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -66,7 +68,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
-# Ответ 04: исправленный небезопасный RBAC
+# Ответ к упражнению 04 (шаг 2): как исправить найденный небезопасный RBAC
 # Проблема 1: wildcard resources/verbs/apiGroups — заменить на конкретные
 # Проблема 2: ClusterRoleBinding к cluster-admin — использовать namespace Role
 # Исправление:
@@ -84,6 +86,14 @@ rules:
     verbs: ["get", "list", "watch"]
 
 ---
+# Отдельный SA для деплой-инструмента: не смешиваем его права с myapp
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: deployer
+  namespace: production
+
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -91,7 +101,7 @@ metadata:
   namespace: production
 subjects:
   - kind: ServiceAccount
-    name: myapp
+    name: deployer
     namespace: production
 roleRef:
   kind: Role              # было: ClusterRole cluster-admin
@@ -99,5 +109,32 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 # Проверка:
-#   kubectl auth can-i get pods -n production --as=system:serviceaccount:production:myapp
-#   kubectl auth can-i delete pods -n production --as=system:serviceaccount:production:myapp
+#   kubectl auth can-i get pods -n production --as=system:serviceaccount:production:deployer
+#   kubectl auth can-i delete pods -n production --as=system:serviceaccount:production:deployer
+
+---
+# Ответ к упражнению 03: ConfigMap, который разрешено читать
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+data:
+  LOG_LEVEL: info
+
+---
+# Ответ к упражнению 03: тестовый Pod под ServiceAccount myapp.
+# У SA выключено automountServiceAccountToken, поэтому для этого пода
+# монтирование токена включаем явно (настройка пода важнее настройки SA).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  namespace: production
+spec:
+  serviceAccountName: myapp
+  automountServiceAccountToken: true
+  containers:
+    - name: curl
+      image: curlimages/curl:8.10.1
+      command: ["sleep", "3600"]

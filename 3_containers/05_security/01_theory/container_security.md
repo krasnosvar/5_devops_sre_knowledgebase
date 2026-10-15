@@ -5,7 +5,7 @@
 2. [Capabilities: Разделение прав Root](#2-capabilities-разделение-прав-root)
 3. [Seccomp и AppArmor: Блокировка системных вызовов](#3-seccomp-и-apparmor-блокировка-системных-вызовов)
 4. [User Namespaces и Rootless Containers](#4-user-namespaces-и-rootless-containers)
-5. [Kubernetes SecurityContext и Pod Security Standards](#5-kubernetes-securitycontext-и-pod-security-standards)
+5. [Kubernetes SecurityContext](#5-kubernetes-securitycontext)
 6. [Типовые вопросы на собеседовании (Interview Q&A)](#6-типовые-вопросы-на-собеседовании-interview-qa)
 
 ---
@@ -46,11 +46,12 @@ Linux **Capabilities** разделяют магическую силу root н�
 Если процесс запущен как `root` (UID 0) внутри контейнера, ядро транслирует этот UID в непривилегированный UID на хосте (например, 100000). 
 Даже если злоумышленник сбежит из контейнера на хост, ядро расценит его не как суперпользователя, а как бесправного пользователя `100000`, который ничего не может сломать. Эта концепция называется **Rootless Containers** (используется в Podman и новом Docker).
 
-## 5. Kubernetes SecurityContext и Pod Security Standards
+## 5. Kubernetes SecurityContext
 
 В Kubernetes вся безопасность пода настраивается в секции `securityContext`.
 
-Золотой стандарт настройки production-пода (Restricted Profile):
+Золотой стандарт настройки production-пода (соответствует профилю
+`restricted` из Pod Security Standards):
 ```yaml
 securityContext:
   runAsNonRoot: true              # Не даст запуститься, если образ работает от root
@@ -62,6 +63,13 @@ securityContext:
       - ALL                       # Забираем все спец. права
 ```
 Если контейнеру нужно писать временные файлы (логи/кэш), при `readOnlyRootFilesystem: true` нужно смонтировать `emptyDir` (tmpfs) тома в эти конкретные папки (`/tmp`).
+
+**Pod Security Standards (PSS)** — три готовых профиля требований к подам
+(`privileged`, `baseline`, `restricted`), которые встроенный контроллер Pod
+Security Admission применяет на уровне namespace по меткам. Это способ
+принудительно требовать настройки `securityContext` выше от всех подов
+кластера, а не надеяться на дисциплину авторов манифестов. Подробно — в
+[10_devsecops/05_pod_security](../../../10_devsecops/05_pod_security/).
 
 ---
 
@@ -93,6 +101,3 @@ securityContext:
 
 **9. В чем уязвимость монтирования `/var/run/docker.sock` внутрь контейнера (Docker-in-Docker или CI/CD агенты)?**
 *Ответ:* Сокет Docker — это шлюз к демону `dockerd`, который работает на хосте от имени root. Контейнер, имеющий доступ к сокету (например, Jenkins-агент), может отправить API-запрос на создание нового, абсолютно привилегированного контейнера (с `--privileged` и смонтированным корнем хоста `/`). Это самый простой и известный способ эскалации привилегий от изолированного контейнера до полного контроля над нодой-хостом.
-
-**10. В чем отличие `PodSecurityPolicy` (PSP) от `Pod Security Admission` (PSA / PSS)?**
-*Ответ:* `PodSecurityPolicy` (PSP) был старым механизмом k8s для принудительной защиты кластера (запрещал деплой privileged подов). Он был сложным, запутанным (RBAC конфликты) и удален в Kubernetes 1.25. Ему на смену пришел `Pod Security Admission` (PSA), который опирается на стандарты `Pod Security Standards` (PSS). PSA позволяет на уровне Namespace вешать простые метки (например, `pod-security.kubernetes.io/enforce: restricted`), и контроллер автоматически будет блокировать любые несекьюрные поды по готовым шаблонам без написания сложных политик.

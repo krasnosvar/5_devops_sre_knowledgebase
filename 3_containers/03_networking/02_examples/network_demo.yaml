@@ -29,7 +29,11 @@ networks:
     name: demo-backend
     internal: true   # нет выхода в интернет
 
-# После запуска:
-#   docker compose exec frontend wget -qO- http://backend:5000   # OK
-#   docker compose exec frontend wget -qO- http://database:5432  # FAIL (разные сети)
-#   docker compose exec backend wget -qO- http://database:5432   # OK
+# После запуска (docker compose -f network_demo.yaml up -d):
+#   curl -s http://localhost:8080                                 # OK, через frontend
+#   docker compose -f network_demo.yaml exec frontend wget -qO- http://backend:5000   # OK
+#   docker compose -f network_demo.yaml exec frontend wget -qO- http://database:5432
+#     # FAIL: "bad address 'database'" — разные сети, имя даже не резолвится
+#   # в python:3.12-slim нет wget — проверяем TCP-доступность из python:
+#   docker compose -f network_demo.yaml exec backend python3 -c \
+#     "import socket; socket.create_connection(('database', 5432), timeout=3); print('OK')"

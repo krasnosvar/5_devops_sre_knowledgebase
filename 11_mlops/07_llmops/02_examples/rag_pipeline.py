@@ -42,8 +42,11 @@ class RAGPipeline:
         self._vector_size = self.embedder.get_sentence_embedding_dimension()
 
     def setup_collection(self):
-        """Создать коллекцию в Qdrant."""
-        self.qdrant.recreate_collection(
+        """Создать коллекцию в Qdrant (пересоздать, если уже есть)."""
+        # recreate_collection() в qdrant-client объявлен устаревшим
+        if self.qdrant.collection_exists(self.collection):
+            self.qdrant.delete_collection(self.collection)
+        self.qdrant.create_collection(
             collection_name=self.collection,
             vectors_config=VectorParams(
                 size=self._vector_size,
@@ -72,12 +75,14 @@ class RAGPipeline:
     def retrieve(self, query: str, top_k: int = 3) -> list[dict]:
         """Найти релевантные документы по запросу."""
         query_vector = self.embedder.encode(query).tolist()
-        results = self.qdrant.search(
+        # search() удалён из новых qdrant-client; актуальный API —
+        # query_points(), результат лежит в .points
+        results = self.qdrant.query_points(
             collection_name=self.collection,
-            query_vector=query_vector,
+            query=query_vector,
             limit=top_k,
             with_payload=True,
-        )
+        ).points
         return [
             {"text": r.payload["text"], "score": r.score, "id": r.id}
             for r in results
@@ -120,7 +125,7 @@ if __name__ == "__main__":
     rag = RAGPipeline(
         # Для Ollama вместо OpenAI:
         # openai_base_url="http://localhost:11434/v1",
-        # llm_model="llama3.1",
+        # llm_model="qwen2.5:0.5b",  # предварительно: ollama pull qwen2.5:0.5b
     )
     rag.setup_collection()
 
@@ -154,5 +159,6 @@ if __name__ == "__main__":
         print(f"\nQ: {q}")
         result = rag.answer(q)
         print(f"A: {result['answer']}")
-        print(f"   Sources used: {[d['score']:.3f for d in result['sources']]}")
+        scores = [round(d["score"], 3) for d in result["sources"]]
+        print(f"   Sources used (scores): {scores}")
         print(f"   Tokens: {result['tokens_used']}")

@@ -23,19 +23,25 @@ getcap /usr/bin/ping
 
 ## 02 — SSH hardening
 
-**Задача:** Привести `sshd_config` к безопасному состоянию и убедиться, что сервис не сломался.
+**Задача:** Привести конфигурацию sshd к безопасному состоянию через drop-in
+файл и убедиться, что сервис не сломался и настройки реально применились.
 
 ```bash
-sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+ls /etc/ssh/sshd_config.d/          # что уже подключается через Include
+grep -n '^Include' /etc/ssh/sshd_config
 
-# TODO: добавить/поправить в /etc/ssh/sshd_config
+# TODO: создать drop-in /etc/ssh/sshd_config.d/<NN>-hardening.conf
 #   PermitRootLogin ???
 #   PasswordAuthentication ???
 #   MaxAuthTries ???
 #   AllowUsers ??? (свой пользователь)
+# Подумай, какой номер <NN> выбрать: sshd берёт ПЕРВОЕ прочитанное значение
+# ключа, а файлы из sshd_config.d/ подключаются в лексикографическом порядке
+# (на облачных образах там уже лежит 50-cloud-init.conf)
 
 sudo sshd -t                        # проверить синтаксис ДО рестарта — обязательно!
-sudo systemctl restart sshd
+sudo sshd -T | grep -i passwordauthentication   # что реально применится
+sudo systemctl restart ssh          # на RHEL/Fedora unit называется sshd
 
 # Проверить с другого терминала, что вход по паролю запрещён,
 # а по ключу — работает (не закрывай текущую sudo-сессию, пока не проверишь!)

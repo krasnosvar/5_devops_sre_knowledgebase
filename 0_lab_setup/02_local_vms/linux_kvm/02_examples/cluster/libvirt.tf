@@ -1,6 +1,6 @@
 # Кластерный стенд: N master + M worker VM на KVM через Terraform libvirt provider
 # Готовит только "голые" VM с правильными hostname и сетью — kubeadm/ansible
-# накатывается отдельно (см. 3_kubernetes/ и 4_iac/06_ansible/).
+# накатывается отдельно (см. 4_kubernetes/ и 5_iac/06_ansible/).
 #
 # Использование:
 #   terraform init

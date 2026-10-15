@@ -26,16 +26,19 @@ services:
     environment:
       VAULT_ADDR: "http://vault:8200"
       VAULT_TOKEN: "dev-root-token"
-    command: >
-      sh -c "
-        echo '--- Записать секрет ---' &&
-        curl -s -X POST http://vault:8200/v1/secret/data/myapp/config
-          -H 'X-Vault-Token: dev-root-token'
-          -d '{\"data\": {\"db_password\": \"s3cr3t\", \"api_key\": \"abc123\"}}'
-          | jq . &&
-        echo '--- Прочитать секрет ---' &&
-        curl -s http://vault:8200/v1/secret/data/myapp/config
-          -H 'X-Vault-Token: dev-root-token'
-          | jq '.data.data'
-      "
+    # У образа curlimages/curl ENTRYPOINT = curl, поэтому для shell-скрипта
+    # переопределяем entrypoint. jq в образе нет — печатаем JSON как есть.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        echo '--- Записать секрет ---'
+        curl -sf -X POST "$$VAULT_ADDR/v1/secret/data/myapp/config" \
+          -H "X-Vault-Token: $$VAULT_TOKEN" \
+          -d '{"data": {"db_password": "s3cr3t", "api_key": "abc123"}}'
+        echo
+        echo '--- Прочитать секрет ---'
+        curl -sf "$$VAULT_ADDR/v1/secret/data/myapp/config" \
+          -H "X-Vault-Token: $$VAULT_TOKEN"
+        echo
     restart: "no"

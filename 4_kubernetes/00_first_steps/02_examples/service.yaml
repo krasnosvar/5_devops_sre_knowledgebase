@@ -1,0 +1,14 @@
+# Service даёт стабильное имя и IP группе подов, выбранных по label.
+# Поды пересоздаются с новыми IP, а имя "web" остаётся.
+# Применить: kubectl apply -f service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  type: ClusterIP         # доступен только изнутри кластера
+  selector:
+    app: web              # трафик идёт на поды с этим label
+  ports:
+    - port: 80            # порт Service
+      targetPort: 80      # порт контейнера

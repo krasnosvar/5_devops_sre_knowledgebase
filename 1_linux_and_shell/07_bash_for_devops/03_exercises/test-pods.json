@@ -1,0 +1,36 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "metadata": {"name": "api-7d9f8b6c4-x2k8p", "namespace": "prod"},
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [{"name": "api", "restartCount": 0}]
+      }
+    },
+    {
+      "metadata": {"name": "worker-5c8d7f9b8-q7m4n", "namespace": "prod"},
+      "status": {
+        "phase": "Running",
+        "containerStatuses": [
+          {"name": "worker", "restartCount": 7},
+          {"name": "log-shipper", "restartCount": 1}
+        ]
+      }
+    },
+    {
+      "metadata": {"name": "migrate-29371", "namespace": "prod"},
+      "status": {
+        "phase": "Failed",
+        "containerStatuses": [{"name": "migrate", "restartCount": 2}]
+      }
+    },
+    {
+      "metadata": {"name": "coredns-76f75df574-9wz2c", "namespace": "kube-system"},
+      "status": {
+        "phase": "Pending"
+      }
+    }
+  ]
+}

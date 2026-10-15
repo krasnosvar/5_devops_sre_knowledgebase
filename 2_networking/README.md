@@ -4,6 +4,18 @@
 DNS и балансировки нагрузки контейнеры и Kubernetes-сеть (CNI, kube-proxy,
 Service) остаются "чёрной магией".
 
+## Пререквизиты
+
+- [1_linux_and_shell](../1_linux_and_shell/) — особенно
+  [06_networking_basics](../1_linux_and_shell/06_networking_basics/)
+  (`ip`, `ss`, network namespaces) и
+  [07_bash_for_devops](../1_linux_and_shell/07_bash_for_devops/).
+- Лабы 00-05 запускаются в Docker, который подробно разбирается позже, в
+  [3_containers](../3_containers/): достаточно уметь `docker run`/`exec` и
+  `docker compose up`/`down`. Лаба 06 использует Terraform
+  ([5_iac](../5_iac/)) и AWS ([7_compute_platforms](../7_compute_platforms/))
+  — её можно отложить.
+
 ## Подразделы
 
 0. [00_osi_and_tcpip](./00_osi_and_tcpip/) — OSI vs TCP/IP, инкапсуляция,
@@ -49,5 +61,17 @@ Service) остаются "чёрной магией".
 ## Упражнения — тиры
 
 🐳 Tier 1: 00, 01, 02, 03, 05 — всё на Docker Compose / контейнерах с `NET_ADMIN`
-☁️ Tier 3: 06 — требует реальный AWS-аккаунт (free tier); не забывайте `terraform destroy`
+☁️ Tier 3: 06 — требует реальный AWS-аккаунт (NAT Gateway платный даже на
+бесплатном уровне; с июля 2025 у новых аккаунтов вместо 12-месячного free
+tier — план на основе кредитов); не забывайте `terraform destroy`
 Без формальной лабы: 04 (BGP) — только теория + рабочий пример FRRouting peering
+
+## Когда двигаться дальше
+
+- Можете по выводу `tcpdump`/`ss` объяснить, на каком уровне сломалось
+  соединение.
+- Можете проследить запрос: DNS → TCP → TLS → HTTP → балансировщик.
+- Можете объяснить путь пакета через netfilter и что делают DNAT/SNAT.
+- Можете объяснить разницу public и private subnet в облаке.
+
+Дальше: [3_containers](../3_containers/).

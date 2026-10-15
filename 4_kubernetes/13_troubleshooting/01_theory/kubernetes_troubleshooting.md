@@ -82,8 +82,11 @@ kubectl get events --field-selector reason=OOMKilling --sort-by='.lastTimestamp'
 убивает все поды бекенда, превращая частичную деградацию в полный каскадный
 коллапс.
 - **Readiness Probe:** проверяет, готово ли приложение принимать трафик.
-  Если проверка падает: **Kubelet исключает Pod IP из EndpointSlice
-  сервиса**. Контейнер НЕ перезапускается.
+  Если проверка падает: kubelet выставляет поду condition `Ready=False`,
+  а **EndpointSlice controller** (в kube-controller-manager), увидев это,
+  помечает endpoint пода как `ready: false` — kube-proxy и
+  Ingress-контроллеры перестают слать на него трафик. Сам kubelet
+  EndpointSlice не трогает. Контейнер НЕ перезапускается.
 
 ---
 
@@ -131,7 +134,8 @@ CSI.
 
 Когда с ноды перестают приходить heartbeat'ы, контроллер
 `node-lifecycle-controller` по истечении `node-monitor-grace-period`
-(по умолчанию 40 секунд) помечает её `NotReady` и ставит на неё taint
+(порядка 40-50 секунд в зависимости от версии) помечает её `NotReady` и ставит
+на неё taint
 `NoExecute`. Это ещё не выселение — поды реально начинают вытесняться
 только после ОТДЕЛЬНОГО тайм-аута терпимости к этому taint'у
 (`tolerationSeconds`, по умолчанию около 5 минут), то есть у ноды есть
@@ -333,8 +337,11 @@ Exit Code: например, 127 при отсутствии бинарника 
 **2. Чем принципиально отличается реакция Kubelet на провал Liveness Probe
 от провала Readiness Probe? Почему неправильная настройка Liveness Probe
 может «положить» весь кластер?**
-*Ответ:* При сбое `Readiness Probe` Kubelet удаляет IP-адрес проблемного
-пода из объекта `EndpointSlice` соответствующего Service. Под перестает
+*Ответ:* При сбое `Readiness Probe` kubelet переводит condition пода
+`Ready` в `False`, а EndpointSlice controller в kube-controller-manager
+помечает endpoint этого пода в `EndpointSlice` соответствующего Service
+как не готовый (`ready: false`), и kube-proxy исключает его из
+балансировки. Под перестает
 получать пользовательский трафик, но контейнер продолжает жить и выполнять
 фоновые задачи. При сбое `Liveness Probe` Kubelet считает контейнер
 безнадежно зависшим и принудительно убивает его (перезапуск контейнера с
@@ -428,8 +435,9 @@ exec-проб и использовать легковесные HTTP или TCP
 *Ответ:* При удалении пода API-сервер параллельно запускает два независимых
 асинхронных процесса: 1) Kubelet получает команду на удаление, посылает поду
 сигнал `SIGTERM` и запускает таймер `terminationGracePeriodSeconds`; 2)
-Контроллер Endpoints обновляет объект Endpoints/EndpointSlice, удаляя Pod
-IP. Ingress Controller должен получить этот event через watch API и обновить
+EndpointSlice controller помечает endpoint пода как terminating/не готовый
+(а Endpoints controller убирает его из legacy-объекта Endpoints). Ingress
+Controller должен получить этот event через watch API и обновить
 свой пул апстримов. Если приложение завершается мгновенно по сигналу
 `SIGTERM` (до того, как Ingress обновил конфигурацию), Ingress продолжает
 отправлять запросы в уже мертвый сокет. Решение: добавить в конфигурацию

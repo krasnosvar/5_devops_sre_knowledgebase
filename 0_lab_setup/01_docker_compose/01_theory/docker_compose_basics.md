@@ -120,19 +120,20 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ## Паттерн стендов в этой базе
 
-Каждый стенд живёт в папке `03_exercises/NN_название/`:
+Tier-1 стенд темы обычно лежит в её `02_examples/` как compose-файл
+(например, `8_observability/02_metrics_prometheus/02_examples/`), а
+`03_exercises/README.md` говорит, какой стенд поднять.
 
-```
-03_exercises/01_prometheus_basics/
+```text
+<тема>/02_examples/
 ├── docker-compose.yml     # поднять: docker compose up -d
-├── .env.example           # скопировать в .env перед запуском
-└── README.md              # задание + как проверить результат
+└── prometheus.yml         # конфиги, которые монтируются в контейнеры
 ```
 
 Стандартный цикл:
+
 ```bash
-cd 03_exercises/01_prometheus_basics/
-cp .env.example .env
+cd <тема>/02_examples/
 docker compose up -d
 # ... выполняешь упражнение ...
 docker compose down -v   # сбросить стенд

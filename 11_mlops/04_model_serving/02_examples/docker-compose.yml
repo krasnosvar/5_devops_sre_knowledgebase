@@ -1,6 +1,10 @@
 # MLOps serving stack: vLLM + MLflow + MinIO
-# Требования: NVIDIA GPU + NVIDIA Container Toolkit
-# Для CPU-only: убери runtime: nvidia и используй модель меньшего размера
+# Требования: NVIDIA GPU + NVIDIA Container Toolkit.
+# Образ vllm/vllm-openai собран под CUDA и без GPU не работает —
+# удаление GPU-настроек его в CPU-версию не превращает. Без GPU:
+# запустите только minio + mlflow (docker compose up -d minio mlflow),
+# а LLM поднимите через Ollama (см. ../03_exercises/README.md, упр. 01).
+# BentoML-сервис для классической модели — см. упражнение 02.
 
 services:
   # ── Model Registry ────────────────────────────────────────────────────────
@@ -39,7 +43,6 @@ services:
   # ── LLM Inference (требует GPU) ────────────────────────────────────────────
   vllm:
     image: vllm/vllm-openai:latest
-    runtime: nvidia    # убрать для CPU
     ports:
       - "8000:8000"
     environment:
@@ -57,18 +60,6 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
-  # ── BentoML (классические ML модели) ──────────────────────────────────────
-  bentoml:
-    build:
-      context: ./bentoml_service
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      MLFLOW_TRACKING_URI: http://mlflow:5000
-    depends_on:
-      - mlflow
 
 volumes:
   minio_data:

@@ -8,13 +8,13 @@
 5. [Типовые вопросы на собеседовании (Interview Q&A)](#5-типовые-вопросы-на-собеседовании-interview-qa)
 
 > Встроенные примитивы безопасности k8s (RBAC, SecurityContext, PSA) — в [`../01_core/`](../../01_core/).
-> Механика Admission-фазы в целом — в [`../../../01_architecture/`](../../../01_architecture/) §3.
+> Механика Admission-фазы в целом — в [`../../../01_architecture/`](../../../01_architecture/) §4.
 
 ---
 
 ## 1. Зачем нужен Admission Controller Policy Engine
 
-Pod Security Admission (см. [`../01_core/`](../../01_core/) §4) проверяет только безопасность самого пода (root/non-root, capabilities). А как запретить деплоить `Ingress` без TLS-сертификата, образы с тегом `:latest` или Deployment без указания `team`-лейбла? Для произвольных корпоративных правил нужны Admission Controller Webhooks — синхронные HTTPS-вызовы, которые API-сервер делает на этапе Admission (см. [`../../../01_architecture/`](../../../01_architecture/) §3), ДО сохранения ресурса в etcd.
+Pod Security Admission (см. [`../01_core/`](../../01_core/) §4) проверяет только безопасность самого пода (root/non-root, capabilities). А как запретить деплоить `Ingress` без TLS-сертификата, образы с тегом `:latest` или Deployment без указания `team`-лейбла? Для произвольных корпоративных правил нужны Admission Controller Webhooks — синхронные HTTPS-вызовы, которые API-сервер делает на этапе Admission (см. [`../../../01_architecture/`](../../../01_architecture/) §4), ДО сохранения ресурса в etcd.
 
 Два конкурирующих движка реализуют эту идею:
 - **OPA Gatekeeper** — универсальный движок политик (используется не только в k8s, но и в CI, Envoy), стандарт CNCF.
@@ -62,19 +62,30 @@ kind: ClusterPolicy
 metadata:
   name: disallow-latest-tag
 spec:
-  validationFailureAction: Enforce
   rules:
     - name: require-image-tag
       match:
-        resources:
-          kinds: [Pod]
+        any:
+          - resources:
+              kinds: [Pod]
       validate:
+        failureAction: Enforce
         message: "Тег :latest запрещён"
         pattern:
           spec:
             containers:
               - image: "!*:latest"
 ```
+
+Синтаксис актуален для Kyverno 1.13+: режим `Enforce`/`Audit` задаётся
+в каждом правиле (`validate.failureAction`), а старое поле
+`spec.validationFailureAction` устарело; ресурсы перечисляются через
+`match.any`/`match.all` (вариант `match.resources` без них — старый).
+В свежих версиях (1.19 на момент написания) сам `ClusterPolicy`
+(`kyverno.io/v1`) помечен устаревшим в пользу CEL-политик
+`ValidatingPolicy`/`MutatingPolicy` (`policies.kyverno.io`); он пока
+работает, но `kubectl apply` выводит предупреждение. Идеи (validate,
+mutate, failurePolicy) от этого не меняются.
 
 Политики пишутся на **обычном YAML** — без отдельного языка. Kyverno умеет не только блокировать (`validate`), но и **мутировать** (`mutate`) манифесты на лету — например, автоматически добавить дефолтные `resources.limits`, если разработчик забыл их указать, ещё до сохранения объекта в etcd.
 
@@ -85,6 +96,13 @@ Admission Webhook — критический компонент в цепочк�
 - **`Ignore`** (Fail-open) — API-сервер проигнорирует падение политик и пропустит манифест. Безопасность нарушена, но доступность сохранена.
 
 На практике SRE держат сам движок (Kyverno/OPA) в нескольких репликах именно для того, чтобы вопрос `Fail` vs `Ignore` вообще редко всплывал на практике.
+
+Дефолты у движков разные: Kyverno по умолчанию регистрирует вебхуки с
+`Fail` (меняется полем `spec.failurePolicy` в политике), Gatekeeper —
+с `Ignore`. Вебхуки Kyverno создаёт и поддерживает сам: ручную правку
+`failurePolicy` в `ValidatingWebhookConfiguration` он сразу откатывает,
+а при штатной остановке admission controller удаляет свои вебхуки
+(поэтому `kubectl scale --replicas=0` не воспроизводит аварию).
 
 ---
 

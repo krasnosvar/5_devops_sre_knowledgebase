@@ -38,7 +38,7 @@ ENTRYPOINT ["python3", "app.py"]
 **Базовые образы по безопасности (от меньшего к большему):**
 1. `scratch` — пустой, только ваш бинарник (только статически слинкованные бинарники)
 2. `gcr.io/distroless/static` — минимальный Linux без shell и package manager
-3. `gcr.io/distroless/python3` / `nodejs` — дистроless с рантаймом
+3. `gcr.io/distroless/python3` / `nodejs` — distroless с рантаймом
 4. `alpine:3.x` — 5 MB, минимальный musl libc, busybox
 5. `debian:slim` / `python:3.x-slim` — популярный компромисс
 
@@ -95,11 +95,10 @@ grype sbom:sbom.json
 brew install sigstore/tap/cosign
 
 # Keyless подписание (через OIDC — GitHub Actions / GitLab)
-# В GitHub Actions:
+# В cosign 2.x keyless — режим по умолчанию, COSIGN_EXPERIMENTAL не нужен.
+# В GitHub Actions (job с permissions: id-token: write):
 # - name: Sign image
-#   run: cosign sign --yes $IMAGE:$SHA
-#   env:
-#     COSIGN_EXPERIMENTAL: "1"
+#   run: cosign sign --yes $IMAGE@$DIGEST
 
 # Подписать с ключом
 cosign generate-key-pair
@@ -122,7 +121,6 @@ kind: ClusterPolicy
 metadata:
   name: require-signed-images
 spec:
-  validationFailureAction: enforce
   rules:
     - name: verify-signature
       match:
@@ -133,6 +131,7 @@ spec:
       verifyImages:
         - imageReferences:
             - "ghcr.io/org/*"
+          failureAction: Enforce   # Kyverno 1.13+ (было validationFailureAction)
           attestors:
             - entries:
                 - keyless:

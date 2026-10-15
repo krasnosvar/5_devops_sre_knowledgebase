@@ -1,6 +1,6 @@
 # Упражнения — Distributed Tracing
 
-Стенд: 🐳 Tier 1 — `7_observability/06_tracing/02_examples/`
+Стенд: 🐳 Tier 1 — `8_observability/06_tracing/02_examples/`
 
 ```bash
 cd ../02_examples/

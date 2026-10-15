@@ -9,13 +9,13 @@ import os, time, signal
 def with_wait():
     pid = os.fork()
     if pid == 0:
-        print(f"[child] PID={os.getpid()} exiting")
+        print(f"[child] PID={os.getpid()} exiting", flush=True)
         os._exit(0)
     else:
         time.sleep(0.5)
         # Без wait: child был бы zombie до вызова wait
         os.waitpid(pid, 0)
-        print(f"[parent] Child {pid} reaped cleanly")
+        print(f"[parent] Child {pid} reaped cleanly", flush=True)
 
 # Вариант 2: SIGCHLD handler — для серверов с множеством потомков
 def sigchld_handler(sig, frame):
@@ -29,11 +29,14 @@ def sigchld_handler(sig, frame):
         except ChildProcessError:
             break
 
+with_wait()
+
 signal.signal(signal.SIGCHLD, sigchld_handler)
 
 pid = os.fork()
 if pid == 0:
-    print(f"[child] PID={os.getpid()} exiting (SIGCHLD will reap me)")
+    print(f"[child] PID={os.getpid()} exiting (SIGCHLD will reap me)",
+          flush=True)
     os._exit(0)
 else:
     time.sleep(0.3)

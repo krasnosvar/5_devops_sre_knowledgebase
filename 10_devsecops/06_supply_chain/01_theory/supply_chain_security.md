@@ -62,10 +62,12 @@ cosign verify --key cosign.pub $IMAGE
   uses: sigstore/cosign-installer@v3
   
 - name: Sign the published Docker image
+  # keyless — режим по умолчанию в cosign 2.x, флаг COSIGN_EXPERIMENTAL
+  # больше не нужен; job должен иметь `permissions: id-token: write`.
+  # Подписывать лучше по digest, а не по тегу (тег можно перезаписать);
+  # digest — из шага docker/build-push-action с id: build
   run: |
-    cosign sign --yes ${{ env.IMAGE }}:${{ github.sha }}
-  env:
-    COSIGN_EXPERIMENTAL: "1"  # keyless signing
+    cosign sign --yes ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
 ```
 
 ### Kyverno — проверять подпись при деплое в k8s
@@ -77,7 +79,6 @@ kind: ClusterPolicy
 metadata:
   name: require-signed-images
 spec:
-  validationFailureAction: enforce
   rules:
     - name: check-image-signature
       match:
@@ -87,6 +88,7 @@ spec:
               namespaces: [production]
       verifyImages:
         - imageReferences: ["ghcr.io/org/*"]
+          failureAction: Enforce   # Kyverno 1.13+ (было validationFailureAction)
           attestors:
             - entries:
                 - keyless:
@@ -96,14 +98,21 @@ spec:
 
 ## SLSA Framework — уровни безопасности
 
-SLSA (Supply chain Levels for Software Artifacts) — фреймворк для повышения доверия к артефактам.
+SLSA (Supply chain Levels for Software Artifacts) — фреймворк для
+повышения доверия к артефактам. В актуальной спецификации v1.0 уровни
+описаны в **Build track** (требования к сборке и provenance):
 
 | Уровень | Требования |
 |---------|-----------|
-| SLSA 1 | Процесс сборки документирован |
-| SLSA 2 | Подписанный provenance (кто, когда, из какого источника собрал) |
-| SLSA 3 | Изолированная среда сборки (hermetic build) |
-| SLSA 4 | Two-party review, воспроизводимые сборки |
+| Build L0 | Никаких гарантий (нет SLSA) |
+| Build L1 | Provenance существует: видно, как и из чего собран артефакт |
+| Build L2 | Сборка на hosted build-платформе, provenance подписан платформой |
+| Build L3 | Hardened build-платформа: сборки изолированы друг от друга, ключи подписи недоступны шагам сборки |
+
+Старая версия v0.1 описывала уровни SLSA 1–4 (с hermetic/reproducible
+builds и two-party review на уровне 4) — эта шкала устарела и часто
+встречается в старых статьях. Требования к исходникам (review кода) в
+v1.0 в Build track не входят и развиваются отдельно.
 
 ```bash
 # GitHub Actions — генерировать SLSA provenance автоматически

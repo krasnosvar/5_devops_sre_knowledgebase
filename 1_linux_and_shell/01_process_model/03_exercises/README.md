@@ -6,7 +6,8 @@
 
 ```bash
 # Посмотреть как bash fork'ает дочерние процессы
-bash -c "echo child PID=$$; sleep 60" &
+# Одинарные кавычки: $$ должен раскрыть дочерний bash, а не текущий shell
+bash -c 'echo child PID=$$; sleep 60' &
 CHILD_PID=$!
 
 # В другом терминале:
@@ -50,7 +51,7 @@ ps aux | grep -E 'zombie|defunct'
 
 ```python
 # graceful.py — обрабатывать SIGTERM правильно
-import signal, time, sys
+import os, signal, time, sys
 
 def handle_sigterm(signum, frame):
     print("Received SIGTERM, cleaning up...")

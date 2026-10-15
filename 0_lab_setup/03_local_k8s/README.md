@@ -1,8 +1,42 @@
-# Tier 2 — Локальный Kubernetes
+# 03. Локальный Kubernetes
 
-Для упражнений по k8s нужен работающий кластер. Три варианта по сложности.
+## Зачем
+
+Для упражнений по Kubernetes нужен работающий кластер, а облачный
+managed-кластер стоит денег и долго создаётся. kind/k3d/minikube поднимают
+кластер локально за десятки секунд поверх Docker (🐳 Tier 1); полная
+установка через kubeadm на VM — это уже 🖥 Tier 2 (см.
+[02_local_vms](../02_local_vms/)).
+
+## Пререквизиты
+
+- [01_docker_compose](../01_docker_compose/) — Docker установлен и
+  работает.
+
+> **Забегание вперёд.** Здесь используется kubectl, который подробно
+> разбирается в [4_kubernetes](../../4_kubernetes/). Для этой темы
+> достаточно: `kubectl cluster-info`, `kubectl get nodes`,
+> `kubectl get pods -A`. Если Kubernetes ещё не освоен — тему можно
+> отложить до начала раздела 4.
+
+## Файлы
+
+- [01_theory/local_k8s_options.md](01_theory/local_k8s_options.md) —
+  сравнение kind / k3d / minikube, установка, загрузка образов, kubectl.
+- [02_examples/kind-cluster.yaml](02_examples/kind-cluster.yaml) — kind:
+  1 control-plane + 2 workers, проброс 80/443 на 8080/8443 хоста.
+- Без `03_exercises/`: тема — только про подъём кластера, упражнения на
+  сам Kubernetes — в [4_kubernetes](../../4_kubernetes/).
+
+## Как проходить
+
+1. Прочитать теорию и выбрать инструмент.
+2. Создать кластер из `kind-cluster.yaml`, проверить `kubectl get nodes`.
+3. Загрузить локальный образ (`kind load docker-image`) и удалить кластер.
 
 ## Сравнение инструментов
+
+Три варианта по сложности.
 
 | | kind | k3d | minikube |
 |---|---|---|---|
@@ -106,3 +140,10 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 brew install kubectx     # macOS
 # Linux: https://github.com/ahmetb/kubectx
 ```
+
+## Когда двигаться дальше
+
+- Можете создать и удалить кластер из конфига `kind-cluster.yaml`.
+- Можете загрузить локально собранный образ в kind/k3d без registry.
+- Понимаете, когда хватит kind, а когда нужен kubeadm на VM.
+- Дальше — [04_cloud_vps](../04_cloud_vps/).

@@ -21,7 +21,10 @@ COPY src/ src/
 FROM python:3.12-slim
 
 # Создать non-root пользователя
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+# --home обязателен: у --system пользователя по умолчанию HOME=/nonexistent,
+# и python не увидит пакеты в ~/.local
+RUN addgroup --system appgroup \
+    && adduser --system --ingroup appgroup --home /home/appuser appuser
 
 WORKDIR /app
 

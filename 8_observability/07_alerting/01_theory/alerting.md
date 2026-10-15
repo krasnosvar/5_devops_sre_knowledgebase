@@ -68,10 +68,13 @@ Alertmanager поддерживает кластеризацию из короб
 *Ответ:* Зависит от настройки `send_resolved` в конфигурации Receiver'а. По умолчанию для многих ресиверов этот параметр равен `false` (чтобы не забивать чат лишними сообщениями об успешных восстановлениях). Если параметр установлен в `true`, Alertmanager пришлет второе зеленое сообщение "Resolved", как только проблема уйдет.
 
 **8. Объясните механику работы Inhibition Rule на конкретном примере. Как именно Alertmanager понимает, кого подавлять?**
-*Ответ:* В Inhibition Rule есть 3 части: `source_match` (кто подавляет), `target_match` (кого подавляют) и `equal` (по каким лейблам они должны совпасть).
+*Ответ:* В Inhibition Rule есть 3 части: `source_matchers` (кто
+подавляет), `target_matchers` (кого подавляют) и `equal` (по каким лейблам
+они должны совпасть). Старые поля `source_match`/`target_match` (и
+`match`/`match_re` в маршрутах) устарели — используйте `*matchers`.
 Пример:
-`source_match: {severity: "critical", alertname: "NodeDown"}`
-`target_match: {severity: "warning"}`
+`source_matchers: [severity="critical", alertname="NodeDown"]`
+`target_matchers: [severity="warning"]`
 `equal: ['node', 'cluster']`
 Если упал сервер `node-1` в `prod`, сработает критический `NodeDown`. Alertmanager посмотрит на все Warning алерты. Если у них тоже есть лейблы `node="node-1"` и `cluster="prod"`, они будут заглушены. Warning-алерты от `node-2` заглушены не будут.
 

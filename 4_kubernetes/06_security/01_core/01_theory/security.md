@@ -62,8 +62,14 @@ SRE и разработчики используют `kubeconfig`. Kubeconfig с
 - `allowPrivilegeEscalation: false` — запрет использования sudo (suid битов).
 - Отбрасывание всех Linux Capabilities (`drop: ["ALL"]`).
 
-**Pod Security Admission (PSA)**:
-Встроенный контроллер допуска (пришел на замену устаревшему PodSecurityPolicy). Работает на уровне namespace через лейблы: `pod-security.kubernetes.io/enforce: restricted`. Если разработчик попытается задеплоить под от root в этот неймспейс, API-сервер мгновенно отвергнет YAML манифест.
+**Pod Security Standards и Pod Security Admission (PSA)** — кратко:
+три встроенных профиля (privileged, baseline, restricted) и
+встроенный admission-контроллер, который применяет их к namespace по
+лейблу `pod-security.kubernetes.io/enforce: restricted` (пришёл на
+замену удалённому PodSecurityPolicy). Под, нарушающий профиль, API-сервер
+отклонит ещё при создании. Профили, режимы enforce/warn/audit и полный
+`securityContext` для production разобраны в
+[10_devsecops/05_pod_security](../../../../10_devsecops/05_pod_security/).
 
 ## 5. NetworkPolicy как часть security-периметра
 
@@ -124,8 +130,17 @@ SRE и разработчики используют `kubeconfig`. Kubeconfig с
 **10. Вы добавили `NetworkPolicy`, которая запрещает весь входящий трафик к подам Backend'а. Но поды все равно могут ходить в интернет и в базу данных. Почему?**
 *Ответ:* NetworkPolicy четко разделяет направления: `Ingress` (входящий) и `Egress` (исходящий). Если манифест содержит только секцию `ingress: []`, он блокирует весь входящий трафик, но **весь исходящий остается разрешенным** по умолчанию, если секция `egress` не задана. Для полной изоляции (Default Deny) нужно явно объявить пустую секцию `egress: []`, после чего точечно разрешать доступ к базе данных и к порту 53 (DNS кластера).
 
-**11. В кластере включен Pod Security Admission (PSA) в режиме `restricted`. Разработчик деплоит под с базовым Nginx, но он отклоняется с ошибкой `Privilege escalation is not explicitly denied`. Почему?**
-*Ответ:* Профиль `restricted` требует максимальной явности. По умолчанию контейнеры могут использовать SUID биты для повышения привилегий (например, утилита `ping`). Чтобы соответствовать строгому профилю, манифест **обязан** явно содержать `allowPrivilegeEscalation: false` и `drop: ["ALL"]` в `securityContext`. Без явного запрета API-сервер считает манифест небезопасным.
+**11. В кластере включен Pod Security Admission (PSA) в режиме `restricted`.
+Разработчик деплоит под с базовым Nginx, но он отклоняется с ошибкой
+`violates PodSecurity "restricted:latest": allowPrivilegeEscalation !=
+false`. Почему?**
+*Ответ:* Профиль `restricted` требует максимальной явности. По умолчанию
+контейнеры могут использовать SUID биты для повышения привилегий (например,
+утилита `ping`). Чтобы соответствовать строгому профилю, манифест **обязан**
+явно содержать `allowPrivilegeEscalation: false`, `capabilities.drop:
+["ALL"]`, `runAsNonRoot: true` и `seccompProfile.type: RuntimeDefault`. Без
+явного запрета API-сервер считает манифест небезопасным и перечисляет в
+ошибке сразу все нарушения.
 
 **12. Чем `External Secrets Operator` (ESO) архитектурно безопаснее, чем хранение секретов в Helm (values.yaml) через SOPS?**
 *Ответ:* SOPS шифрует секреты в Git, но они все равно проходят через CI/CD контур — пайплайн должен расшифровать их и отправить в k8s API в открытом виде, где они могут осесть в логах или стейте Helm'а. В ESO секреты вообще **не существуют** в Git и пайплайнах: они лежат в защищенном Vault/AWS Secrets Manager, а контроллер ESO работает внутри кластера и материализует секреты напрямую в память Kubernetes.

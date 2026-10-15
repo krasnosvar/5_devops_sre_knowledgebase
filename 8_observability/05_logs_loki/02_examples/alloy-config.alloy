@@ -1,0 +1,66 @@
+// Grafana Alloy — агент сбора логов (замена Promtail, который снят с
+// поддержки). Собирает stdout/stderr всех контейнеров через Docker API и
+// отправляет в Loki. UI с графом компонентов: http://localhost:12345
+
+// 1. Найти контейнеры через Docker API
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+}
+
+// 2. Превратить docker-метаданные в метки Loki
+discovery.relabel "containers" {
+  targets = []
+
+  // Не собирать логи самих агентов
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    regex         = "alloy|promtail"
+    action        = "drop"
+  }
+
+  // Имя контейнера без ведущего "/" (в compose: <проект>-<сервис>-1)
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  // Имя сервиса из docker-compose.yml — стабильно, удобно в селекторах
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  // Пользовательские docker-labels (см. log-generator в docker-compose.yml)
+  rule {
+    source_labels = ["__meta_docker_container_label_app"]
+    target_label  = "app"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_environment"]
+    target_label  = "env"
+  }
+}
+
+// 3. Читать логи контейнеров
+loki.source.docker "containers" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.containers.targets
+  relabel_rules = discovery.relabel.containers.rules
+  forward_to    = [loki.process.containers.receiver]
+}
+
+// 4. Pipeline обработки строк. Пока пустой: строки уходят как есть,
+//    stage.* блоки добавляются в упражнении 04.
+loki.process "containers" {
+  forward_to = [loki.write.default.receiver]
+}
+
+// 5. Отправить в Loki
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

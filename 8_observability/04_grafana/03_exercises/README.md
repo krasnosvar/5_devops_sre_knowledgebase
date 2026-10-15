@@ -1,6 +1,6 @@
 # Упражнения — Grafana
 
-Стенд: 🐳 Tier 1 — Prometheus + Grafana из `7_observability/02_metrics_prometheus/02_examples/`
+Стенд: 🐳 Tier 1 — Prometheus + Grafana из `8_observability/02_metrics_prometheus/02_examples/`
 
 ## 01 — Первый дашборд вручную
 
@@ -58,8 +58,12 @@ Panel → Edit → Alert tab → New alert rule
 закоммитить в репозиторий.
 
 ```bash
+# UID дашборда, созданного в UI, генерируется случайно — найти его поиском
+DASH_UID=$(curl -s 'http://admin:admin@localhost:3000/api/search?query=Node%20Health&type=dash-db' \
+  | jq -r '.[0].uid')
+
 # Экспорт через API
-curl -s http://admin:admin@localhost:3000/api/dashboards/uid/node-health \
+curl -s "http://admin:admin@localhost:3000/api/dashboards/uid/$DASH_UID" \
   | jq '.dashboard | del(.id, .version)' > node-health-dashboard.json
 
 # Проверить что JSON корректен

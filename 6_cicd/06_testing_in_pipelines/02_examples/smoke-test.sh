@@ -31,10 +31,10 @@ check() {
     local name=$1 cmd=$2
     if eval "$cmd" > /dev/null 2>&1; then
         echo "  ✓ $name"
-        (( PASS++ ))
+        PASS=$((PASS + 1))  # не (( PASS++ )): при PASS=0 вернёт 1 и set -e убьёт скрипт
     else
         echo "  ✗ $name"
-        (( FAIL++ ))
+        FAIL=$((FAIL + 1))
     fi
 }
 

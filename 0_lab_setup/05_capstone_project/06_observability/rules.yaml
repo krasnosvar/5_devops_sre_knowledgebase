@@ -1,0 +1,4 @@
+# Задание шага 6: допишите сюда recording и alerting rules
+# (см. README.md). Решение — answers/rules.yaml.
+# После правки: docker compose kill -s SIGHUP prometheus
+groups: []

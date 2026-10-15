@@ -97,18 +97,21 @@ VAULT_TOKEN=$APP_TOKEN vault kv list secret/                    # FORBIDDEN
 # Создать тестовый репозиторий с "утечкой"
 mkdir /tmp/test-repo && cd /tmp/test-repo && git init
 
-# Записать "секрет" в файл
-printf 'AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"\n' > config.py
-printf 'DB_PASSWORD = "supersecret123"\n' >> config.py
+# Записать "секрет" в файл. Значения генерируются случайно: документальный
+# ключ AKIAIOSFODNN7EXAMPLE и простые пароли вроде "supersecret123"
+# gitleaks намеренно пропускает (allowlist и порог энтропии)
+FAKE_KEY="AKIA$(LC_ALL=C tr -dc 'A-Z2-7' < /dev/urandom | head -c 16)"
+printf 'AWS_ACCESS_KEY_ID = "%s"\n' "$FAKE_KEY" > config.py
+printf 'DB_PASSWORD = "%s"\n' "$(openssl rand -base64 18)" >> config.py
 git add . && git commit -m "Add config"
 
-# Сканировать
-gitleaks detect --source . --verbose
+# Сканировать историю git (в старых версиях gitleaks — `gitleaks detect`)
+gitleaks git --verbose .
 
 # Вопрос: как правильно исправить?
 # 1. Удалить из кода
 # 2. Использовать переменные окружения
 # 3. Добавить .env в .gitignore
 # 4. Ротировать скомпрометированные ключи
-# 5. git filter-branch / BFG для очистки истории
+# 5. git filter-repo / BFG для очистки истории
 ```

@@ -1,0 +1,5 @@
+# Базовый файл: только то, что одинаково для dev и prod.
+# Без портов и без bind mount — их добавляют override-файлы.
+services:
+  web:
+    image: lab/web:1.0

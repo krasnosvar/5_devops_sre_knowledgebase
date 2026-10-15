@@ -4,7 +4,7 @@
 
 ```
 Code → SAST         — найти уязвимости в коде (SQL injection, hardcoded secrets)
-IaC  → Checkov/tfsec — найти уязвимости в Terraform, k8s манифестах
+IaC  → Checkov / trivy config (бывший tfsec) — Terraform, k8s манифесты
 Deps → Trivy/Grype  — найти CVE в зависимостях
 Container → Trivy   — CVE в образе
 Docker → hadolint   — ошибки в Dockerfile
@@ -60,22 +60,27 @@ checkov -d . --skip-check CKV_AWS_18          # пропустить конкр�
 checkov -d . --output sarif --output-file checkov.sarif
 ```
 
-## tfsec — Terraform security
+## trivy config — Terraform и IaC (бывший tfsec)
+
+tfsec больше не развивается отдельно: его проверки перенесены в Trivy,
+и мейнтейнеры рекомендуют переходить на `trivy config` (misconfiguration
+scanning). Старые статьи и pipeline с `tfsec .` переводятся почти
+один к одному.
 
 ```bash
-# установка
-brew install tfsec   # macOS
-go install github.com/aquasecurity/tfsec/cmd/tfsec@latest
+# установка (см. раздел Trivy ниже)
+brew install trivy   # macOS
 
-# сканировать
-tfsec .
-tfsec . --minimum-severity HIGH
-tfsec . --format json > tfsec-results.json
+# сканировать Terraform, k8s-манифесты, Dockerfile в каталоге
+trivy config .
+trivy config --severity HIGH,CRITICAL .
+trivy config --format json --output trivy-config.json .
+trivy config --exit-code 1 --severity CRITICAL .   # уронить CI
 
-# игнорировать конкретные проверки
-# в коде Terraform:
+# игнорировать конкретную проверку — комментарий над ресурсом,
+# ID берётся из вывода trivy (поле ID у найденной проблемы)
 resource "aws_s3_bucket" "logs" {
-  # tfsec:ignore:aws-s3-enable-bucket-logging
+  # trivy:ignore:<ID проверки>
   bucket = "my-logs"
 }
 ```

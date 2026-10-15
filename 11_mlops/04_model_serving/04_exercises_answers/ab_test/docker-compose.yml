@@ -1,0 +1,28 @@
+# Лаба A/B-теста: nginx делит трафик 80/20 между двумя версиями модели.
+# Запуск: docker compose up -d ; проверка — см. ../answers.md
+services:
+  model-v1:
+    image: python:3.12-slim
+    command: ["python", "/app/model_stub.py"]
+    environment:
+      MODEL_VERSION: v1
+    volumes:
+      - ./model_stub.py:/app/model_stub.py:ro
+
+  model-v2:
+    image: python:3.12-slim
+    command: ["python", "/app/model_stub.py"]
+    environment:
+      MODEL_VERSION: v2
+    volumes:
+      - ./model_stub.py:/app/model_stub.py:ro
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - model-v1
+      - model-v2

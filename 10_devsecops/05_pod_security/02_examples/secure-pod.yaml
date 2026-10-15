@@ -85,7 +85,6 @@ kind: ClusterPolicy
 metadata:
   name: drop-all-capabilities
 spec:
-  validationFailureAction: enforce
   background: true
   rules:
     - name: drop-all-caps
@@ -95,6 +94,7 @@ spec:
               kinds: [Pod]
               namespaces: [secure-apps, production]
       validate:
+        failureAction: Enforce   # Kyverno 1.13+ (было validationFailureAction)
         message: "All containers must drop ALL capabilities"
         pattern:
           spec:

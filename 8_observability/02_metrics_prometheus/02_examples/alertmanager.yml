@@ -9,11 +9,10 @@ route:
   receiver: 'slack'
 
   routes:
-    - match:
-        severity: critical
+    # `matchers` — актуальный синтаксис; `match`/`match_re` устарели.
+    - matchers: [severity="critical"]
       receiver: 'pagerduty'
-    - match:
-        severity: warning
+    - matchers: [severity="warning"]
       receiver: 'slack'
 
 receivers:
@@ -31,8 +30,6 @@ receivers:
   - name: 'null'   # заглушка для подавления алертов
 
 inhibit_rules:
-  - source_match:
-      severity: 'critical'
-    target_match:
-      severity: 'warning'
+  - source_matchers: [severity="critical"]
+    target_matchers: [severity="warning"]
     equal: ['alertname', 'instance']

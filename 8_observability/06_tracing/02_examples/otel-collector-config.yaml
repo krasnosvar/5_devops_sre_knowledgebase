@@ -11,21 +11,27 @@ processors:
     timeout: 1s
     send_batch_size: 1024
   memory_limiter:
+    check_interval: 1s
     limit_mib: 512
 
 exporters:
-  # Отправить traces в Jaeger
+  # Отправить traces в Jaeger по OTLP gRPC (порт 4317 внутри сети compose).
+  # Старый exporter `jaeger` и порт 14250 удалены из Collector — Jaeger
+  # принимает OTLP нативно.
   otlp/jaeger:
-    endpoint: jaeger:14250
+    endpoint: jaeger:4317
     tls:
       insecure: true
 
-  # Экспортировать span metrics как Prometheus метрики
+  # Отдать OTLP-метрики (pipeline metrics ниже) в формате Prometheus.
+  # Это не span metrics: для RED-метрик из спанов нужен connector
+  # spanmetrics.
   prometheus:
     endpoint: "0.0.0.0:8889"
 
-  # Логировать в stdout (для отладки)
-  logging:
+  # Печатать в stdout (для отладки). Exporter `logging` удалён из
+  # Collector — его заменил `debug`.
+  debug:
     verbosity: normal
 
 service:
@@ -33,7 +39,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [otlp/jaeger, logging]
+      exporters: [otlp/jaeger, debug]
 
     metrics:
       receivers: [otlp]

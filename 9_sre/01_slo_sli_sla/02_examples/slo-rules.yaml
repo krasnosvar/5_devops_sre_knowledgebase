@@ -1,6 +1,8 @@
 # Prometheus recording и alerting rules для SLO 99.9%
-# Применить: kubectl apply -f slo-rules.yaml (в k8s)
-# или добавить в prometheus rule_files
+# Применить: добавить файл в `rule_files` prometheus.yml.
+# В k8s с Prometheus Operator эти же groups кладутся в spec объекта
+# PrometheusRule (сам файл через kubectl apply не применяется — это не
+# k8s-объект). Проверка: promtool check rules slo-rules.yaml
 
 groups:
   - name: slo-payment-api
@@ -12,6 +14,12 @@ groups:
         expr: |
           rate(http_requests_total{job="payment-api", status=~"5.."}[5m])
           / rate(http_requests_total{job="payment-api"}[5m])
+
+      # Error rate за 1 час — используется в описании алерта ниже
+      - record: job:payment_error_rate:rate1h
+        expr: |
+          rate(http_requests_total{job="payment-api", status=~"5.."}[1h])
+          / rate(http_requests_total{job="payment-api"}[1h])
 
       # Error rate за 30 дней (скользящее окно)
       - record: job:payment_error_rate:rate30d
@@ -38,10 +46,15 @@ groups:
           service: payment-api
           slo: "99.9"
         annotations:
-          summary: "Error budget burning fast for {{ $labels.service }}"
+          # $labels — метки серии из expr (job, ...); статические labels
+          # правила (service, slo) в $labels шаблона аннотаций не попадают.
+          summary: "Error budget burning fast for {{ $labels.job }}"
+          # В шаблонах Prometheus нет арифметики (функции div не существует),
+          # поэтому время до исчерпания бюджета считаем PromQL-запросом:
+          # 30 дней (2592000 с) * бюджет 0.001 / текущий error rate.
           description: |
             Error rate: {{ $value | humanizePercentage }}
-            At this rate monthly budget exhausted in {{ div 30 (div $value 0.001) | humanizeDuration }}
+            At this rate monthly budget exhausted in {{ with query "2592000 * 0.001 / job:payment_error_rate:rate1h" }}{{ . | first | value | humanizeDuration }}{{ end }}
           runbook_url: "https://runbooks.example.com/payment-api-errors"
           dashboard_url: "https://grafana.example.com/d/payment-slo"
 

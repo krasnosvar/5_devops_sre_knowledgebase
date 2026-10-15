@@ -13,7 +13,8 @@
     - name: Install nginx
       ansible.builtin.package:
         name: nginx
-        state: present   # идемпотентно: ставит если нет, ничего не делает если есть
+        # идемпотентно: ставит, если нет; ничего не делает, если есть
+        state: present
       notify: Reload nginx
 
     - name: Create web root
@@ -29,12 +30,26 @@
         mode: "0644"
       # Если содержимое не изменилось — changed=false (идемпотентно)
 
+    # Конфиг сайта — фрагмент (server {}), а не полный nginx.conf,
+    # поэтому validate: "nginx -t -c %s" здесь не подходит: nginx не
+    # примет server{} на верхнем уровне. Синтаксис проверяет handler.
     - name: Configure nginx site
-      ansible.builtin.template:
-        src: templates/nginx.conf.j2
+      ansible.builtin.copy:
+        content: |
+          server {
+              listen {{ nginx_port }};
+              server_name _;
+              location / {
+                  root /var/www/html;
+                  index index.html;
+              }
+              location /health {
+                  return 200 "ok\n";
+                  add_header Content-Type text/plain;
+              }
+          }
         dest: /etc/nginx/sites-available/myapp
         mode: "0644"
-        validate: nginx -t -c %s
       notify: Reload nginx
 
     - name: Enable nginx site
@@ -63,12 +78,18 @@
       # uri module идемпотентен — всегда проверяет, не изменяет
 
   handlers:
+    # Сначала проверка полного конфига, потом reload: битый конфиг
+    # остановит play с ошибкой, а не уронит nginx.
     - name: Reload nginx
+      ansible.builtin.command: nginx -t
+      changed_when: false
+      notify: Do reload nginx
+
+    - name: Do reload nginx
       ansible.builtin.service:
         name: nginx
         state: reloaded
 
-# Проверка идемпотентности:
-# 1й запуск: несколько "changed"
-# 2й запуск: все задачи "ok", нет "changed"
-# ansible-playbook -i inventory.yaml site-idempotent.yaml -v
+# Проверка идемпотентности (см. ansible-answers.md, упражнение 05):
+# ansible-playbook -i ../02_examples/inventory.yaml site-idempotent.yaml
+# 1-й запуск: несколько "changed"; 2-й запуск: changed=0

@@ -1,11 +1,25 @@
 # Упражнения — KVM Lab
 
+🖥 Tier 2. Все `cd` даны относительно папки `03_exercises/`; упражнения
+02–04 продолжают работу в `02_examples/`, куда вы перешли в упражнении 01.
+`virsh` без параметров от обычного пользователя смотрит в
+`qemu:///session`, а стенды создаются в `qemu:///system`, поэтому перед
+упражнениями:
+
+```bash
+export LIBVIRT_DEFAULT_URI=qemu:///system
+```
+
+Ответы — в [04_exercises_answers/](../04_exercises_answers/).
+
 ## 01 — Поднять 3 VM и проверить SSH доступность
 
 ```bash
 cd ../02_examples/
+terraform init
 
 # Поднять 3 VM
+terraform plan -var="vm_count=3"
 terraform apply -var="vm_count=3"
 
 # Получить IP адреса
@@ -22,7 +36,9 @@ done
 
 ## 02 — Изменить ресурсы VM через Terraform
 
-**Задача:** Изменить vm_memory_mb с 2048 на 4096 для всех VM, применить без пересоздания.
+**Задача:** изменить `vm_memory_mb` с 2048 на 4096 для всех VM. До
+`apply` по `terraform plan` определить: обновит Terraform VM на месте или
+пересоздаст? Объяснить, почему, и что это значит для данных на дисках.
 
 ```bash
 # Посмотреть план изменений
@@ -70,7 +86,7 @@ terraform apply -var="vm_count=2"
 
 ## 05 — Кластерный стенд: master + workers
 
-🐳 Tier 1 (VM внутри Tier 2, но задача — про Terraform, а не про k8s)
+🖥 Tier 2 (задача — про Terraform, а не про k8s)
 
 ```bash
 cd ../02_examples/cluster/
@@ -99,9 +115,9 @@ terraform output ssh_commands
 
 ## 07 — Troubleshooting: три сломанных VM
 
-☁️ По духу задачи взяты из реальных секций troubleshooting на технических
-собеседованиях DevOps (например Yandex) — вас сажают за SSH в сломанный
-стенд и просят вернуть 200/нормальную работу, не объясняя что именно не так.
+🖥 Tier 2. По духу задачи взяты из секций troubleshooting на технических
+собеседованиях DevOps — вас сажают за SSH в сломанный стенд и просят
+вернуть 200/нормальную работу, не объясняя, что именно не так.
 
 ```bash
 cd ../02_examples/broken/

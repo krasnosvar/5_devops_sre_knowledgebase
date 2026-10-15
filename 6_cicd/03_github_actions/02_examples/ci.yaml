@@ -99,17 +99,20 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
-      # Подписать образ через Cosign (keyless через OIDC)
+      # Подписать образ через Cosign (keyless через OIDC).
+      # Cosign 2.x делает keyless по умолчанию — переменная
+      # COSIGN_EXPERIMENTAL больше не нужна (была нужна только в 1.x).
       - uses: sigstore/cosign-installer@v3
       - run: cosign sign --yes ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
-        env:
-          COSIGN_EXPERIMENTAL: "1"
 
   # ── DEPLOY ───────────────────────────────────────────────────────────────────
   deploy-staging:
     runs-on: ubuntu-24.04
     needs: build
     environment: staging
+    permissions:
+      id-token: write   # OIDC-токен для aws-actions/configure-aws-credentials
+      contents: read    # для actions/checkout (остальные права — none)
 
     steps:
       - uses: actions/checkout@v4
@@ -129,6 +132,9 @@ jobs:
     runs-on: ubuntu-24.04
     needs: deploy-staging
     environment: production   # требует ручного approve в GitHub UI
+    permissions:
+      id-token: write   # OIDC-токен для aws-actions/configure-aws-credentials
+      contents: read    # для actions/checkout (остальные права — none)
 
     steps:
       - uses: actions/checkout@v4

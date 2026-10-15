@@ -1,5 +1,8 @@
 # Корневой terragrunt.hcl — общий backend и провайдер для всей инфраструктуры
 # Размещается в корне infrastructure/
+# В новых версиях Terragrunt корневой файл рекомендуют называть root.hcl
+# (include: path = find_in_parent_folders("root.hcl")); имя terragrunt.hcl
+# для корня даёт предупреждение об устаревшем подходе.
 
 locals {
   account_id  = get_aws_account_id()
@@ -14,11 +17,13 @@ remote_state {
     if_exists = "overwrite_terragrunt"
   }
   config = {
-    bucket         = "my-tfstate-${local.account_id}"
-    key            = "${path_relative_to_include()}/terraform.tfstate"
-    region         = local.region
-    encrypt        = true
-    dynamodb_table = "terraform-locks"
+    bucket  = "my-tfstate-${local.account_id}"
+    key     = "${path_relative_to_include()}/terraform.tfstate"
+    region  = local.region
+    encrypt = true
+    # Блокировка lock-файлом в S3 (Terraform 1.10+ / OpenTofu 1.10+).
+    # Раньше здесь был dynamodb_table — этот способ deprecated.
+    use_lockfile = true
   }
 }
 

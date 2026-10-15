@@ -1,0 +1,41 @@
+# Решение шага 6: recording + alerting rules для shortener.
+groups:
+  - name: shortener-recording
+    rules:
+      # RPS по эндпоинту и результату (ok/fail)
+      - record: shortener:requests:rate5m
+        expr: sum by (endpoint, status) (rate(shortener_requests_total[5m]))
+      # p95 латентности по эндпоинту (гистограмма есть у shorten/resolve)
+      - record: shortener:request_duration_seconds:p95_5m
+        expr: >
+          histogram_quantile(0.95,
+            sum by (le, endpoint) (
+              rate(shortener_request_duration_seconds_bucket[5m])))
+
+  - name: shortener-alerts
+    rules:
+      - alert: ShortenerDown
+        expr: up{job="shortener"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "shortener не отвечает на scrape /metrics"
+
+      # /health отвечает 503, когда Redis недоступен; Docker HEALTHCHECK
+      # дёргает /health каждые 10 секунд, поэтому счётчик растёт сам.
+      - alert: ShortenerRedisUnavailable
+        expr: increase(shortener_requests_total{endpoint="health",status="fail"}[2m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "shortener не может достучаться до Redis"
+
+      - alert: ShortenerHighLatencyP95
+        expr: shortener:request_duration_seconds:p95_5m > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 {{ $labels.endpoint }} выше 500 мс"

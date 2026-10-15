@@ -1,0 +1,9 @@
+# dev: подхватывается автоматически при `docker compose up`.
+services:
+  web:
+    build: .                 # локальная сборка из Dockerfile
+    ports:
+      - "8000:8000"          # порт приложения наружу
+      - "5678:5678"          # debug-порт (например, для debugpy)
+    volumes:
+      - ./site:/srv:ro       # bind mount кода: правки видны без пересборки

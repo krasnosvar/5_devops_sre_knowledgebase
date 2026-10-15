@@ -105,9 +105,14 @@ build-image:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 # ── DEPLOY STAGING ────────────────────────────────────────────────────────────
+# Образ с kubectl: раньше часто брали bitnami/kubectl, но в 2025 году Bitnami
+# перенёс бесплатные образы в архивный bitnamilegacy/* (без обновлений), а
+# в основном каталоге оставил ограниченный набор. Берём образ с shell и
+# kubectl фиксированной версии (alpine/k8s — образ сообщества) или собираем
+# свой базовый образ во внутреннем registry.
 deploy-staging:
   stage: deploy-staging
-  image: bitnami/kubectl:latest
+  image: alpine/k8s:1.31.0
   environment:
     name: staging
     url: https://staging.example.com
@@ -135,11 +140,10 @@ smoke-test-staging:
 # ── DEPLOY PRODUCTION ─────────────────────────────────────────────────────────
 deploy-production:
   stage: deploy-production
-  image: bitnami/kubectl:latest
+  image: alpine/k8s:1.31.0
   environment:
     name: production
     url: https://example.com
-  when: manual          # ручное подтверждение
   allow_failure: false
   before_script:
     - echo "$PROD_KUBECONFIG" | base64 -d > /tmp/kubeconfig
@@ -149,3 +153,4 @@ deploy-production:
     - kubectl rollout status deployment/myapp -n production --timeout=10m
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual      # ручное подтверждение (when — внутри rules)

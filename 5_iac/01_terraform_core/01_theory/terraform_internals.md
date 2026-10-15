@@ -2,7 +2,7 @@
 
 ## Содержание
 1. [Декларативность и Граф зависимостей](#1-декларативность-и-граф-зависимостей)
-2. [Циклы: count vs for_each](#2-циклы-count-vs-foreach)
+2. [Циклы: count vs for_each](#2-циклы-count-vs-for_each)
 3. [Продвинутый синтаксис: dynamic blocks](#3-продвинутый-синтаксис-dynamic-blocks)
 4. [Data Sources и Lifecycles](#4-data-sources-и-lifecycles)
 5. [Типовые вопросы на собеседовании (Interview Q&A)](#5-типовые-вопросы-на-собеседовании-interview-qa)

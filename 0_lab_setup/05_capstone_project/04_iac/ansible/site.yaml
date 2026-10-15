@@ -1,5 +1,5 @@
 ---
-# kubeadm-кластер на "голых" VM из ../../02_local_vms/linux_kvm/02_examples/cluster/
+# kubeadm-кластер на "голых" VM из ../../../02_local_vms/linux_kvm/02_examples/cluster/
 # Пакетный репозиторий pkgs.k8s.io без пина версии — берёт текущий stable v1.34.
 # Когда выйдет новый minor, поменяй только URL ниже (community-стандарт, см.
 # https://kubernetes.io/releases/ — не пиши сюда версию "на глаз").

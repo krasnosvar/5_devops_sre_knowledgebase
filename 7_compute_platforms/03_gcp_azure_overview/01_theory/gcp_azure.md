@@ -77,7 +77,7 @@ gcloud compute security-policies rules create 1000 \
 
 ## Azure — особенности для DevOps
 
-### Azure Active Directory и Managed Identity
+### Microsoft Entra ID (бывш. Azure AD) и Managed Identity
 
 ```bash
 # Managed Identity — аналог AWS IAM Role для VM

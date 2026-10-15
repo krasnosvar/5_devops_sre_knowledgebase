@@ -1,0 +1,15 @@
+# Самый простой объект — один Pod с одним контейнером nginx.
+# Применить: kubectl apply -f pod.yaml
+# Голый Pod никто не пересоздаст, если его удалить или если умрёт нода.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello
+  labels:
+    app: hello
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.27-alpine   # конкретный тег, не latest
+      ports:
+        - containerPort: 80

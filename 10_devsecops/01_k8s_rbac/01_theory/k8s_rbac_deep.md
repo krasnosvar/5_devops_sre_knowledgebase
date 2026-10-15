@@ -11,7 +11,7 @@
 **Авторизация** — что тебе можно? (RBAC решает это)
 
 ```bash
-# посмотреть куbeconfig (как kubectl аутентифицируется)
+# посмотреть kubeconfig (как kubectl аутентифицируется)
 kubectl config view --raw
 
 # декодировать сертификат пользователя
@@ -131,8 +131,8 @@ kubectl who-can create pods -n production
 kubectl who-can delete secrets -n production
 kubectl who-can update deployments --all-namespaces
 
-# rakkess — матрица прав для ServiceAccount
-kubectl rakkess --sa production:myapp -n production
+# rakkess (krew-плагин access-matrix) — матрица прав для ServiceAccount
+kubectl access-matrix --sa production:myapp -n production
 ```
 
 ## Типичные антипаттерны RBAC

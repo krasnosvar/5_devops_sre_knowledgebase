@@ -1,41 +1,59 @@
 #!/usr/bin/env bash
-# Получить секреты из Vault через GitLab OIDC JWT (без статических credentials)
-# Размещать как script в .gitlab-ci.yml job
+# Получить секреты из Vault через GitLab OIDC JWT (без статических credentials).
+#
+# JWT джоба получает через `id_tokens:` (GitLab 15.7+). Старые переменные
+# CI_JOB_JWT / CI_JOB_JWT_V2 удалены в GitLab 17.0 — не использовать.
+#
+# Пример джобы в .gitlab-ci.yml:
+#
+#   deploy:
+#     image: hashicorp/vault:1.17
+#     id_tokens:
+#       VAULT_ID_TOKEN:
+#         aud: https://vault.example.com   # = bound_audiences роли в Vault
+#     variables:
+#       VAULT_ADDR: https://vault.example.com
+#       VAULT_ROLE: gitlab-deploy
+#     before_script:
+#       - apk add --no-cache curl jq
+#     script:
+#       - source ./vault-oidc-gitlab.sh   # source: переменные нужны дальше
+#       - ./deploy.sh                     # читает DB_PASSWORD / API_KEY из env
+#
+# Скрипт рассчитан на `source`: секреты экспортируются в окружение текущей
+# джобы и НЕ пишутся на диск (файл легко случайно отдать как artifact).
 
-# Переменные предоставляет GitLab автоматически:
-# CI_JOB_JWT_V2 — OIDC JWT токен для текущего job
-# VAULT_ADDR    — задать в GitLab CI/CD Variables
+set -euo pipefail
 
-VAULT_ADDR="${VAULT_ADDR:?VAULT_ADDR required}"
-VAULT_ROLE="${VAULT_ROLE:-gitlab-deploy}"
+: "${VAULT_ADDR:?VAULT_ADDR не задан (CI/CD Variables)}"
+: "${VAULT_ROLE:?VAULT_ROLE не задан (имя роли в auth/jwt Vault)}"
+: "${VAULT_ID_TOKEN:?VAULT_ID_TOKEN пуст: в джобе нет блока id_tokens}"
 
-echo "Authenticating to Vault via JWT..."
+echo "Authenticating to Vault via JWT (role: ${VAULT_ROLE})..."
 
-# Получить Vault token через JWT auth
-VAULT_TOKEN=$(curl -s \
+# --fail: HTTP 4xx/5xx -> ненулевой код, set -e остановит джобу
+VAULT_TOKEN=$(curl --silent --show-error --fail \
     --request POST \
-    --data "{\"jwt\": \"$CI_JOB_JWT_V2\", \"role\": \"$VAULT_ROLE\"}" \
-    "$VAULT_ADDR/v1/auth/jwt/login" \
+    --data "{\"jwt\": \"${VAULT_ID_TOKEN}\", \"role\": \"${VAULT_ROLE}\"}" \
+    "${VAULT_ADDR}/v1/auth/jwt/login" \
     | jq -r '.auth.client_token')
 
 if [[ -z "$VAULT_TOKEN" || "$VAULT_TOKEN" == "null" ]]; then
-    echo "ERROR: Failed to get Vault token" >&2
+    echo "ERROR: Vault не вернул client_token" >&2
     exit 1
 fi
-
 export VAULT_TOKEN
 
 echo "Fetching secrets..."
 
-# Прочитать секреты
+# Прочитать секреты (KV v2) — только в память процесса джобы
 DB_PASSWORD=$(vault kv get -field=password secret/production/database)
 API_KEY=$(vault kv get -field=api_key secret/production/external-api)
+export DB_PASSWORD API_KEY
 
-# Экспортировать для использования в последующих шагах
-echo "DB_PASSWORD=${DB_PASSWORD}" >> deploy.env
-echo "API_KEY=${API_KEY}" >> deploy.env
+# Значения не печатаем: маскирование в логах защищает только от точного
+# совпадения строки (см. теорию, раздел 5)
+echo "Secrets fetched"
 
-# Маскировать в логах GitLab (добавить в masked variables)
-echo "Secrets fetched successfully"
-
-# Vault token автоматически истечёт после lease_duration (1h по умолчанию)
+# Vault token истечёт сам по TTL роли (token_ttl); короткий TTL (5-15 мин)
+# ограничивает ущерб, если токен всё же утечёт.

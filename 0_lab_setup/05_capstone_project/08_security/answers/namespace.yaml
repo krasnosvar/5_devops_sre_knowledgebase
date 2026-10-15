@@ -1,0 +1,10 @@
+# Namespace с Pod Security Admission в режиме restricted:
+# поды, нарушающие профиль, не будут допущены в namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shortener
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted

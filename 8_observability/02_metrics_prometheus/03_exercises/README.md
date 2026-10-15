@@ -41,21 +41,28 @@ docker compose up -d
 3. Сервис down (up == 0)
 
 ```bash
-# Создать файл prometheus/alerts/node.yml
-# Добавить в prometheus.yml: rule_files: ["alerts/*.yml"]
+# Создать файл 02_examples/alerts/node.yml (каталог смонтирован в
+# контейнер, в prometheus.yml уже есть rule_files: ["alerts/*.yml"])
+# Проверить синтаксис (promtool есть внутри контейнера):
+docker compose exec prometheus promtool check rules /etc/prometheus/alerts/node.yml
 # Перезагрузить: curl -X POST http://localhost:9090/-/reload
 # Проверить: http://localhost:9090/alerts
 ```
 
 ## 03 — Recording rules
 
-**Задача:** Создать recording rules для частовычисляемых запросов:
+**Задача:** Создать recording rules для частовычисляемых запросов
+(файл `02_examples/alerts/recording.yml`):
 1. `job:node_cpu_usage:rate5m` — CPU usage per job
 2. `job:node_memory_usage_percent:current` — memory usage %
 
 ## 04 — Подключить своё приложение
 
-**Задача:** Написать простой HTTP сервер (Python/Go) который экспортирует метрики в Prometheus формате. Добавить в scrape_configs. Создать дашборд в Grafana.
+**Задача:** Написать простой HTTP сервер (Python/Go), который экспортирует
+метрики в Prometheus формате. Добавить в `scrape_configs` (приложение
+на хосте доступно из контейнера Prometheus как
+`host.docker.internal:<порт>`). Создать дашборд в Grafana (datasource
+Prometheus уже подключён через `grafana-datasources.yaml`).
 
 ```python
 # TODO: написать app.py с prometheus_client

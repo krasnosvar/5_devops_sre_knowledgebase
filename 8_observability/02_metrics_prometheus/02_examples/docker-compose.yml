@@ -5,12 +5,18 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # Каталог для rule-файлов (rule_files: "alerts/*.yml" в prometheus.yml)
+      - ./alerts:/etc/prometheus/alerts:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'          # POST /-/reload для hot-reload
       - '--web.enable-remote-write-receiver'  # принимать remote_write
+    # Чтобы Prometheus мог скрейпить приложение, запущенное на хосте
+    # (упражнение 04): target host.docker.internal:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   grafana:
     image: grafana/grafana:latest
@@ -18,7 +24,7 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/prometheus.yaml:ro
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_AUTH_ANONYMOUS_ENABLED=true

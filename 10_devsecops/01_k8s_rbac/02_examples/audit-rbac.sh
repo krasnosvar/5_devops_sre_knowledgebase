@@ -12,10 +12,11 @@ kubectl get rolebindings,clusterrolebindings -A -o json 2>/dev/null \
         "\(.metadata.namespace // "cluster")\t\(.metadata.name)\t\(.roleRef.name)"' \
     | sort | head -20
 
+# null (поле не задано) означает true, поэтому сравниваем с false
 echo -e "\n=== Pods с automountServiceAccountToken=true ==="
 kubectl get pods -A -o json \
     | jq -r '.items[] |
-        select(.spec.automountServiceAccountToken // true == true) |
+        select(.spec.automountServiceAccountToken != false) |
         "\(.metadata.namespace)\t\(.metadata.name)\t\(.spec.serviceAccountName // "default")"' \
     | head -20
 

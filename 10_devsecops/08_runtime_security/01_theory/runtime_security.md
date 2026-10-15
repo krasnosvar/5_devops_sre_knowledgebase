@@ -2,8 +2,11 @@
 
 ## Falco — обнаружение аномалий в runtime
 
-Falco — CNCF-проект для обнаружения подозрительного поведения контейнеров в runtime.
-Использует eBPF для перехвата syscalls без изменения приложений.
+Falco — CNCF-проект для обнаружения подозрительного поведения контейнеров
+в runtime. Перехватывает syscalls на уровне ядра без изменения приложений.
+Драйверы: `modern_ebpf` (рекомендуемый, CO-RE probe встроен в Falco,
+нужно ядро с поддержкой BTF, ориентировочно 5.8+), устаревающий legacy
+`ebpf` probe и kernel module `kmod` — для старых ядер.
 
 **Что обнаруживает:**
 - Запись файлов в неожиданные директории
@@ -17,7 +20,7 @@ Falco — CNCF-проект для обнаружения подозритель
 helm repo add falcosecurity https://falcosecurity.github.io/charts
 helm install falco falcosecurity/falco \
   --namespace falco --create-namespace \
-  --set driver.kind=ebpf \
+  --set driver.kind=modern_ebpf \
   --set falcosidekick.enabled=true \
   --set falcosidekick.config.slack.webhookurl=https://hooks.slack.com/...
 ```

@@ -19,7 +19,7 @@ docker compose exec router1 vtysh -c "show ip route"
 docker compose down
 ```
 
-## Два реальных гочтa FRR, из-за которых peering "молча" не работает
+## Два реальных подвоха FRR, из-за которых peering "молча" не работает
 
 Оба варианта проявляются одинаково: BGP-сессия в статусе `Established`,
 `MsgRcvd`/`MsgSent` растут, но `show ip bgp` каждого роутера видит только

@@ -1,0 +1,42 @@
+# Ответ на упражнение 03: reusable workflow деплоя.
+# Разместить в .github/workflows/deploy.yaml; вызывается из ci-answer.yaml.
+
+name: Deploy (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      image-tag:
+        required: true
+        type: string
+    secrets:
+      KUBECONFIG:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Write kubeconfig
+        env:
+          # секрет через env, а не ${{ }} внутри run: не попадает в текст
+          # скрипта и не ломает его спецсимволами
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          printf '%s' "$KUBECONFIG_DATA" > ~/.kube/config
+          chmod 600 ~/.kube/config
+      - name: Deploy
+        run: |
+          kubectl set image deployment/myapp \
+            app=ghcr.io/${{ github.repository }}:${{ inputs.image-tag }} \
+            -n ${{ inputs.environment }}
+          kubectl rollout status deployment/myapp \
+            -n ${{ inputs.environment }} --timeout=5m
