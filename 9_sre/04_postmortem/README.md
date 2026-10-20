@@ -1,5 +1,7 @@
 # 04. Postmortem
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Инцидент без разбора повторится. Blameless postmortem ищет системные
 причины (почему процесс позволил ошибке случиться), а не виноватого, и
@@ -10,6 +12,7 @@
   инцидента и timeline.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: шаблон, 5 почему, action items.
 - [01_theory/postmortem.md](./01_theory/postmortem.md) — принципы
   blameless, пример заполненного postmortem, техника «5 почему», когда
   postmortem обязателен.

@@ -1,5 +1,7 @@
 # 00. Архитектура ядра и загрузка Linux
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Перед разговором о процессах, cgroups и systemd нужно понимать, где
 проходит граница user space / kernel space и что происходит от включения
@@ -13,6 +15,7 @@
 - Уверенная работа в терминале (cd, ls, редактор, SSH-ключи).
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: загрузка, SSH, chrony.
 - [01_theory/boot_process_and_core_services.md](./01_theory/boot_process_and_core_services.md)
   — кольца защиты и системные вызовы, загрузка (firmware → загрузчик →
   ядро/initramfs → systemd), SSH под капотом, NTP/chrony.

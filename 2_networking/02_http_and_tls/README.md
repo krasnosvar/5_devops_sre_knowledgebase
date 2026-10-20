@@ -1,5 +1,7 @@
 # 02. HTTP и TLS
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Почти весь трафик сервисов — HTTP поверх TLS. Ошибки сертификатов,
@@ -20,6 +22,7 @@ HTTP/1.1/2/3 — ежедневные причины инцидентов и в�
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: curl, openssl, версии HTTP, кэш.
 - [01_theory/http_and_tls.md](./01_theory/http_and_tls.md) — HTTP/1.1,
   HTTP/2, HTTP/3/QUIC, TLS handshake, цепочка доверия, кэширование.
 - [02_examples/](./02_examples/) — `docker-compose.yml` + `nginx.conf` с TLS,

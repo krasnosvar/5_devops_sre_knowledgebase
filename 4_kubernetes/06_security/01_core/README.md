@@ -1,5 +1,8 @@
 # 06.1. Безопасность: основа (RBAC, Pod Security, NetworkPolicy, секреты)
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и
+> шаблоны одним экраном.
+
 ## Зачем
 Это минимум, без которого нельзя выпускать манифесты в production:
 кто и что может делать в API (RBAC), с какими правами работает
@@ -12,6 +15,7 @@
 - [03_networking](../../03_networking/) — §3 о NetworkPolicy.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: RBAC, PSA, securityContext, аудит.
 - [01_theory/security.md](./01_theory/security.md) — RBAC,
   ServiceAccount и bound-токены, OIDC, SecurityContext и кратко PSA
   (подробно — в

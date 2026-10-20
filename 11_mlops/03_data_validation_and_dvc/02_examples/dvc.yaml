@@ -1,0 +1,19 @@
+# Воспроизводимый DAG-пайплайн подготовки данных и обучения рубрикатора документов.
+# Запуск: dvc repro
+stages:
+  validate_data:
+    cmd: python3 validate_docs_schema.py
+    deps:
+      - golden_docs_dataset.json
+      - validate_docs_schema.py
+
+  train_router:
+    cmd: python3 ../../13_capstone_project/02_examples/train_and_export_router.py
+    deps:
+      - golden_docs_dataset.json
+      - ../../13_capstone_project/02_examples/train_and_export_router.py
+    outs:
+      - ../../13_capstone_project/02_examples/artifacts/router_model.json
+    metrics:
+      - ../../13_capstone_project/02_examples/artifacts/metrics.json:
+          cache: false

@@ -1,0 +1,46 @@
+# ── 1. Веса моделей и артефакты (хранятся в S3 / DVC / локальном кэше) ──────
+*.gguf
+*.safetensors
+*.onnx
+*.pt
+*.pth
+*.bin
+*.pkl
+*.joblib
+*.h5
+*.tflite
+models_cache/
+mlruns/
+mlartifacts/
+
+# ── 2. Личный архив документов (ВСЕГДА вне публичного Git!) ─────────────────
+# Реальные сканы врачей, госорганов и заметки храним в ~/personal_docs_vault,
+# но дополнительно блокируем расширения на случай случайного копирования:
+personal_docs_vault/
+private_data/
+*.pdf
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.heic
+*.mp4
+*.mov
+*.mp3
+*.wav
+*.xlsx
+*.docx
+
+# Разрешаем только синтетические тестовые шаблоны для CI и демо:
+!data/sample_docs/**
+
+# ── 3. Python, виртуальные окружения и локальные секреты ────────────────────
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.env
+.env.*
+!.env.example

@@ -27,7 +27,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 FROM gcr.io/distroless/python3-debian12    # Google Distroless
-# Нет shell, нет package manager, нет /tmp, нет лишних утилит
+# Нет shell, нет package manager, нет лишних утилит
 WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.12 /usr/local/lib/python3.12
 COPY --from=builder /usr/local/bin/python3 /usr/local/bin/python3
@@ -105,8 +105,9 @@ cosign generate-key-pair
 cosign sign --key cosign.key my-registry/myapp:v1.0
 
 # Верифицировать
+# identity для GitHub Actions — URL workflow с ref, не e-mail
 cosign verify my-registry/myapp:v1.0 \
-  --certificate-identity=ci@example.com \
+  --certificate-identity=https://github.com/org/app/.github/workflows/ci.yaml@refs/heads/main \
   --certificate-oidc-issuer=https://token.actions.githubusercontent.com
 
 # Верифицировать с ключом

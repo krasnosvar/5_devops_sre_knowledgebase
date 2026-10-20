@@ -49,7 +49,9 @@ cosign generate-key-pair    # создаёт cosign.key и cosign.pub
 cosign sign --key cosign.key $IMAGE
 
 # проверить подпись
-cosign verify $IMAGE --certificate-identity=ci@example.com \
+# identity для GitHub Actions — URL workflow с ref, не e-mail
+cosign verify $IMAGE \
+  --certificate-identity=https://github.com/org/repo/.github/workflows/build.yaml@refs/heads/main \
   --certificate-oidc-issuer=https://token.actions.githubusercontent.com
 
 # проверить подпись с ключом
@@ -114,12 +116,16 @@ builds и two-party review на уровне 4) — эта шкала устар
 встречается в старых статьях. Требования к исходникам (review кода) в
 v1.0 в Build track не входят и развиваются отдельно.
 
-```bash
-# GitHub Actions — генерировать SLSA provenance автоматически
-- uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+```yaml
+# GitHub Actions — SLSA provenance. Это reusable workflow: вызывается
+# на уровне job (jobs.<id>.uses), а не шагом в steps
+provenance:
+  needs: build
+  permissions: {actions: read, id-token: write, packages: write}
+  uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
   with:
-    image: ${{ env.IMAGE }}
-    digest: ${{ steps.build.outputs.digest }}
+    image: ${{ needs.build.outputs.image }}
+    digest: ${{ needs.build.outputs.digest }}
 ```
 
 ## Защита зависимостей

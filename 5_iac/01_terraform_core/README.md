@@ -1,5 +1,7 @@
 # 01. Terraform core
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Инфраструктура, созданная руками, не воспроизводится и не ревьюится.
@@ -26,6 +28,7 @@ Terraform описывает её кодом: `plan` показывает, чт�
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: команды, count/for_each, lifecycle.
 - [01_theory/terraform_internals.md](./01_theory/terraform_internals.md) —
   DAG, count vs for_each, dynamic blocks, data sources, lifecycle.
 - [02_examples/main.tf](./02_examples/main.tf) — nginx-контейнер, сеть и

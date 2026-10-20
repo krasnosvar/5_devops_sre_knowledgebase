@@ -1,5 +1,7 @@
 # 02. Terraform modules
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Копипаста одних и тех же ресурсов по окружениям множит ошибки. Модуль —
@@ -20,6 +22,7 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: источники, версии, providers.
 - [01_theory/terraform_modules.md](./01_theory/terraform_modules.md) —
   структура модуля, источники, передача провайдеров, версионирование.
 - [02_examples/main.tf](./02_examples/main.tf) — вызовы модуля, в том

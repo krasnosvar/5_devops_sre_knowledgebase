@@ -1,0 +1,33 @@
+# Создание кластера:
+#   mkdir -p ~/.cache/mlops-models ~/personal_docs_vault
+#   k3d cluster create --config k3d-mlops-cluster.yaml
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: mlops-local
+servers: 1
+agents: 1
+image: rancher/k3s:v1.31.2-k3s1
+
+# Пробрасываем общий кэш моделей с хоста во все ноды кластера:
+# поды подключают /var/lib/ml-cache через hostPath / PersistentVolume,
+# благодаря чему GGUF, safetensors и ONNX-модели скачиваются один раз
+# и разделяют общие страницы памяти (Page Cache) через mmap(2).
+volumes:
+  - volume: /home/den/.cache/mlops-models:/var/lib/ml-cache
+    nodeFilters:
+      - server:*
+      - agent:*
+
+ports:
+  # Ingress HTTP порт для доступа к веб-интерфейсу архива документов,
+  # MLflow, Grafana и LiteLLM Gateway
+  - port: 8080:80
+    nodeFilters:
+      - loadbalancer
+options:
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*

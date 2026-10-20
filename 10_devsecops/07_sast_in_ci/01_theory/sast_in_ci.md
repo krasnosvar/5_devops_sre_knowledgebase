@@ -32,10 +32,11 @@ semgrep --config=auto --severity=ERROR .
 semgrep-scan:
   image: semgrep/semgrep
   script:
-    - semgrep --config=auto --error --json > semgrep-results.json || true
+    # --gitlab-sast — формат отчёта GitLab SAST (обычный --json им не является)
+    - semgrep scan --config=auto --gitlab-sast -o gl-sast-report.json
   artifacts:
     reports:
-      sast: semgrep-results.json
+      sast: gl-sast-report.json
 ```
 
 ## Checkov — Terraform и IaC
@@ -56,8 +57,9 @@ checkov -f Dockerfile --framework dockerfile
 checkov -d . --check CKV_AWS_20,CKV_AWS_57   # только S3 публичный доступ
 checkov -d . --skip-check CKV_AWS_18          # пропустить конкретную проверку
 
-# вывод в SARIF (для GitLab/GitHub Security)
-checkov -d . --output sarif --output-file checkov.sarif
+# вывод в SARIF (для GitLab/GitHub Security): --output-file-path — каталог,
+# файл внутри — results_sarif.sarif
+checkov -d . --output sarif --output-file-path .
 ```
 
 ## trivy config — Terraform и IaC (бывший tfsec)
@@ -99,7 +101,8 @@ trivy fs --scanners vuln .    # только CVE
 trivy fs --scanners secret .  # только секреты
 
 # k8s кластер
-trivy k8s --report summary cluster
+trivy k8s --report summary            # текущий контекст kubeconfig
+trivy k8s kind-kind --report summary  # явный контекст (не слово cluster)
 
 # в GitLab CI
 trivy-scan:

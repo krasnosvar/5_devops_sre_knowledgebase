@@ -1,5 +1,8 @@
 # 00. Первые шаги в Kubernetes
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и
+> шаблоны одним экраном.
+
 ## Зачем
 Прежде чем разбирать планировщик, сеть и etcd, нужно уметь поднять
 кластер, понять, куда смотрит `kubectl`, и руками пройти путь
@@ -14,6 +17,7 @@ Kubernetes: посмотреть поды, прочитать логи, зайт
   установленный kind (или minikube) и kubectl.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: контексты, kubectl, kind.
 - [01_theory/first_steps.md](./01_theory/first_steps.md) — что такое
   кластер, control plane и ноды, Pod/Deployment/Service, kubeconfig и
   контексты, базовые команды kubectl, `--dry-run`, `kubectl explain`.

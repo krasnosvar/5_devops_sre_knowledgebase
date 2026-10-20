@@ -1,5 +1,7 @@
 # 05. iptables и nftables
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 netfilter — это и файрвол сервера, и NAT в Docker, и kube-proxy в
@@ -21,6 +23,7 @@ Kubernetes. Без понимания цепочек, DNAT/SNAT и conntrack н�
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: iptables, nft, NAT, conntrack.
 - [01_theory/iptables_and_nftables.md](./01_theory/iptables_and_nftables.md)
   — netfilter, таблицы и цепочки, путь пакета, NAT, conntrack, nftables.
 - [02_examples/](./02_examples/) — `basic_rules.sh` (default-deny),

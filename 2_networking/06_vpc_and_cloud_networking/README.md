@@ -1,5 +1,7 @@
 # 06. VPC и облачные сети
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 В облаке нет физических коммутаторов, но есть VPC, подсети, таблицы
@@ -26,6 +28,7 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: SG vs NACL, маршруты, AWS CLI.
 - [01_theory/vpc_and_cloud_networking.md](./01_theory/vpc_and_cloud_networking.md)
   — VPC, subnets, IGW/NAT/Route Tables, SG vs NACL, Peering vs Transit
   Gateway.

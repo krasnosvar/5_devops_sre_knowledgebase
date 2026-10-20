@@ -77,10 +77,12 @@ spec:
   policyTypes: [Ingress]
   ingress:
     - from:
+        # один элемент списка = AND: prometheus ИЗ namespace monitoring.
+        # Два элемента (`- namespaceSelector`, `- podSelector`) = OR.
         - namespaceSelector:
             matchLabels:
-              name: monitoring   # из namespace monitoring
-        - podSelector:
+              kubernetes.io/metadata.name: monitoring  # метка есть всегда
+          podSelector:
             matchLabels:
               app: prometheus    # только prometheus
       ports:

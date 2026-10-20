@@ -172,9 +172,9 @@ spec:
         seccompProfile:
           type: RuntimeDefault       # стандартный seccomp профиль (ядро ограничивает syscalls)
         
-        sysctls:                     # ядерные параметры (только разрешённые safe sysctls)
-          - name: net.core.somaxconn
-            value: "1024"
+        sysctls:                     # без флагов kubelet — только safe sysctls
+          - name: net.ipv4.ip_local_port_range  # (net.core.somaxconn — unsafe:
+            value: "1024 65000"                 # нужен --allowed-unsafe-sysctls)
 
       containers:
         - name: app
@@ -218,7 +218,8 @@ capsh --decode=00000000a80425fb
 # Capabilities по умолчанию в Docker контейнере:
 # CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_FOWNER, CAP_FSETID,
 # CAP_KILL, CAP_NET_BIND_SERVICE, CAP_SETGID, CAP_SETUID,
-# CAP_NET_RAW, CAP_SYS_CHROOT, CAP_MKNOD, CAP_AUDIT_WRITE
+# CAP_NET_RAW, CAP_SYS_CHROOT, CAP_MKNOD, CAP_AUDIT_WRITE,
+# CAP_SETFCAP, CAP_SETPCAP
 
 # Принцип: drop ALL, добавить только нужные
 # Типичные нужные:

@@ -1,5 +1,7 @@
 # 06. Supply Chain Security
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Атаки через зависимости и сборочную инфраструктуру обходят все проверки
 на стороне кластера: вредоносный код приходит уже внутри «доверенного»
@@ -13,6 +15,7 @@
   provenance.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: SBOM, аттестации, SLSA.
 - [01_theory/supply_chain_security.md](./01_theory/supply_chain_security.md)
   — SBOM (Syft/Grype), Cosign, Kyverno, SLSA Build track v1.0,
   Dependabot/Renovate, чеклист.

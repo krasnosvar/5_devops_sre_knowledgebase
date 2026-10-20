@@ -72,12 +72,10 @@ Error Budget = 1 - SLO
   )
 ) * 100
 
-# Остаток error budget в %
-(
-  1 - (
-    rate(http_requests_total{status=~"5.."}[30d])
-    / rate(http_requests_total[30d])
-  )
+# Остаток error budget (доля: 1.0 = 100%)
+1 - (
+  rate(http_requests_total{status=~"5.."}[30d])
+  / rate(http_requests_total[30d])
 ) / 0.001   # 0.001 = 1 - SLO (0.999)
 # > 1.0 = бюджет не потрачен
 # < 0.0 = бюджет исчерпан

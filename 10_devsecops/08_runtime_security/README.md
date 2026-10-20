@@ -1,5 +1,7 @@
 # 08. Runtime Security
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Статические проверки не видят того, что происходит после запуска:
 shell в контейнере, чтение `/etc/shadow`, неожиданные соединения.
@@ -16,6 +18,7 @@ shell в контейнере, чтение `/etc/shadow`, неожиданны�
   здесь достаточно `helm repo add` и `helm install`.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: Falco, audit log, инцидент.
 - [01_theory/runtime_security.md](./01_theory/runtime_security.md) —
   Falco, Kubernetes audit log, incident response, NetworkPolicy для
   изоляции.

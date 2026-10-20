@@ -1,5 +1,7 @@
 # 07. IaC patterns
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Знать Terraform и Ansible мало — нужно решить, как разложить код по
@@ -25,6 +27,7 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: слои, drift, PR-flow, секреты.
 - [01_theory/iac_patterns.md](./01_theory/iac_patterns.md) — immutable vs
   mutable, GitOps для инфраструктуры, секреты, drift, слои state.
 - Без примеров и упражнений: паттерны архитектурные, их практика —

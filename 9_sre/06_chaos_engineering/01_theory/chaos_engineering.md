@@ -35,7 +35,10 @@
 ```bash
 # установить LitmusChaos
 helm repo add litmuschaos https://litmuschaos.github.io/litmus-helm/
-helm install chaos litmuschaos/litmus --namespace litmus --create-namespace
+# оператор + CRD (ChaosEngine применяется через kubectl);
+# веб-UI ChaosCenter — отдельный чарт litmuschaos/litmus
+helm install litmus-core litmuschaos/litmus-core \
+  --namespace litmus --create-namespace
 ```
 
 ```yaml
@@ -67,6 +70,9 @@ metadata:
   name: nginx-chaos
   namespace: production
 spec:
+  engineState: active
+  # SA с RBAC на удаление подов (создаётся заранее)
+  chaosServiceAccount: pod-delete-sa
   appinfo:
     appns: production
     applabel: "app=nginx"
@@ -81,12 +87,15 @@ spec:
             type: httpProbe
             httpProbe/inputs:
               url: http://nginx-service/health
-              expectedResponseCode: "200"
+              method:
+                get:
+                  criteria: ==
+                  responseCode: "200"
             mode: Continuous
             runProperties:
-              probeTimeout: 5
-              interval: 2
-              retry: 1
+              probeTimeout: 5s
+              interval: 2s
+              attempt: 1
 ```
 
 ```bash
@@ -105,7 +114,9 @@ kubectl delete chaosengine nginx-chaos -n production
 
 ```bash
 # Убить Pod (проверить что k8s перезапустит и LB перенаправит трафик)
-kubectl delete pod -l app=myapp -n production --grace-period=0
+kubectl delete pod -l app=myapp -n production
+# жёстко, без graceful shutdown (0 допустим только с --force):
+kubectl delete pod -l app=myapp -n production --grace-period=0 --force
 
 # CPU stress в Pod
 kubectl exec -it mypod -- stress --cpu 4 --timeout 60

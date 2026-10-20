@@ -1,5 +1,7 @@
 # 03. NetworkPolicy
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 По умолчанию в Kubernetes любой Pod может обратиться к любому другому —
 взломанный frontend сразу видит базу данных. NetworkPolicy позволяет
@@ -11,6 +13,7 @@
 - [2_networking](../../2_networking/) — L3/L4, порты, TCP.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: селекторы, default-deny.
 - [01_theory/network_policy.md](./01_theory/network_policy.md) —
   default deny, ingress/egress, паттерны, отладка, ограничения.
 - [02_examples/netpol-demo.yaml](./02_examples/netpol-demo.yaml) —

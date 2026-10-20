@@ -1,5 +1,7 @@
 # 03. Terraform state
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 State — единственная связь между кодом и реальными ресурсами. Потерянный,
@@ -28,6 +30,7 @@ State — единственная связь между кодом и реал�
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: S3 lock, state-команды, import/moved.
 - [01_theory/terraform_state.md](./01_theory/terraform_state.md) — зачем
   state, S3 backend и `use_lockfile`, секреты, import/mv/rm.
 - [02_examples/backend.tf](./02_examples/backend.tf) — production S3

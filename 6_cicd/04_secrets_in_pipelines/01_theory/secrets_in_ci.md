@@ -79,7 +79,8 @@ Actions аналог — `permissions: id-token: write` у джобы (подр�
 Иногда секреты (например, токены для Telegram-бота) удобно хранить прямо рядом с
 кодом приложения в репозитории (в `values.yaml` для Helm).
 Хранить их в открытом виде (Plain-text) строго запрещено. Используется утилита
-**SOPS (Secrets OPerationS) от Mozilla**.
+**SOPS (Secrets OPerationS)** — изначально Mozilla, сейчас CNCF-проект
+`getsops/sops`.
 Вы шифруете файл `secrets.yaml` ключом KMS (AWS/GCP/Yandex). В Git коммитится
 зашифрованная каша.
 В CI/CD пайплайне (через OIDC) раннер получает доступ к облачному KMS, выполняет

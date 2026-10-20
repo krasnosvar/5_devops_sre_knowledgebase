@@ -1,5 +1,7 @@
 # 06. Сеть в Linux: инструменты
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Прежде чем разбирать протоколы, нужно уметь посмотреть, что
 происходит с сетью на конкретном хосте: интерфейсы и адреса, маршруты,
@@ -14,6 +16,7 @@ network namespace и veth — так устроена сеть каждого к
 - Стенд: Linux VM с sudo (🖥 Tier 2) для `ip netns` и `tcpdump`.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: ip, ss, DNS, netns, tcpdump.
 - [01_theory/linux_networking.md](./01_theory/linux_networking.md) —
   iproute2 (`ip`), маршруты, `ss` и TIME_WAIT, `/etc/hosts`/nsswitch/
   `resolv.conf`, netns и veth, базовый tcpdump; протоколы — ссылками в

@@ -1,5 +1,8 @@
 # 02. Workloads: Pod, Deployment, StatefulSet, DaemonSet, Job
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и
+> шаблоны одним экраном.
+
 ## Зачем
 Каждое приложение в Kubernetes запускается через один из контроллеров
 нагрузки, и выбор неправильного (Deployment для базы данных, голый Pod
@@ -13,6 +16,7 @@
 - [00_first_steps](../00_first_steps/) — базовые команды kubectl.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: rollout, пробы, Job/CronJob.
 - [01_theory/workloads.md](./01_theory/workloads.md) — анатомия пода и
   pause-контейнер, rolling update (maxSurge/maxUnavailable),
   StatefulSet, DaemonSet, Job и CronJob.

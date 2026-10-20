@@ -1,5 +1,7 @@
 # 07. SAST и статический анализ в CI
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Уязвимость в коде или открытый S3 bucket в Terraform дешевле всего
 поймать в merge request, а не в production. Тема: какие сканеры ставить
@@ -12,6 +14,7 @@
 - [5_iac](../../5_iac/) — Terraform, который сканируется.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: сканеры по слоям, CI-отчёты.
 - [01_theory/sast_in_ci.md](./01_theory/sast_in_ci.md) — Semgrep,
   Checkov, trivy config (бывший tfsec), Trivy, kubesec, hadolint,
   полный security pipeline.

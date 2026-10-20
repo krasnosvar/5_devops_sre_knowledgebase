@@ -1,5 +1,7 @@
 # 01. Теория CI/CD и стратегии развертывания
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Прежде чем писать `.gitlab-ci.yml` или workflow GitHub Actions, нужно
 понимать, что именно автоматизируется: чем CI отличается от Continuous
@@ -17,6 +19,7 @@ Blue/Green, Canary, feature toggles). Эти решения принимаютс
   результат CI почти всегда Docker-образ.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: стратегии деплоя, когда что.
 - [01_theory/cicd_theory.md](./01_theory/cicd_theory.md) — CI vs CD vs
   Deployment, Rolling Update, Blue/Green, Canary, A/B и feature toggles,
   вопросы с собеседований.

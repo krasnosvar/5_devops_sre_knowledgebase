@@ -99,12 +99,16 @@ rules:
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "list"]     # list нельзя ограничить по resourceNames
+    verbs: ["get", "list"]     # без resourceNames — все секреты namespace
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get", "update"]
     resourceNames: ["myapp-tls", "myapp-db"]  # только эти два секрета
 ```
+
+`create` и `deletecollection` по `resourceNames` не ограничить. `list`/
+`watch` с `resourceNames` работают, только если клиент сам передаёт
+`fieldSelector=metadata.name=<имя>`.
 
 ## Аудит прав — что запускать регулярно
 

@@ -1,5 +1,8 @@
 # 03. Сеть в Kubernetes
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и
+> шаблоны одним экраном.
+
 ## Зачем
 "Service не отвечает", потерянный IP клиента, 502 от Ingress, DNS-
 задержки — самые частые сетевые инциденты в кластере. Тема объясняет
@@ -15,6 +18,7 @@ Ingress/Gateway API, NetworkPolicy и Service Mesh, чтобы такие
 - [02_workloads](../02_workloads/) — Deployment и readiness probe.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: Service, DNS, NetworkPolicy, kube-proxy.
 - [01_theory/01_k8s_networking.md](./01_theory/01_k8s_networking.md) —
   Service vs Ingress vs Gateway API, Ingress Controller, NetworkPolicy,
   Service Mesh (mTLS, L7-балансировка), ExternalDNS, cert-manager,

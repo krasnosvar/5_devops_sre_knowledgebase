@@ -1,5 +1,8 @@
 # 03. Сеть контейнеров
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Контейнер «не видит» базу, порт опубликован, но не отвечает, имя
@@ -22,6 +25,8 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: bridge/veth/NAT, kube-proxy,
+  DNS/ndots.
 - [01_theory/container_networking.md](./01_theory/container_networking.md)
   — veth, bridge и NAT в Docker; CNI, overlay vs underlay, kube-proxy
   (iptables/IPVS), Cilium, CoreDNS и `ndots`.

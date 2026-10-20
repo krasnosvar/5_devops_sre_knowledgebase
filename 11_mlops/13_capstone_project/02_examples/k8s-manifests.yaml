@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: personal-vault
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: personal-vault-assistant
+  namespace: personal-vault
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: personal-vault-assistant
+  template:
+    metadata:
+      labels:
+        app: personal-vault-assistant
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8090"
+        prometheus.io/path: "/metrics"
+    spec:
+      initContainers:
+        - name: verify-golden-data-and-model
+          image: python:3.12-slim
+          command:
+            - sh
+            - -c
+            - |
+              echo "Preparing model volume and checking schema..."
+              mkdir -p /models/ready
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models
+      containers:
+        - name: vault-app
+          image: python:3.12-slim
+          ports:
+            - containerPort: 8090
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "256Mi"
+            limits:
+              cpu: "2"
+              memory: "512Mi"
+          startupProbe:
+            httpGet:
+              path: /metrics
+              port: 8090
+            periodSeconds: 5
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 8090
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 8090
+            periodSeconds: 15
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models
+              readOnly: true
+      volumes:
+        - name: model-cache
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: personal-vault-assistant
+  namespace: personal-vault
+spec:
+  selector:
+    app: personal-vault-assistant
+  ports:
+    - name: http
+      port: 8090
+      targetPort: 8090

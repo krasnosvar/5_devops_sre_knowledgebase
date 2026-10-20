@@ -116,22 +116,25 @@ kubectl get pods -A | grep -v Running
 kubectl describe pod suspicious-pod -n default > pod-details.txt
 kubectl logs suspicious-pod > pod-logs.txt
 
-# 3. Изолировать (убрать трафик, но не убивать)
-kubectl patch networkpolicy allow-all -p '{"spec":{"podSelector":{"matchLabels":{"quarantine":"true"}}}}'
-kubectl label pod suspicious-pod quarantine=true
+# 3. Изолировать (убрать трафик, но не убивать): снять метку, по которой
+# Pod выбирают Service/ReplicaSet/allow-политики (политики суммируются,
+# deny «поверх» allow не работает), и закрыть его deny-all политикой
+# с podSelector quarantine=true и policyTypes [Ingress, Egress]
+kubectl label pod suspicious-pod app- quarantine=true
 
-# 4. Создать snapshot файловой системы
+# 4. Сохранить файловую систему контейнера
 CONTAINER_ID=$(kubectl get pod suspicious-pod -o jsonpath='{.status.containerStatuses[0].containerID}' | sed 's/containerd:\/\///')
-# на ноде:
-sudo ctr containers snapshot suspicious-snapshot $CONTAINER_ID
+# на ноде: PID контейнера и архив его корня через /proc/<pid>/root
+PID=$(sudo crictl inspect "$CONTAINER_ID" | jq -r '.info.pid')
+sudo tar -C "/proc/$PID/root" -czf /root/evidence-rootfs.tgz .
 
 # 5. Анализ запущенных процессов
 kubectl exec suspicious-pod -- ps aux
 kubectl exec suspicious-pod -- ss -tlnp
 
-# 6. Удалить Pod и проверить образ
+# 6. Проверить образ (пока Pod существует), затем удалить Pod
+trivy image "$(kubectl get pod suspicious-pod -o jsonpath='{.spec.containers[0].image}')"
 kubectl delete pod suspicious-pod
-trivy image $(kubectl get pod suspicious-pod -o jsonpath='{.spec.containers[0].image}')
 
 # 7. Проверить если образ был изменён
 docker diff suspicious-container-id   # показать изменения ФС

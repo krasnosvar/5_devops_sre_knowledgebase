@@ -21,7 +21,7 @@ export const options = {
   ],
   thresholds: {
     // Алерт когда ломается — не fail test
-    'http_req_duration{status:200}': [{ threshold: 'p95<1000', abortOnFail: false }],
+    'http_req_duration{status:200}': [{ threshold: 'p(95)<1000', abortOnFail: false }],
     errors: [{ threshold: 'rate<0.1', abortOnFail: false }],
   },
 };

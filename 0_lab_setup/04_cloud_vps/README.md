@@ -1,5 +1,8 @@
 # 04. Tier 3 — Cloud / VPS
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Когда нужна реальная внешняя инфраструктура: публичный IP и DNS, managed
@@ -25,6 +28,8 @@ services (IAM, S3, managed k8s), многоузловой стенд с RAM бо
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: AWS CLI, hcloud, doctl, цены и
+  экономия.
 - [01_theory/cloud_vps_options.md](01_theory/cloud_vps_options.md) — AWS,
   Hetzner, DigitalOcean, GPU-провайдеры, правила экономии.
 - [02_examples/hetzner.tf](02_examples/hetzner.tf) — 3 ноды на Hetzner

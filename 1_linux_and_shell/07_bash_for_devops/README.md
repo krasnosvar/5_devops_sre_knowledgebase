@@ -1,5 +1,7 @@
 # 07. Bash для DevOps
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Bash остаётся клеем инфраструктуры: entrypoint'ы контейнеров, шаги
 CI, setup-скрипты, обёртки над kubectl/terraform. Тема — не про синтаксис,
@@ -20,6 +22,7 @@ CI, setup-скрипты, обёртки над kubectl/terraform. Тема — 
 > (Docker — в [3_containers](../../3_containers/)); подойдёт и любая VM.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: каркас скрипта, strict mode, ловушки.
 - [01_theory/bash_devops_patterns.md](./01_theory/bash_devops_patterns.md)
   — subshells, перенаправления, strict mode, env vs локальные переменные,
   trap.

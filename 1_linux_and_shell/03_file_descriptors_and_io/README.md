@@ -1,5 +1,7 @@
 # 03. Файловые дескрипторы и I/O
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 «Too many open files», логи, которые не появляются из-за буферизации,
 место на диске, которое не освобождается после `rm`, и сервер, который
@@ -12,6 +14,7 @@
 - Стенд: любой Linux с bash и `lsof` (🐳 Tier 1 подходит).
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: лимиты fd, lsof, перенаправления.
 - [01_theory/fd_and_io.md](./01_theory/fd_and_io.md) — «всё есть файл»,
   таблица fd, модели I/O, select/poll/epoll, сокеты.
 - [02_examples/fd_demo.sh](./02_examples/fd_demo.sh) — fd текущего shell,

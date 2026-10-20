@@ -63,7 +63,7 @@ spec:
     - name: error-rate
       interval: 1m
       successCondition: result[0] < 0.05      # меньше 5% ошибок — ОК
-      failureLimit: 2                          # 2 провала подряд — стоп
+      failureLimit: 2                          # 3-й провал (всего) — Failed
       provider:
         prometheus:
           address: http://prometheus:9090
@@ -73,7 +73,7 @@ spec:
             sum(rate(http_requests_total[1m]))
 ```
 
-Rollout привязывает `AnalysisTemplate` к шагам Canary (`analysis: {templates: [{templateName: success-rate}]}`). На каждом шаге контроллер сам запрашивает Prometheus. Если условие `successCondition` не выполняется `failureLimit` раз подряд — Rollout автоматически откатывает трафик на старую версию (`setWeight: 0`) без участия человека. Это принципиальное отличие от обычного RollingUpdate: там "здоровье" версии проверяется только по Readiness Probe одного пода, здесь — по агрегированным бизнес-метрикам всего трафика.
+Rollout привязывает `AnalysisTemplate` к шагам Canary (`analysis: {templates: [{templateName: success-rate}]}`). На каждом шаге контроллер сам запрашивает Prometheus. Если число неудачных измерений превысит `failureLimit` (считаются все, не только подряд) — Rollout автоматически откатывает трафик на старую версию (`setWeight: 0`) без участия человека. Это принципиальное отличие от обычного RollingUpdate: там "здоровье" версии проверяется только по Readiness Probe одного пода, здесь — по агрегированным бизнес-метрикам всего трафика.
 
 ## 4. Blue/Green: preview vs active Service
 

@@ -1,5 +1,7 @@
 # 05. Terragrunt
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Когда инфраструктура разбита на десятки стеков (окружения × регионы ×
@@ -25,6 +27,7 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: run --all, root.hcl, dependency.
 - [01_theory/terragrunt.md](./01_theory/terragrunt.md) — DRY, generate,
   dependency, `run --all` (старое `run-all`).
 - [02_examples/terragrunt.hcl](./02_examples/terragrunt.hcl) — корневой

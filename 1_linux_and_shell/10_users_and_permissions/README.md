@@ -1,5 +1,7 @@
 # 10. Пользователи, группы и ACL
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Права «не работают», пользователь потерял доступ к docker после
 `usermod -G`, сервисный аккаунт может залогиниться, файлы в общей
@@ -17,6 +19,7 @@
 > `docker run --rm -it ubuntu:22.04 bash`; подойдёт и одноразовая VM.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: useradd/usermod, права, ACL.
 - [01_theory/users_and_permissions.md](./01_theory/users_and_permissions.md)
   — `/etc/passwd`/`shadow`/`group`, useradd/usermod, primary vs
   supplementary группы, NSS, ACL (default ACL, mask, POSIX vs NFSv4).

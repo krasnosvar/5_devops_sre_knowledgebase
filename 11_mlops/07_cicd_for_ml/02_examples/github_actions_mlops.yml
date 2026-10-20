@@ -1,0 +1,31 @@
+name: MLOps CI/CD & Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ml-quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12 via uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Step 1 - Validate Golden Dataset Contract (Data CI)
+        run: |
+          python3 11_mlops/03_data_validation_and_dvc/02_examples/validate_docs_schema.py
+
+      - name: Step 2 - Verify Safetensors & ONNX Integrity
+        run: |
+          python3 11_mlops/02_huggingface_and_hubs/02_examples/inspect_safetensors_and_onnx.py
+
+      - name: Step 3 - Run Behavioral Invariants (MFT, INV, DIR) & Quality Gate
+        run: |
+          python3 11_mlops/07_cicd_for_ml/02_examples/test_router_invariants.py

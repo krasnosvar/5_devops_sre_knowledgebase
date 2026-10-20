@@ -1,5 +1,7 @@
 # 05. GitOps глазами CI
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 При переходе на GitOps пайплайн перестаёт делать `kubectl apply`: он
 собирает образ и меняет тег в Git, а деплоит агент в кластере. На работе
@@ -20,6 +22,7 @@ GitOps-агенты (ArgoCD, Flux), drift, секреты в GitOps — кано
   GitOps-агент с коммитом, который сделал CI.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: обновление тега, promotion, откат.
 - [01_theory/gitops_cd.md](./01_theory/gitops_cd.md) — граница CI и CD,
   push vs pull для пайплайна, App Repo vs Ops Repo, обновление тега из
   CI, promotion, rollback, вопросы с собеседований.

@@ -1,5 +1,7 @@
 # 01. DNS
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 DNS — первое, что проверяют при «сервис недоступен»: неверная запись,
@@ -20,6 +22,7 @@ DNS — первое, что проверяют при «сервис недос
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: dig, типы записей, TTL-миграция.
 - [01_theory/dns.md](./01_theory/dns.md) — иерархия DNS, резолвинг,
   типы записей, TTL, DNSSEC.
 - [02_examples/](./02_examples/) — `docker-compose.yml` с CoreDNS,

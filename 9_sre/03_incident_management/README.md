@@ -1,5 +1,7 @@
 # 03. Incident Management
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Инцидент случится обязательно; вопрос — сколько он продлится и
 сколько хаоса создаст. Чёткий lifecycle, уровни severity, роли
@@ -16,6 +18,7 @@
   — команды диагностики, на которые ссылаются примеры runbook.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: severity, роли, коммуникация, команды.
 - [01_theory/incident_management.md](./01_theory/incident_management.md)
   — lifecycle инцидента, severity, роли, коммуникация, runbook к
   алерту, чего не делать под давлением.

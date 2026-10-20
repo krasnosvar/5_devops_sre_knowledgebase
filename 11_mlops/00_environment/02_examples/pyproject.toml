@@ -1,0 +1,44 @@
+[project]
+name = "mlops-personal-docs-vault"
+version = "0.1.0"
+description = "Локальный MLOps + LLMOps стек: рубрикатор документов (ONNX) и гибридный RAG"
+readme = "README.md"
+# Фиксируем Python 3.12, чтобы все C++/Rust-колёса (onnxruntime, pyarrow,
+# tokenizers, scipy) ставились за секунды без компиляции из исходников
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    # Классический ML и экспорт в ONNX (CPU)
+    "scikit-learn>=1.5.0",
+    "skl2onnx>=1.17.0",
+    "onnx>=1.16.0",
+    "onnxruntime>=1.19.0",
+    # Работа с данными, валидация схем и экспорт реестра в Excel (.xlsx)
+    "pandas>=2.2.0",
+    "openpyxl>=3.1.5",
+    "pandera>=0.20.0",
+    "pydantic>=2.9.0",
+    # Экосистема Hugging Face и трекинг экспериментов
+    "huggingface-hub>=0.25.0",
+    "safetensors>=0.4.5",
+    "mlflow>=2.17.0",
+    "boto3>=1.35.0",
+    # Веб-сервис, метрики, векторный поиск и мониторинг дрифта
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.31.0",
+    "prometheus-client>=0.21.0",
+    "qdrant-client>=1.12.0",
+    "evidently>=0.4.30",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "ruff>=0.7.0",
+    "mypy>=1.12.0",
+    "modelscan>=0.8.0",
+]
+
+[tool.ruff]
+line-length = 80
+target-version = "py312"

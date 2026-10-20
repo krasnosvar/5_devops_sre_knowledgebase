@@ -1,5 +1,8 @@
 # 04. Хранение данных контейнеров
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Данные, записанные в слой контейнера, исчезают вместе с ним. Тема
@@ -21,6 +24,8 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: volumes/bind/tmpfs, PV/PVC,
+  access modes.
 - [01_theory/container_storage.md](./01_theory/container_storage.md) —
   почему writable-слой не для данных, volumes и bind mounts; CSI, PV/PVC/
   StorageClass, access modes в Kubernetes.

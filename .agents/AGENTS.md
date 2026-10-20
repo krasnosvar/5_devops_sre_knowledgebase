@@ -1,23 +1,33 @@
 # Repo Context & Conventions
 
-This is a Russian-language DevOps/SRE/MLOps knowledge base, written as a practical
+This is a Russian-language DevOps/SRE/MLOps knowledge base, written as a
+practical
 roadmap for senior engineers: theory + runnable configs/scripts + exercises with
-lab stands. Root `README.md` is the master index of top-level topics — it MUST be
-kept in sync any time a subsection is added, removed, renamed, or nested; the same
+lab stands. Root `README.md` is the master index of top-level topics — it MUST
+be
+kept in sync any time a subsection is added, removed, renamed, or nested; the
+same
 applies to each top-level topic's own `README.md`.
 
-All new content — theory, code comments in examples, exercise text — is written in
+All new content — theory, code comments in examples, exercise text — is
+written in
 Russian, matching the rest of the repo.
 
 ## Directory & Structural Conventions
 
-- Top-level topics: `<N>_<name>/` with a sequential integer prefix (`0_lab_setup`,
-  `1_linux_and_shell`, ... `11_mlops`, `other`). Don't assume the prefix list on disk
-  and in root `README.md` agree — verify with `ls` before trusting either; this repo
+- Top-level topics: `<N>_<name>/` with a sequential integer prefix
+  (`0_lab_setup`,
+  `1_linux_and_shell`, ... `11_mlops`, `other`). Don't assume the prefix list
+  on disk
+  and in root `README.md` agree — verify with `ls` before trusting either;
+  this repo
   has a history of README/disk drift after renumbering.
-- Standard leaf template per subsection: `01_theory/` (mandatory), `02_examples/`,
-  `03_exercises/`, `04_exercises_answers/`. Add examples/exercises only where a real
-  hands-on lab makes sense; skip them (and say so explicitly in the theory doc, e.g.
+- Standard leaf template per subsection: `01_theory/` (mandatory),
+  `02_examples/`,
+  `03_exercises/`, `04_exercises_answers/`. Add examples/exercises only where
+  a real
+  hands-on lab makes sense; skip them (and say so explicitly in the theory
+  doc, e.g.
   "без лабы: требует реальное облако") for cloud-only or reference-only topics.
 - **If `01_theory/` ever holds 2+ files, give each a numeric reading-order
   prefix** (`01_`, `02_`, ...), e.g. `4_kubernetes/03_networking/01_theory/
@@ -36,27 +46,39 @@ Russian, matching the rest of the repo.
 
 ## Nested Sub-Tool Convention
 
-When a subsection's topic naturally contains 2+ independent, swappable tools that
-are each deep enough to deserve their own theory+examples+exercises (ArgoCD vs Flux,
+When a subsection's topic naturally contains 2+ independent, swappable tools
+that
+are each deep enough to deserve their own theory+examples+exercises (ArgoCD vs
+Flux,
 Helm vs Kustomize, OPA Gatekeeper vs Kyverno, Cluster Autoscaler vs Karpenter) —
-do **not** create a separate top-level numbered topic per tool. Nest them as numbered
+do **not** create a separate top-level numbered topic per tool. Nest them as
+numbered
 subdirectories *inside* the parent subsection, continuing that parent's own
 `01/02/03/04` numbering:
 
-- If the parent's general content occupies only `01_theory/` (no `02_examples` etc. of
+- If the parent's general content occupies only `01_theory/` (no `02_examples`
+  etc. of
   its own) — nested tools become `02_<tool>/`, `03_<tool>/`, ... directly.
-- If the parent's general content already occupies `01_theory/02_examples/03_exercises/
+- If the parent's general content already occupies
+  `01_theory/02_examples/03_exercises/
   04_exercises_answers` — first wrap ALL of that general content into its own
-  `01_core/` subdirectory (with its own nested `01_theory/02_examples/...` inside),
-  *then* nest tools starting at `02_<tool>/`. Never mix a bare `01_theory/` directly
+  `01_core/` subdirectory (with its own nested `01_theory/02_examples/...`
+  inside),
+  *then* nest tools starting at `02_<tool>/`. Never mix a bare `01_theory/`
+  directly
   under the parent with numbered tool-subdirectories as siblings — the parent's
-  top level must be uniform: either all leaf files, or all numbered sub-topics, never both.
-- Reserve top-level numbered topics for things that don't cleanly belong inside one
-  existing parent (cross-cutting bridge topics like Operators/CRDs, or reference/
+  top level must be uniform: either all leaf files, or all numbered
+  sub-topics, never both.
+- Reserve top-level numbered topics for things that don't cleanly belong
+  inside one
+  existing parent (cross-cutting bridge topics like Operators/CRDs, or
+  reference/
   landscape pages like the ecosystem overview).
-- Worked examples on disk: `4_kubernetes/06_security/{01_core/, 02_policy_engines/}`,
+- Worked examples on disk: `4_kubernetes/06_security/{01_core/,
+  02_policy_engines/}`,
   `4_kubernetes/07_manifests_management/{01_theory/, 02_helm/, 03_kustomize/}`,
-  `4_kubernetes/09_gitops/{01_theory/, 02_argocd/, 03_fluxcd/, 04_argo_rollouts/}`.
+  `4_kubernetes/09_gitops/{01_theory/, 02_argocd/, 03_fluxcd/,
+  04_argo_rollouts/}`.
 
 ## Renumbering History (grep old names as plain text after any rename)
 
@@ -75,6 +97,13 @@ subdirectories *inside* the parent subsection, continuing that parent's own
   `8_observability/06_*/01_theory/{01_distributed_tracing,02_tracing}.md`.
 - Older stale names seen in the wild: `7_observability`, `4_iac`,
   `3_kubernetes`, `2_containers` (pre-renumber) — must not reappear.
+- 2026-10-20: `14_system_design` expanded into the 7-topic canonical System
+  Design section (`01_architecture_and_api_styles`,
+  `02_performance_caching_and_scaling`, `03_distributed_components_and_data`,
+  `04_single_vs_multi_cluster` [was `02_`], `05_cicd_at_scale` [was `03_`],
+  `06_iac_at_scale` [was `04_`], `07_case_studies_and_interview`; old
+  `01_scaling_high_load_systems` moved into
+`02_performance_caching_and_scaling/01_theory/03_scaling_high_load_systems.md`).
 
 ## Topic README Template
 
@@ -128,6 +157,13 @@ Quick reference for an engineer who already knows the topic (added
 - Protocols — `2_networking/`; `1_linux_and_shell/06_networking_basics` is
   a Linux-tooling intro linking forward.
 - Certifications — `13_books_certs_resources/01_certifications/`.
+- System Design theory (monolith vs microservices, Clean/Hexagonal/DDD, API
+  styles, caching, replication/sharding/CAP, message brokers, load balancing &
+  resilience patterns, interview framework & case studies) —
+  `14_system_design/` is the canonical home across this repo and the sibling
+  `4_python_my_knowledgebase/4_system_design` and
+  `3_go_my_knowledgebase/3_system_design` repos (which focus on Python/Go
+  runtime specifics and link here for foundational theory).
 
 ## Exercise Answer Format
 
@@ -157,17 +193,22 @@ Sections link to each other constantly via relative markdown links
 unpredictable number of these — depth changes by exactly one level of `../` for
 every level of nesting added or removed.
 
-**After any structural change, re-verify every relative link — don't rely on memory.**
+**After any structural change, re-verify every relative link — don't rely on
+memory.**
 A short script does this reliably: glob all `*.md` files, regex-match
 `\]\(\.\./[^)]+\)` links, resolve each against its file's directory with
-`os.path.normpath(os.path.join(dirname, link))`, and check `os.path.exists`. Run it
+`os.path.normpath(os.path.join(dirname, link))`, and check `os.path.exists`.
+Run it
 repo-wide (not just in the touched subtree) since other sections may link *into*
 the paths you just changed.
 
-For Kubernetes YAML that uses Kustomize, validate for real with `kubectl kustomize
-<dir>` (kubectl is available in this environment) instead of only eyeballing syntax
+For Kubernetes YAML that uses Kustomize, validate for real with `kubectl
+kustomize
+<dir>` (kubectl is available in this environment) instead of only eyeballing
+syntax
 — this has caught real bugs, e.g. `$patch: delete` being silently ignored when
-nested under `metadata:` instead of placed as a top-level key alongside `apiVersion`/`kind`.
+nested under `metadata:` instead of placed as a top-level key alongside
+`apiVersion`/`kind`.
 
 ## Git & Workspace Discipline
 
@@ -192,30 +233,54 @@ nested under `metadata:` instead of placed as a top-level key alongside `apiVers
 
 # Theory Files Formatting Rules
 
-When generating or refactoring theoretical knowledge base files (like those in devops, python, or go knowledgebase repositories), YOU MUST ADHERE to the following strict structural and content guidelines.
+When generating or refactoring theoretical knowledge base files (like those in
+devops, python, or go knowledgebase repositories), YOU MUST ADHERE to the
+following strict structural and content guidelines.
 
 ## 1. Depth of Theory (Глубина теории)
 - **Target Audience:** Senior DevOps / SRE engineers.
-- **Content Depth:** Do not write superficial summaries. Dive deep into OS internals, kernel mechanisms, and "under the hood" concepts. 
-- **Required Elements:** Mention specific system calls (e.g., `fork`, `exec`, `epoll`, `clone`), kernel structures (e.g., `inodes`, `dentry`, `Page Cache`), memory management (RSS vs VSZ, OOM Killer), IPC, and architecture differences (e.g., cgroups v1 vs v2, select vs epoll). Include practical `bash` command examples that an SRE would use to debug these concepts.
+- **Content Depth:** Do not write superficial summaries. Dive deep into OS
+  internals, kernel mechanisms, and "under the hood" concepts.
+- **Required Elements:** Mention specific system calls (e.g., `fork`, `exec`,
+  `epoll`, `clone`), kernel structures (e.g., `inodes`, `dentry`, `Page
+  Cache`), memory management (RSS vs VSZ, OOM Killer), IPC, and architecture
+  differences (e.g., cgroups v1 vs v2, select vs epoll). Include practical
+  `bash` command examples that an SRE would use to debug these concepts.
 
 ## 2. Document Structure
-- **Table of Contents (TOC):** Always start the file with a numbered Table of Contents (`## Содержание`).
-- **Numbered Headings:** Number all main H2 (`##`) chapters to exactly match the TOC (e.g., `## 1. Процесс — основная единица выполнения`).
-- If there are sub-chapters (H3 `###`), number them hierarchically (e.g., `### 6.1 procfs (/proc)`).
+- **Table of Contents (TOC):** Always start the file with a numbered Table of
+  Contents (`## Содержание`).
+- **Numbered Headings:** Number all main H2 (`##`) chapters to exactly match
+  the TOC (e.g., `## 1. Процесс — основная единица выполнения`).
+- If there are sub-chapters (H3 `###`), number them hierarchically (e.g., `###
+  6.1 procfs (/proc)`).
 
 ## 3. Interview Q&A Section
-- The final chapter must ALWAYS be `## N. Типовые вопросы на собеседовании (Interview Q&A)`.
-- **Quantity:** **10 is the default target** for a single, focused topic — not a hard
-  law. If a file legitimately merges several sub-themes (e.g. RBAC + SecurityContext +
-  NetworkPolicy + Secrets in one security doc), it's fine to exceed 10 — more real,
-  non-duplicate questions beat padding to hit a number or artificially trimming good
-  content. If a doc is a short addendum/pointer section or a pure reference/landscape
+- The final chapter must ALWAYS be `## N. Типовые вопросы на собеседовании
+  (Interview Q&A)`.
+- **Quantity:** **10 is the default target** for a single, focused topic — not
+  a hard
+  law. If a file legitimately merges several sub-themes (e.g. RBAC +
+  SecurityContext +
+  NetworkPolicy + Secrets in one security doc), it's fine to exceed 10 — more
+  real,
+  non-duplicate questions beat padding to hit a number or artificially
+  trimming good
+  content. If a doc is a short addendum/pointer section or a pure
+  reference/landscape
   page, it's fine to have fewer questions, or skip the section entirely.
-- **Quality & Depth:** Questions should be challenging, deep, and often contain a "trick" (подвох) or edge case (e.g., "Why does an unprivileged user fail to use `renice -10` on their own process?"). 
-- **Relevance:** Questions must be strictly relevant to the exact topic of the file. Do not include questions that belong to a different technical domain.
-- **Company Anonymity:** Never mention specific company names (e.g., Yandex, Sber, VK, Alibaba, Amazon etc.) when formulating or cataloging interview questions. Present all questions objectively without attributing them to any specific employer.
-- **Format Constraint (.sh):** All interview question files MUST STRICTLY be created and maintained with a `.sh` file extension. NEVER convert them to `.md` or any other format. This is a hard requirement from the user.
+- **Quality & Depth:** Questions should be challenging, deep, and often
+  contain a "trick" (подвох) or edge case (e.g., "Why does an unprivileged
+  user fail to use `renice -10` on their own process?").
+- **Relevance:** Questions must be strictly relevant to the exact topic of the
+  file. Do not include questions that belong to a different technical domain.
+- **Company Anonymity:** Never mention specific company names (e.g., Yandex,
+  Sber, VK, Alibaba, Amazon etc.) when formulating or cataloging interview
+  questions. Present all questions objectively without attributing them to any
+  specific employer.
+- **Format Constraint (.sh):** All interview question files MUST STRICTLY be
+  created and maintained with a `.sh` file extension. NEVER convert them to
+  `.md` or any other format. This is a hard requirement from the user.
 
 ## Example Structure:
 ```markdown
@@ -275,7 +340,11 @@ When generating or refactoring theoretical knowledge base files (like those in d
 - **Line Length (Перенос строк):** Strictly adhere to the 70-80 characters
   per line limit (§4) with explicit line breaks. Apply indentation and
   spacing exactly as seen in the first two questions of `01_linux/05_bash.sh`.
-- **Introductory Fundamentals:** Every `.sh` question file must begin with basic, foundational questions (e.g., "What is a process?", "What is Bash?", "What is Docker?", "What are cgroups and namespaces?"). Do not jump straight into advanced concepts without covering the underlying definitions and mechanisms first.
+- **Introductory Fundamentals:** Every `.sh` question file must begin with
+  basic, foundational questions (e.g., "What is a process?", "What is Bash?",
+  "What is Docker?", "What are cgroups and namespaces?"). Do not jump straight
+  into advanced concepts without covering the underlying definitions and
+  mechanisms first.
 - **Multi-line question headers:** when a question is too long for one line,
   wrap the continuation WITHOUT repeating the `# ` prefix or any other marker
   — just plain indented/unindented continuation text. A past bug produced
@@ -346,7 +415,8 @@ Run these repo-wide (not just on touched files — other files may reference
 what you changed), via a quick Bash/Python one-liner each:
 1. **Line width** — no `.sh` interview file line over 80 chars.
 2. **Fence balance** — ``` grep -c '^```' file ``` is even in every `.md`/`.sh`.
-3. **Sequential numbering** — `.sh` files: `grep -cE '^# [0-9]+\.'` count matches
+3. **Sequential numbering** — `.sh` files: `grep -cE '^# [0-9]+\.'` count
+   matches
    the highest number used, no gaps, no duplicates.
 4. **No company-name attribution** — interview questions never say "spotted
    at Yandex/Sber/Amazon/etc." (naming cloud products like AWS/GCP is fine;

@@ -1,5 +1,7 @@
 # 00. OSI и TCP/IP
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Любая сетевая диагностика начинается с вопроса «на каком уровне
@@ -21,6 +23,7 @@ TCP handshake, разницу TCP/UDP, сокеты и MTU — то, без че
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: ss, tcpdump, MTU, состояния TCP.
 - [01_theory/osi_and_tcpip.md](./01_theory/osi_and_tcpip.md) — OSI vs
   TCP/IP, инкапсуляция, handshake, TCP vs UDP, sockets, MTU и фрагментация.
 - [02_examples/](./02_examples/) — `tcpdump_and_ss.sh`: слушающие сокеты,

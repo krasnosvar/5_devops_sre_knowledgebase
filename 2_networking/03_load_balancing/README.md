@@ -1,5 +1,7 @@
 # 03. Балансировка нагрузки
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Любой сервис с более чем одной репликой стоит за балансировщиком. Выбор
@@ -19,6 +21,7 @@ backend'а или сама устроит каскадный отказ.
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: L4/L7, алгоритмы, nginx upstream.
 - [01_theory/load_balancing.md](./01_theory/load_balancing.md) — L4 vs L7,
   алгоритмы, health checks, sticky sessions.
 - [02_examples/](./02_examples/) — `docker-compose.yml`, `nginx-lb.conf`

@@ -1,5 +1,7 @@
 # 02. GitLab CI
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 GitLab CI — одна из самых распространённых CI-систем в компаниях с
 self-hosted GitLab. На работе придётся писать и чинить `.gitlab-ci.yml`,
@@ -24,6 +26,7 @@ self-hosted GitLab. На работе придётся писать и чини�
 > Kubernetes ещё не освоен — деплой-джобы можно пропустить.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: ключи `.gitlab-ci.yml`, rules, runner.
 - [01_theory/gitlab_ci.md](./01_theory/gitlab_ci.md) — Server/Runner/
   executors, регистрация раннера (GitLab 16+), cache vs artifacts, DAG
   (`needs`) и `rules`, dotenv-переменные, DinD и сборка без демона

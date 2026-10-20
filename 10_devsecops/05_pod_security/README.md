@@ -1,5 +1,7 @@
 # 05. Pod Security
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Даже идеальный образ можно запустить как root, с privileged и
 hostPath — и тогда побег из контейнера становится тривиальным. Тема —
@@ -16,6 +18,7 @@ engines для правил сверх стандарта.
   — capabilities и seccomp на уровне ядра.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: PSA labels, securityContext.
 - [01_theory/pod_security.md](./01_theory/pod_security.md) — уровни
   PSS, режимы PSA, labels и фиксация версии, exemptions, миграция с PSP,
   securityContext, capabilities, seccomp, Kyverno/Gatekeeper.

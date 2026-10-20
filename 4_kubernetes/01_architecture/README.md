@@ -1,5 +1,8 @@
 # 01. Архитектура Kubernetes
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и
+> шаблоны одним экраном.
+
 ## Зачем
 Почти любой инцидент в Kubernetes упирается в вопрос "какой компонент
 не сделал свою работу": под завис в Pending (scheduler), не стартует
@@ -14,6 +17,7 @@
   namespaces и cgroups.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: control plane, etcdctl, crictl.
 - [01_theory/k8s_architecture.md](./01_theory/k8s_architecture.md) —
   компоненты control plane, kube-controller-manager и его контроллеры,
   etcd (Raft, MVCC), фазы обработки запроса в apiserver, scheduler,

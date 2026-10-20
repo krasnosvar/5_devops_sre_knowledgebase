@@ -1,5 +1,8 @@
 # 06.2. Движки политик: OPA Gatekeeper и Kyverno
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и
+> шаблоны одним экраном.
+
 ## Зачем
 PSA проверяет только безопасность пода. Правила вида "никаких
 `:latest`", "у каждого Deployment есть label `team`", "дефолтные
@@ -18,6 +21,7 @@ Kyverno. Важно не только написать политику, но и
 > из упражнений как есть.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: Gatekeeper, Kyverno, CEL-политики.
 - [01_theory/policy_engines.md](./01_theory/policy_engines.md) —
   Gatekeeper (Rego, ConstraintTemplate + Constraint), Kyverno (YAML,
   validate/mutate, актуальный синтаксис), failurePolicy.

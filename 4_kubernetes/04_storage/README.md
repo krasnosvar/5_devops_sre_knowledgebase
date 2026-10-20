@@ -1,5 +1,8 @@
 # 04. Хранилище в Kubernetes
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и
+> шаблоны одним экраном.
+
 ## Зачем
 Поды эфемерны, а данные — нет. Тема о том, как Kubernetes подключает
 диски к подам (PV, PVC, StorageClass, CSI), почему под с томом может
@@ -12,6 +15,7 @@
   bind mount в контейнерах.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: PVC, StorageClass, снапшоты.
 - [01_theory/k8s_storage.md](./01_theory/k8s_storage.md) — emptyDir и
   его лимиты, Local PV и local-path provisioner, topology-aware
   provisioning, volume expansion, CSI snapshots и клонирование.

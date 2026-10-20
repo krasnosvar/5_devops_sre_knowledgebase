@@ -1,5 +1,7 @@
 # 05. Systemd
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 На любой Linux-ноде сервисы (kubelet, containerd, sshd, ваше
 приложение) запускает и перезапускает systemd, а логи собирает journald.
@@ -16,6 +18,7 @@
   контейнере systemd нет).
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: systemctl, юниты, timers, journalctl.
 - [01_theory/systemd.md](./01_theory/systemd.md) — юниты и их типы,
   зависимости и targets, timers, journald.
 - [02_examples/myapp.service](./02_examples/myapp.service) — unit-файл с

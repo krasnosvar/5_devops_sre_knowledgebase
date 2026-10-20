@@ -9,7 +9,7 @@
 | Ресурсы | ~300 MB RAM | ~200 MB RAM | 2+ GB RAM |
 | Multi-node | ✅ | ✅ | ограниченно |
 | Близость к prod | Максимально | Близко (k3s ≈ k8s) | Близко |
-| LoadBalancer | нет (нужен MetalLB) | встроен (traefik) | встроен |
+| LoadBalancer | нет (MetalLB или cloud-provider-kind) | встроен (ServiceLB/klipper; Ingress — Traefik) | через `minikube tunnel` |
 | Загрузка образов | `kind load` | `k3d image import` | `minikube image load` |
 | CRI | containerd | containerd | containerd / docker |
 | Рекомендован для | тестирование k8s компонентов | быстрые лабы | обучение |
@@ -48,7 +48,8 @@ kubectl cluster-info --context kind-lab
 ## k3d — k3s в Docker
 
 k3s — lightweight Kubernetes от Rancher (CNCF). k3d запускает k3s в Docker.
-Встроенный Traefik LoadBalancer — удобен для упражнений с Ingress.
+Встроенные ServiceLB (LoadBalancer) и Traefik (Ingress) — удобно для
+упражнений с Ingress.
 
 ```bash
 # установка

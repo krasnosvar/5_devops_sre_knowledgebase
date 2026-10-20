@@ -1,5 +1,7 @@
 # 08. Производительность и eBPF
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Когда метрик недостаточно, а перезапускать приложение с отладкой
 нельзя, нужна наблюдаемость на уровне ядра: eBPF-инструменты (bpftrace,
@@ -16,6 +18,7 @@ bcc), kprobes/uprobes, XDP. На них же построены современ
   eBPF требует привилегий.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: bpftrace, BCC, perf, strace.
 - [01_theory/ebpf_and_observability.md](./01_theory/ebpf_and_observability.md)
   — от модулей ядра к eBPF, верификатор и JIT, XDP, kprobes/uprobes и
   bpftrace, io_uring.

@@ -1,5 +1,7 @@
 # 04. BGP и маршрутизация
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Таблица маршрутизации ядра решает, куда уйдёт каждый пакет, а BGP —
@@ -21,6 +23,7 @@ Kubernetes. Понимание BGP объясняет глобальные ин�
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: ip route, выбор BGP-маршрута, vtysh.
 - [01_theory/bgp_and_routing.md](./01_theory/bgp_and_routing.md) —
   маршрутизация ядра, статика vs динамика, BGP, hijacking/RPKI, BGP в k8s.
 - [02_examples/](./02_examples/) — `README.md` и `docker-compose.yml` с двумя

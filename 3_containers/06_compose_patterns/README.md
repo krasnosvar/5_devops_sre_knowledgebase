@@ -1,5 +1,8 @@
 # 06. Паттерны Docker Compose
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Compose — основной инструмент локальной разработки и Tier-1 лаб этой
@@ -14,6 +17,8 @@ Compose — основной инструмент локальной разра�
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: healthcheck, `.env`, override,
+  профили.
 - [01_theory/compose_patterns.md](./01_theory/compose_patterns.md) —
   depends_on и healthcheck, `.env` vs `env_file`, override и profiles, сети
   и volumes.

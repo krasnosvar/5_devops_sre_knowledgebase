@@ -1,5 +1,7 @@
 # 06. Chaos Engineering
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Отказоустойчивость, которую не проверяли, — гипотеза. Chaos
 engineering проверяет её контролируемыми экспериментами (убить под,
@@ -17,6 +19,7 @@ engineering проверяет её контролируемыми экспер�
   — Helm, которым ставится LitmusChaos.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: инъекции, Chaos Mesh, Litmus.
 - [01_theory/chaos_engineering.md](./01_theory/chaos_engineering.md) —
   принципы (гипотеза, blast radius), что тестировать, LitmusChaos,
   простые эксперименты на `kubectl`.

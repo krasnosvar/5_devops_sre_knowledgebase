@@ -178,7 +178,8 @@ allocation failure`) и фоновый демон `kswapd` не успевает
 2. **Корректировка (`oom_score_adj`):** к баллу прибавляется значение из
    `/proc/<PID>/oom_score_adj` (диапазон от -1000 до +1000).
    - Значение `-1000` полностью защищает процесс от OOM Killer (так
-     защищаются `kubelet`, `sshd`, `systemd`).
+     часто настроен `sshd` через `OOMScoreAdjust=-1000`; `kubelet` и
+     container runtime по умолчанию получают `-999`).
    - Контейнеры c QoS `BestEffort` в k8s получают `oom_score_adj = 1000`,
      принимая первый удар.
 3. **Выбор жертвы:** процесс с максимальным результирующим `oom_score`
@@ -309,7 +310,10 @@ cat /proc/sys/net/netfilter/nf_conntrack_count
 cat /proc/sys/net/netfilter/nf_conntrack_max
 
 # Просмотр топ-IP в conntrack (поиск флуда)
-conntrack -L 2>/dev/null | awk '{print $4}' | cut -d= -f2 | sort | uniq -c | sort -nr | head -10
+# (номер колонки с src= разный у TCP и UDP, поэтому ищем первое поле src=)
+conntrack -L 2>/dev/null \
+  | awk '{for (i = 1; i <= NF; i++) if ($i ~ /^src=/) {print substr($i, 5); break}}' \
+  | sort | uniq -c | sort -nr | head -10
 ```
 
 ---

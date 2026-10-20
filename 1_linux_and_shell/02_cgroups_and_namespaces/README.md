@@ -1,5 +1,7 @@
 # 02. Cgroups и Namespaces
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Namespaces и cgroups — это и есть контейнер: изоляция того, что процесс
 видит, и лимиты того, сколько он потребляет. Без этого непонятно, почему
@@ -20,6 +22,7 @@ throttling при низкой загрузке и как зайти в сеть
 > не освоены — упражнения 02 и 04 можно пропустить и вернуться к ним позже.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: файлы cgroups v2, nsenter, unshare.
 - [01_theory/cgroups_namespaces.md](./01_theory/cgroups_namespaces.md) —
   8 типов namespaces, контроллеры cgroups v2 (`cpu.weight`, `cpu.max`,
   `memory.max`, `memory.high`, `pids.max`), v1 как legacy, eBPF.

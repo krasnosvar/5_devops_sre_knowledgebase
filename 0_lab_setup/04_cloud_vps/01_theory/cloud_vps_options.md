@@ -56,12 +56,15 @@ brew install hcloud   # macOS
 
 hcloud context create my-project   # вставить API token
 hcloud server list
+# --ssh-key принимает имя/ID ключа в проекте, не путь к файлу
+hcloud ssh-key create --name lab-key \
+  --public-key-from-file ~/.ssh/lab_key.pub
 hcloud server create \
   --name lab-node \
   --type cx22 \
   --image ubuntu-24.04 \
   --location fsn1 \
-  --ssh-key ~/.ssh/lab_key.pub
+  --ssh-key lab-key
 hcloud server delete lab-node
 ```
 

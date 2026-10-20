@@ -47,7 +47,8 @@ MLOps, языки и system design. Это не учебник с нуля, а �
 - [08_git.sh](./08_git.sh) — Git.
 - [09_clouds/](./09_clouds/) — AWS, GCE, Azure, Yandex Cloud.
 - [10_devsecops.sh](./10_devsecops.sh) — DevSecOps.
-- [11_mlops.sh](./11_mlops.sh) — MLOps.
+- [11_mlops/](./11_mlops/) — MLOps (жизненный цикл, данные, DVC, MLflow),
+  Hugging Face и ONNX Serving, LLMOps (RAG, Qdrant, GPU/CPU), AI DevSecOps.
 - [12_languages/](./12_languages/) — Python, Go.
 - [13_system_design/](./13_system_design/) — масштабирование и кластеры,
   CI/CD, IaC и наблюдаемость на масштабе.

@@ -1,5 +1,7 @@
 # 03. GitHub Actions
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 GitHub Actions — CI/CD по умолчанию для проектов на GitHub. На работе это
 workflow для тестов и сборки, reusable workflows для единого деплоя во
@@ -22,6 +24,7 @@ workflow для тестов и сборки, reusable workflows для един
 > можно отложить.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: ключи workflow, OIDC, `gh`.
 - [01_theory/github_actions.md](./01_theory/github_actions.md) —
   workflows/jobs/steps, custom actions, self-hosted runners (ARC),
   environments и protection rules, OIDC и блок `permissions`, вопросы с

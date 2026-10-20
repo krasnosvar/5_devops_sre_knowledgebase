@@ -1,5 +1,8 @@
 # 09. Observability на масштабе
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны
+> одним экраном.
+
 ## Зачем
 Стек из одного Prometheus и одного Loki перестаёт справляться на
 десятках кластеров и тысячах хостов: память съедает cardinality,
@@ -13,9 +16,12 @@ tiered retention.
   [05_logs_loki](../05_logs_loki/) — single-node инструменты, о
   пределах которых идёт речь.
 - [4_kubernetes](../../4_kubernetes/) — мультикластерный контекст;
-  также см. [14_system_design/02_single_vs_multi_cluster](../../14_system_design/02_single_vs_multi_cluster/).
+  также см.
+[14_system_design/04_single_vs_multi_cluster](../../14_system_design/04_single_vs_multi_cluster/).
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: cardinality, remote_write,
+  federation, tiered retention.
 - [01_theory/observability_at_scale.md](./01_theory/observability_at_scale.md)
   — cardinality как первая причина деградации, federation vs
   remote_write (Thanos, VictoriaMetrics cluster), управление

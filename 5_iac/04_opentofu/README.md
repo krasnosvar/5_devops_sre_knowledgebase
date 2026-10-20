@@ -1,5 +1,7 @@
 # 04. OpenTofu
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 После смены лицензии Terraform на BSL появился открытый форк —
@@ -21,6 +23,7 @@ OpenTofu. На работе встретится выбор «Terraform или O
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: отличия, миграция, шифрование стейта.
 - [01_theory/opentofu.md](./01_theory/opentofu.md) — лицензия, drop-in
   совместимость, state encryption, OpenTofu Registry.
 - Без примеров и упражнений: тема справочная. Любой пример из

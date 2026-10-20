@@ -1,5 +1,8 @@
 # 02. Слои образов
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Размер образа, скорость сборки в CI и время раскатки зависят от того,
@@ -15,6 +18,8 @@ multi-stage сжимает образ до нескольких мегабайт
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: OverlayFS, инспекция слоёв,
+  правила кэша.
 - [01_theory/image_layers.md](./01_theory/image_layers.md) — overlay FS,
   copy-on-write, кэш слоёв, multi-stage, distroless.
 - [02_examples/](./02_examples/) — `Dockerfile.optimized` (multi-stage

@@ -42,7 +42,8 @@ getfacl /opt/app/config.yaml
 - `pam_limits.so` — применяет лимиты из `/etc/security/limits.conf` (ulimit на процессы пользователя — nofile, nproc).
 - `pam_google_authenticator.so` — 2FA (TOTP) поверх пароля.
 
-Практическое следствие: если нужно добавить 2FA для SSH-логина, правильное место — не `sshd_config`, а PAM-стек `/etc/pam.d/sshd` (плюс `ChallengeResponseAuthentication yes` в sshd_config).
+Практическое следствие: если нужно добавить 2FA для SSH-логина, правильное место — не `sshd_config`, а PAM-стек `/etc/pam.d/sshd` (плюс `KbdInteractiveAuthentication yes` в sshd_config; старое имя —
+`ChallengeResponseAuthentication`, устарело с OpenSSH 8.7).
 
 **Правила `sudoers`, о которых часто забывают:**
 ```
@@ -108,7 +109,9 @@ sshd реально применит. (У `sysctl.d/` логика обратн�
 
 ## 5. auditd: аудит на уровне syscalls
 
-`auditd` — демон ядра Linux, который логирует системные вызовы по правилам (`auditctl`/`/etc/audit/rules.d/`). В отличие от `journald` (логи приложений) или `sshd`-логов (события конкретного сервиса), auditd видит **любое** обращение к файлу или вызов syscall, независимо от того, какой процесс это сделал.
+`auditd` — user-space демон: подсистема аудита ядра по правилам
+(`auditctl`/`/etc/audit/rules.d/`) отбирает события (системные вызовы,
+доступ к файлам), а auditd пишет их в лог. В отличие от `journald` (логи приложений) или `sshd`-логов (события конкретного сервиса), auditd видит **любое** обращение к файлу или вызов syscall, независимо от того, какой процесс это сделал.
 
 ```bash
 # Следить за изменениями конкретного файла

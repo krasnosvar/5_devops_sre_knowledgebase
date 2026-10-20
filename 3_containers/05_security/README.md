@@ -1,5 +1,8 @@
 # 05. Безопасность контейнеров
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Контейнер делит ядро с хостом, поэтому root в контейнере с лишними
@@ -24,6 +27,8 @@ capabilities — прямой путь к побегу на ноду. Тема �
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: флаги `docker run`,
+  securityContext, PSS.
 - [01_theory/container_security.md](./01_theory/container_security.md) —
   capabilities, seccomp/AppArmor, user namespaces, rootless, SecurityContext.
 - [02_examples/](./02_examples/) — `Dockerfile.secure`, `run-secure.sh`

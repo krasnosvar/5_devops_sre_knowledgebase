@@ -1,5 +1,7 @@
 # 02. Secrets Management
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Пароли в Git, в ConfigMap или в base64 Secret без шифрования etcd —
 самые частые причины утечек. Тема показывает, где хранить секреты
@@ -16,6 +18,7 @@
   (соседний репозиторий). Достаточно `git init`, `git add`, `git commit`.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: Vault, ESO, kubeseal, SOPS.
 - [01_theory/secrets_management.md](./01_theory/secrets_management.md) —
   почему Secret небезопасен, Vault, External Secrets Operator, Sealed
   Secrets, AWS Secrets Manager + IRSA.

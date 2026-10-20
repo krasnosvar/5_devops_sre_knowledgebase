@@ -1,5 +1,7 @@
 # 11. Траблшутинг Linux
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Итоговая тема раздела: как системно, а не наугад, разбирать
 инциденты на хосте — высокая нагрузка, нехватка памяти, медленный диск,
@@ -14,6 +16,7 @@
 - Стенд: Linux VM с sudo (🖥 Tier 2), утилиты `sysstat`, `perf`, `bcc`.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: 60 секунд, USE, симптом → команда.
 - [01_theory/linux_troubleshooting.md](./01_theory/linux_troubleshooting.md)
   — USE/RED, 60-секундный чек-лист, D-state, page cache и slab, OOM
   Killer, насыщение I/O, удалённые открытые файлы, дропы в сокетах и

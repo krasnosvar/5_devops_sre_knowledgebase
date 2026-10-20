@@ -1,5 +1,7 @@
 # 09. Безопасность Linux
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 securityContext в k8s, capabilities и seccomp в контейнерах, CIS-
 бенчмарки и аудит хостов опираются на механизмы ОС: SUID и capabilities,
@@ -16,6 +18,7 @@ sandboxing. Тема нужна, чтобы закрыть хост и умет�
   ([0_lab_setup/02_local_vms](../../0_lab_setup/02_local_vms/)).
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: SUID, sudo, SSH, SELinux, auditd.
 - [01_theory/linux_security.md](./01_theory/linux_security.md) —
   SUID/SGID/sticky, ACL, sudo и PAM, SSH hardening (включая порядок
   drop-in файлов sshd), SELinux vs AppArmor, auditd, sysctl и systemd

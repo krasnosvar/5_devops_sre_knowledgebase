@@ -168,13 +168,14 @@ Forbidden) на уровне RBAC самого Гитлаба.
 **5. Вы используете Kubernetes-executor для GitLab Runner. Джоба пытается
 запустить контейнер, но падает с OOMKilled. Вы меняете в настройках раннера
 `cpu_limit` и `memory_limit`, но ничего не меняется. В чем ошибка?**
-*Ответ:* Это частая ловушка в k8s-executor. Настройки `cpu_limit` /
-`memory_limit` в `config.toml` раннера задают жесткие лимиты (cgroups) для
-запускаемых подов. Но чтобы Kube-scheduler правильно нашел ноду для пода, вам
-нужно задать **requests** (гарантированные ресурсы). Если `requests` не заданы
-(или `cpu_request` в `config.toml`), Pod создается с нулевыми реквестами (класс
-BestEffort), и kubelet может пристрелить его при первой же нехватке памяти на
-ноде. Нужно настроить `memory_request` и `memory_limit` одновременно.
+*Ответ:* Это частая ловушка в k8s-executor. `cpu_limit` / `memory_limit` в
+`config.toml` касаются только build-контейнера пода джобы; у контейнеров
+`helper` и сервисов (`svc-*`) свои ключи — `helper_memory_limit`,
+`service_memory_limit`, и OOMKilled часто прилетает именно им. Кроме того,
+нужны **requests** для scheduler: если задан только limit, Kubernetes
+подставит request = limit; если не заданы ни те, ни другие, под получает
+класс BestEffort и первым вытесняется при нехватке памяти на ноде. Поэтому
+задают `memory_request` и `memory_limit` (и helper/service-аналоги) явно.
 
 **6. Что такое Docker-in-Docker (DinD) и почему SRE инженеры запрещают
 использовать его в production CI/CD?**

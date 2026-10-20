@@ -1,5 +1,7 @@
 # 04. Секреты в пайплайнах
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 CI-система — точка, где сходятся доступы ко всему: registry, облако,
 базы, кластеры. Статический ключ в переменных CI — типовой источник
@@ -16,6 +18,7 @@ auth), шифровать секреты в Git (SOPS) и не светить и
   проверять JWT (auth method `jwt`).
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: Vault JWT, SOPS, gitleaks.
 - [01_theory/secrets_in_ci.md](./01_theory/secrets_in_ci.md) — почему
   статические ключи плохи, OIDC, Vault JWT auth и `id_tokens` в GitLab,
   SOPS, masking и secret scanning, вопросы с собеседований.

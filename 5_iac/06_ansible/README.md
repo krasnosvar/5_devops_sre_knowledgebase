@@ -1,5 +1,7 @@
 # 06. Ansible
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 
 Terraform создаёт VM, но не настраивает то, что внутри: пакеты,
@@ -18,6 +20,7 @@ Terraform создаёт VM, но не настраивает то, что вн�
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: флаги, Vault, Galaxy, приоритеты.
 - [01_theory/ansible.md](./01_theory/ansible.md) — push-модель,
   идемпотентность, модули vs shell, роли, handlers.
 - [02_examples/inventory.yaml](./02_examples/inventory.yaml) — группы

@@ -59,7 +59,8 @@ kubectl exec -n payments db-0 -- psql -U app -c "SELECT * FROM pg_stat_activity 
 
 Если Stripe медленный — включить fallback режим:
 ```bash
-kubectl set env deployment/payment-service PAYMENT_PROVIDER=backup
+kubectl set env deployment/payment-service -n payments \
+  PAYMENT_PROVIDER=backup
 ```
 
 Если memory OOM:

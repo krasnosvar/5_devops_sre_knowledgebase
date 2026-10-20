@@ -1,5 +1,8 @@
 # 05. Планирование подов (Scheduling)
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и
+> шаблоны одним экраном.
+
 ## Зачем
 Куда попадёт под, переживёт ли сервис падение зоны, кого выселят при
 нехватке памяти и не "съест" ли одна команда весь кластер — всё это
@@ -13,6 +16,7 @@
   встречались в упражнении 05.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: taints, affinity, PDB, QoS.
 - [01_theory/scheduling.md](./01_theory/scheduling.md) — nodeSelector и
   node affinity, taints и tolerations, topology spread constraints,
   PodDisruptionBudget, QoS-классы, ResourceQuota и LimitRange.

@@ -1,5 +1,7 @@
 # 01. Процессная модель Linux
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Контейнер — это просто процесс, поэтому всё, что происходит с ним в
 проде (zombie в контейнере без init, потерянный SIGTERM при остановке
@@ -14,6 +16,7 @@
 - Базовый Python для чтения коротких программ на `os.fork()`/`signal`.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: ps, сигналы, OOM, nice.
 - [01_theory/process_model.md](./01_theory/process_model.md) — процесс и
   память (VSZ/RSS), IPC, fork/exec, zombie/orphan, сигналы и OOM Killer,
   nice/renice.

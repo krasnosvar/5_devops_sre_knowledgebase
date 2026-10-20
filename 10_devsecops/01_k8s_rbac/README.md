@@ -1,5 +1,7 @@
 # 01. Kubernetes RBAC
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 По умолчанию в кластерах легко раздать `cluster-admin` всем подряд —
 и тогда утечка одного токена ServiceAccount означает захват кластера.
@@ -13,6 +15,7 @@
   кластер для упражнений.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: can-i, роли, аудит прав.
 - [01_theory/k8s_rbac_deep.md](./01_theory/k8s_rbac_deep.md) —
   аутентификация vs авторизация, встроенные ClusterRoles,
   resourceNames, аудит, антипаттерны, kubeconfig для пользователя.

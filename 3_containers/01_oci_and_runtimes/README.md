@@ -1,5 +1,8 @@
 # 01. OCI и container runtimes
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 «Контейнер» — это не Docker, а набор стандартов (OCI) и цепочка
@@ -16,6 +19,8 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: цепочка runtime, crictl/ctr,
+  RuntimeClass.
 - [01_theory/oci_runtimes.md](./01_theory/oci_runtimes.md) — OCI image/
   runtime/distribution spec, containerd, runc, crun, gVisor, Kata, Podman.
 - [02_examples/](./02_examples/) — `runtime_compare.sh` (Docker vs crictl,

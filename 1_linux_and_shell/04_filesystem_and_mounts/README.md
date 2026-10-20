@@ -1,5 +1,7 @@
 # 04. Файловая система и монтирование
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 «No space left on device» при свободных гигабайтах (кончились inodes),
 медленный диск, который на деле — page cache, и слои Docker-образа — всё
@@ -15,6 +17,7 @@
 - Стенд: Linux VM с sudo (🖥 Tier 2) — для mount/overlay нужен root.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: df/du, findmnt, LVM, swap.
 - [01_theory/filesystem_mounts.md](./01_theory/filesystem_mounts.md) —
   VFS, inodes, page cache, swap, ext4 vs XFS, LVM, bind mount, tmpfs,
   OverlayFS.

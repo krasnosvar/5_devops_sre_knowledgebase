@@ -87,7 +87,7 @@ export let options = {
     { duration: '2m', target: 0 },      // охлаждение
   ],
   thresholds: {
-    http_req_duration: ['p95<500'],     // 95% < 500ms
+    http_req_duration: ['p(95)<500'],   // 95% < 500ms
     http_req_failed: ['rate<0.01'],     // < 1% ошибок
   },
 };
@@ -132,7 +132,7 @@ forecast_growth(1000, 0.15, 6)  # ~2313 RPS
 # 3. Держать N+2 ноды (при выходе 2 нод кластер работает)
 
 # Горизонтальное масштабирование (предпочтительнее вертикального)
-kubectl autoscale deployment myapp --cpu-percent=70 --min=3 --max=50
+kubectl autoscale deployment myapp --cpu=70% --min=3 --max=50
 
 # KEDA — масштабирование по внешним метрикам (Kafka lag, очередь)
 kubectl apply -f - <<EOF
@@ -149,7 +149,6 @@ spec:
     - type: prometheus
       metadata:
         serverAddress: http://prometheus:9090
-        metricName: http_requests_total
         query: sum(rate(http_requests_total[2m]))
         threshold: "100"   # 100 RPS на реплику
 EOF

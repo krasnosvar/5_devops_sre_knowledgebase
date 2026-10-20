@@ -1,5 +1,8 @@
 # Tier 2 — KVM + libvirt + Terraform (Linux)
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Рекомендуемый Tier-2 сетап для Linux: «настоящие» VM со своим ядром,
@@ -63,6 +66,8 @@ terraform destroy -var="vm_count=1"
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: virsh, qemu-img, сети,
+  cloud-init, симптомы.
 - [01_theory/kvm_libvirt_arch.md](01_theory/kvm_libvirt_arch.md) —
   KVM/QEMU/libvirt, сетевые режимы, storage, cloud-init.
 - [02_examples/base_lab.tf](02_examples/base_lab.tf) — базовый шаблон:

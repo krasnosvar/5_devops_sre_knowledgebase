@@ -28,8 +28,10 @@ Vault — централизованное хранилище секретов �
 - lease (секрет живёт ограниченное время)
 
 ```bash
-# логин в Vault
-vault login -method=kubernetes role=myapp
+# логин в Vault из Pod (у kubernetes auth нет CLI-помощника
+# `vault login -method=...` — только запись в login-эндпоинт)
+vault write auth/kubernetes/login role=myapp \
+  jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token
 
 # читать секрет
 vault kv get secret/myapp/database
@@ -53,7 +55,7 @@ ESO синхронизирует секреты из внешних систем
 
 ```yaml
 # SecretStore — подключение к Vault
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: vault-backend
@@ -70,7 +72,7 @@ spec:
 
 ---
 # ExternalSecret — какой секрет создать в k8s
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: myapp-db-secret

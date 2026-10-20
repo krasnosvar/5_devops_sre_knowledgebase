@@ -1,5 +1,7 @@
 # 04. Безопасность образов
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — команды и шаблоны одним экраном.
+
 ## Зачем
 Каждый образ тянет сотни пакетов с известными CVE, а без подписи нельзя
 доказать, что в кластер попал именно тот образ, который собрал CI. Тема:
@@ -15,6 +17,7 @@
   YAML.
 
 ## Файлы
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: Trivy, Grype, Cosign.
 - [01_theory/image_security.md](./01_theory/image_security.md) —
   attack surface, Trivy, Grype, Cosign, Kyverno verifyImages, immutable
   tags, lifecycle policy.

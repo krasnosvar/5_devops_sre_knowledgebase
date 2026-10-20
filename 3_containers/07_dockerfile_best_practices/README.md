@@ -1,5 +1,8 @@
 # 07. Dockerfile: лучшие практики
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Неправильная форма `CMD`, shell-обёртка в PID 1 или секрет в `ARG`
@@ -15,6 +18,8 @@
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: exec form, PID 1,
+  BuildKit-секреты.
 - [01_theory/dockerfile_best_practices.md](./01_theory/dockerfile_best_practices.md)
   — shell vs exec form, PID 1 и сигналы, ENTRYPOINT + CMD, BuildKit
   secrets и cache mounts, `.dockerignore`.

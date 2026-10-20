@@ -1,5 +1,8 @@
 # 03. Локальный Kubernetes
 
+> Уже знакомы с темой? → [CHEATSHEET.md](./CHEATSHEET.md) — быстрый
+> справочник команд, флагов и типовых конфигов.
+
 ## Зачем
 
 Для упражнений по Kubernetes нужен работающий кластер, а облачный
@@ -21,6 +24,8 @@ managed-кластер стоит денег и долго создаётся. k
 
 ## Файлы
 
+- [CHEATSHEET.md](./CHEATSHEET.md) — шпаргалка: kind/k3d/minikube, контексты
+  kubectl.
 - [01_theory/local_k8s_options.md](01_theory/local_k8s_options.md) —
   сравнение kind / k3d / minikube, установка, загрузка образов, kubectl.
 - [02_examples/kind-cluster.yaml](02_examples/kind-cluster.yaml) — kind:
